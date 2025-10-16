@@ -11,6 +11,7 @@ export type IncidentFilters = {
   bbox?: [number, number, number, number];
   geocode?: boolean;
   limit?: number;
+  station?: string;
 };
 
 export type IncidentsResponse = {
@@ -59,6 +60,7 @@ const buildQuery = (filters: IncidentFilters) => {
   if (typeof filters.limit === 'number') params.set('limit', String(filters.limit));
   if (filters.geocode) params.set('geocode', '1');
   if (filters.bbox?.length === 4) params.set('bbox', filters.bbox.join(','));
+  if (filters.station) params.set('station', filters.station);
 
   return params.toString();
 };
@@ -77,12 +79,20 @@ export async function fetchIncidents(
   const base = joinUrl(options.baseUrl);
   const url = query ? `${base}?${query}` : base;
 
+  console.log('[FETCH_INCIDENTS] Building request:', {
+    filters,
+    baseUrl: options.baseUrl,
+    finalUrl: url
+  });
+
   const headers = {
     Accept: 'application/json',
     ...(options.init?.headers instanceof Headers
       ? Object.fromEntries(options.init.headers.entries())
       : (options.init?.headers as Record<string, string> | undefined))
   };
+
+  console.log('[FETCH_INCIDENTS] Fetching:', url);
 
   const res = await fetch(url, {
     method: 'GET',
@@ -91,11 +101,33 @@ export async function fetchIncidents(
     signal: options.signal
   });
 
+  let headerDump: Record<string, string> = {};
+  try {
+    // Some test doubles won't implement Headers; guard accordingly
+    const maybeHeaders: any = (res as any).headers;
+    if (maybeHeaders?.entries) {
+      headerDump = Object.fromEntries(maybeHeaders.entries());
+    }
+  } catch {}
+
+  console.log('[FETCH_INCIDENTS] Response:', {
+    status: (res as any).status,
+    statusText: (res as any).statusText,
+    ok: (res as any).ok,
+    headers: headerDump
+  });
+
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
+    console.error('[FETCH_INCIDENTS] Error response:', text.slice(0, 500));
     throw new Error(`Incidents request failed (${res.status}): ${text}`);
   }
 
   const data = (await res.json()) as IncidentsResponse;
+  console.log('[FETCH_INCIDENTS] Received data:', {
+    count: data.count,
+    itemsLength: data.items?.length
+  });
+
   return data;
 }

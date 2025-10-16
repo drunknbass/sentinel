@@ -28,11 +28,35 @@ export async function GET(req: NextRequest) {
   const minPriority = Number(url.searchParams.get('minPriority') || 0);
   const q = url.searchParams.get('q');
   const bbox = parseBbox(url.searchParams.get('bbox'));
-  const limit = Math.min(Number(url.searchParams.get('limit') || 1000), 3000);
+  const limit = Math.min(Number(url.searchParams.get('limit') || 10000), 10000); // Increase default limit
   const withGeocode = ['1', 'true', 'yes'].includes((url.searchParams.get('geocode') || '').toLowerCase());
+  const station = url.searchParams.get('station');
+  const maxGeocode = Number(url.searchParams.get('maxGeocode') || process.env.MAX_GEOCODE_PER_REQUEST || 40);
+  const geocodeConcurrency = Number(url.searchParams.get('geocodeConcurrency') || process.env.GEOCODE_CONCURRENCY || 3);
 
   try {
-    const all = await scrapeIncidents({ geocode: withGeocode });
+    console.log('[API] Request params:', {
+      since,
+      until,
+      area,
+      callCategory,
+      callType,
+      minPriority,
+      bbox: bbox ? `${bbox.minLon},${bbox.minLat},${bbox.maxLon},${bbox.maxLat}` : null,
+      limit,
+      withGeocode,
+      station
+    });
+    console.log('[API] Fetching incidents, geocode:', withGeocode, 'since:', since, 'station:', station);
+    const all = await scrapeIncidents({
+      geocode: withGeocode,
+      since: since || undefined,
+      station: station || undefined,
+      maxGeocode,
+      geocodeConcurrency
+    });
+    console.log('[API] Got', all.length, 'incidents');
+    console.log('[API] Sample incident:', all[0]);
     const filtered = all.filter((item) => {
       if (since && new Date(item.received_at) < new Date(since)) return false;
       if (until && new Date(item.received_at) > new Date(until)) return false;
@@ -49,6 +73,7 @@ export async function GET(req: NextRequest) {
     });
 
     const limited = filtered.slice(0, limit);
+    console.log('[API] After filtering and limiting:', limited.length, 'incidents');
 
     const spatial = bbox
       ? limited.filter(
@@ -62,6 +87,9 @@ export async function GET(req: NextRequest) {
         )
       : limited;
 
+    console.log('[API] Final count to return:', spatial.length);
+    console.log('[API] Response:', { count: spatial.length, itemsSample: spatial.slice(0, 2) });
+
     return NextResponse.json(
       { count: spatial.length, items: spatial },
       {
@@ -71,6 +99,15 @@ export async function GET(req: NextRequest) {
       }
     );
   } catch (error: any) {
-    return NextResponse.json({ error: error?.message || 'scrape failed' }, { status: 500 });
+    console.error('[API] Error occurred:', error?.message);
+    console.error('[API] Error stack:', error?.stack);
+    return NextResponse.json(
+      {
+        error: error?.message || 'scrape failed',
+        stack: error?.stack,
+        details: 'Check server logs for more information'
+      },
+      { status: 500 }
+    );
   }
 }

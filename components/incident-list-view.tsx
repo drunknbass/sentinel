@@ -167,7 +167,6 @@ export default function IncidentListView({
               key={item.incident_id}
               onClick={() => {
                 onSelectIncident(item)
-                onClose()
               }}
               className="w-full text-left bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 hover:bg-white/10 transition-all group"
             >

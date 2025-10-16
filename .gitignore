@@ -32,3 +32,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code
+.claude/settings.local.json
+
+# cloudflare workers
+/workers/node_modules
+/workers/.wrangler
+/workers/dist

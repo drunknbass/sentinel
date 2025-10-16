@@ -13,15 +13,17 @@ interface FilterPanelProps {
   searchTags: string[]
   onSearchTagsChange: (tags: string[]) => void
   availableTags: string[]
+  selectedRegion: string
+  onRegionChange: (region: string) => void
 }
 
 const TIME_RANGES = [
-  { label: "1h", hours: 1 },
-  { label: "3h", hours: 3 },
+  { label: "2h", hours: 2 },
   { label: "6h", hours: 6 },
   { label: "12h", hours: 12 },
-  { label: "24h", hours: 24 },
-  { label: "48h", hours: 48 },
+  { label: "1 day", hours: 24 },
+  { label: "3 days", hours: 72 },
+  { label: "7 days", hours: 168 },
   { label: "All", hours: 999 },
 ]
 
@@ -35,6 +37,8 @@ export default function FilterPanel({
   searchTags,
   onSearchTagsChange,
   availableTags,
+  selectedRegion,
+  onRegionChange,
 }: FilterPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [searchInput, setSearchInput] = useState("")
@@ -59,10 +63,11 @@ export default function FilterPanel({
     minPriority < 100 ? 1 : 0,
     timeRange < 999 ? 1 : 0,
     searchTags.length,
+    selectedRegion ? 1 : 0,
   ].reduce((a, b) => a + b, 0)
 
   return (
-    <div className="absolute top-32 left-6 z-40 w-80 max-w-[calc(100vw-3rem)]">
+    <div className="w-80 max-w-[calc(100vw-3rem)]">
       {/* Collapsed state */}
       {!isExpanded && (
         <button
@@ -168,12 +173,12 @@ export default function FilterPanel({
                 </div>
 
                 {/* Time range buttons */}
-                <div className="grid grid-cols-7 gap-1">
+                <div className="grid grid-cols-4 gap-2">
                   {TIME_RANGES.map((range) => (
                     <button
                       key={range.hours}
                       onClick={() => onTimeRangeChange(range.hours)}
-                      className={`py-2 rounded-lg text-xs font-bold transition-all ${
+                      className={`py-2.5 rounded-lg text-xs font-bold transition-all ${
                         timeRange === range.hours
                           ? "bg-white text-black"
                           : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
@@ -183,6 +188,38 @@ export default function FilterPanel({
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            {/* Region filter */}
+            <div>
+              <label className="text-xs text-gray-400 uppercase tracking-wide mb-2 block">Region</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => onRegionChange("")}
+                  className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                    selectedRegion === "" ? "bg-white text-black" : "bg-white/5 hover:bg-white/10"
+                  }`}
+                >
+                  All
+                </button>
+                {[
+                  { key: "southwest", label: "Southwest" },
+                  { key: "moreno", label: "Moreno Valley" },
+                  { key: "central", label: "Central" },
+                  { key: "jurupa", label: "Jurupa Valley" },
+                  { key: "desert", label: "Desert" },
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => onRegionChange(key)}
+                    className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                      selectedRegion === key ? "bg-white text-black" : "bg-white/5 hover:bg-white/10"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -251,8 +288,9 @@ export default function FilterPanel({
                 onClick={() => {
                   onCategoryChange("")
                   onPriorityChange(100)
-                  onTimeRangeChange(999)
+                  onTimeRangeChange(2)
                   onSearchTagsChange([])
+                  onRegionChange("")
                 }}
                 className="w-full py-2.5 bg-red-500/20 border border-red-500/30 rounded-xl text-sm font-semibold hover:bg-red-500/30 transition-colors"
               >

@@ -9,6 +9,7 @@ type LeafletMapProps = {
   items: Incident[]
   onMarkerClick: (item: Incident) => void
   selectedIncident: Incident | null
+  onLocationPermission?: (granted: boolean) => void
 }
 
 const getPriorityColor = (priority: number) => {
@@ -18,7 +19,7 @@ const getPriorityColor = (priority: number) => {
   return "#6b7280"
 }
 
-export default function LeafletMap({ items, onMarkerClick, selectedIncident }: LeafletMapProps) {
+export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission }: LeafletMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -119,54 +120,65 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident }: L
 
         mapInstanceRef.current = map
 
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              const userLat = position.coords.latitude
-              const userLon = position.coords.longitude
+        // Wait for map to be fully loaded before requesting location
+        map.whenReady(() => {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                console.log('[MAP] Location permission granted')
+                onLocationPermission?.(true)
 
-              const isInRiversideArea = userLat >= 33.4 && userLat <= 34.2 && userLon >= -117.8 && userLon <= -116.8
+                const userLat = position.coords.latitude
+                const userLon = position.coords.longitude
 
-              if (isInRiversideArea) {
-                map.setView([userLat, userLon], 13)
+                const isInRiversideArea = userLat >= 33.4 && userLat <= 34.2 && userLon >= -117.8 && userLon <= -116.8
 
-                const userIcon = L.divIcon({
-                  className: "user-location-marker",
-                  html: `
-                    <div style="position: relative; width: 20px; height: 20px;">
-                      <div style="
-                        position: absolute;
-                        inset: 0;
-                        background: #3b82f6;
-                        border-radius: 50%;
-                        filter: blur(6px);
-                        opacity: 0.6;
-                      "></div>
-                      <div style="
-                        position: absolute;
-                        inset: 4px;
-                        background: #3b82f6;
-                        border: 3px solid white;
-                        border-radius: 50%;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-                      "></div>
-                    </div>
-                  `,
-                  iconSize: [20, 20],
-                  iconAnchor: [10, 10],
-                })
+                if (isInRiversideArea && mapInstanceRef.current) {
+                  try {
+                    mapInstanceRef.current.setView([userLat, userLon], 13)
 
-                L.marker([userLat, userLon], { icon: userIcon }).addTo(map).bindPopup("Your Location")
+                    const userIcon = L.divIcon({
+                      className: "user-location-marker",
+                      html: `
+                        <div style="position: relative; width: 20px; height: 20px;">
+                          <div style="
+                            position: absolute;
+                            inset: 0;
+                            background: #3b82f6;
+                            border-radius: 50%;
+                            filter: blur(6px);
+                            opacity: 0.6;
+                          "></div>
+                          <div style="
+                            position: absolute;
+                            inset: 4px;
+                            background: #3b82f6;
+                            border: 3px solid white;
+                            border-radius: 50%;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+                          "></div>
+                        </div>
+                      `,
+                      iconSize: [20, 20],
+                      iconAnchor: [10, 10],
+                    })
 
-                setUserLocationUsed(true)
-              }
-            },
-            (error) => {
-              console.log("[v0] Geolocation error:", error.message)
-            },
-            { timeout: 5000, maximumAge: 60000 },
-          )
-        }
+                    L.marker([userLat, userLon], { icon: userIcon }).addTo(mapInstanceRef.current).bindPopup("Your Location")
+
+                    setUserLocationUsed(true)
+                  } catch (e) {
+                    console.error('[MAP] Error setting user location:', e)
+                  }
+                }
+              },
+              (error) => {
+                console.log('[MAP] Location permission denied:', error.message)
+                onLocationPermission?.(false)
+              },
+              { timeout: 5000, maximumAge: 60000 },
+            )
+          }
+        })
       }
     }
 
@@ -186,17 +198,57 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident }: L
     const L = (window as any).L
     if (!L) return
 
-    markersRef.current.forEach((marker) => marker.remove())
+    // Safely remove markers
+    markersRef.current.forEach((marker) => {
+      try {
+        if (marker && mapInstanceRef.current) {
+          marker.remove()
+        }
+      } catch (e) {
+        // Ignore errors from already-removed markers
+      }
+    })
     markersRef.current = []
 
     const validItems = items.filter((item) => item.lat && item.lon)
 
     validItems.forEach((item) => {
       const color = getPriorityColor(item.priority)
+      const isApproximate = item.location_approximate === true
 
+      // Different marker styles for exact vs approximate locations
       const icon = L.divIcon({
         className: "custom-marker",
-        html: `
+        html: isApproximate ? `
+          <div style="position: relative; width: 32px; height: 32px;">
+            <!-- Larger dashed circle for approximate location area -->
+            <div style="
+              position: absolute;
+              inset: 0;
+              border: 2px dashed ${color};
+              border-radius: 50%;
+              opacity: 0.5;
+              animation: pulse-approximate 2s ease-in-out infinite;
+            "></div>
+            <!-- Inner solid dot -->
+            <div style="
+              position: absolute;
+              inset: 10px;
+              background: ${color};
+              border: 2px solid white;
+              border-radius: 50%;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            "></div>
+            <!-- Opacity overlay to show it's approximate -->
+            <div style="
+              position: absolute;
+              inset: 10px;
+              background: black;
+              border-radius: 50%;
+              opacity: 0.3;
+            "></div>
+          </div>
+        ` : `
           <div style="position: relative; width: 24px; height: 24px;">
             <div style="
               position: absolute;
@@ -217,8 +269,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident }: L
             "></div>
           </div>
         `,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12],
+        iconSize: isApproximate ? [32, 32] : [24, 24],
+        iconAnchor: isApproximate ? [16, 16] : [12, 12],
       })
 
       const marker = L.marker([item.lat!, item.lon!], { icon })
@@ -258,6 +310,17 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident }: L
             50% {
               transform: scale(1.2);
               opacity: 0.8;
+            }
+          }
+          @keyframes pulse-approximate {
+            0%,
+            100% {
+              transform: scale(1);
+              opacity: 0.4;
+            }
+            50% {
+              transform: scale(1.15);
+              opacity: 0.6;
             }
           }
         `}</style>

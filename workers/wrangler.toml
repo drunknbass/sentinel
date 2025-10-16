@@ -1,0 +1,10 @@
+name = "sentinel-geocode-cache"
+main = "geocode-cache.js"
+compatibility_date = "2024-01-01"
+
+# KV namespace for storing geocoded results
+# Create this with: wrangler kv:namespace create GEOCODE_CACHE
+# Then update the id below with the namespace ID from the command output
+# kv_namespaces = [
+#   { binding = "GEOCODE_CACHE", id = "YOUR_NAMESPACE_ID_HERE" }
+# ]
