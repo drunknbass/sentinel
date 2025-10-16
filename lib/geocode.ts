@@ -12,8 +12,6 @@ const geocodeCache = new TTLCache<GeocodeResult>(
 );
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-const isGeocodeEnabled = () =>
-  String(process.env.GEOCODE_ENABLED || '').toLowerCase() === 'true';
 
 
 /**
@@ -154,7 +152,7 @@ async function geocodeWithCensus(address: string, area: string | null, allowAppr
  * 4. Census Bureau (fallback geocoder)
  */
 export async function geocodeOne(address: string | null, area: string | null): Promise<GeocodeResult> {
-  if (!isGeocodeEnabled() || !address) return { lat: null, lon: null };
+  if (!address) return { lat: null, lon: null };
 
   const key = `geo:${address}|${area || ''}`;
 
