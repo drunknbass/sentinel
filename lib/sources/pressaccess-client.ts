@@ -129,7 +129,9 @@ export async function fetchIncidents(options: {
         'Sec-Fetch-Mode': 'cors',
         'Sec-Fetch-Site': 'same-origin'
       },
-      cache: 'no-store'
+      // Allow Next.js to cache upstream for short bursts
+      // while still keeping the route response fresh via s-maxage
+      next: { revalidate: Number(process.env.CACHE_TTL_SECONDS || 60) }
     });
 
     console.log('[PRESSACCESS_CLIENT] Response status:', res.status, res.statusText);
