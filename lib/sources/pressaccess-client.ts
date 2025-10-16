@@ -134,13 +134,19 @@ export async function fetchIncidents(options: {
       next: { revalidate: Number(process.env.CACHE_TTL_SECONDS || 60) }
     });
 
-    console.log('[PRESSACCESS_CLIENT] Response status:', res.status, res.statusText);
-    console.log('[PRESSACCESS_CLIENT] Response headers:', Object.fromEntries(res.headers.entries()));
+    let hdrDump: Record<string, string> = {};
+    try {
+      const maybeHeaders: any = (res as any).headers;
+      if (maybeHeaders?.entries) hdrDump = Object.fromEntries(maybeHeaders.entries());
+    } catch {}
+    console.log('[PRESSACCESS_CLIENT] Response status:', (res as any).status, (res as any).statusText);
+    console.log('[PRESSACCESS_CLIENT] Response headers:', hdrDump);
 
     if (!res.ok) {
-      const text = await res.text();
-      console.error('[PRESSACCESS_CLIENT] Error response body:', text.slice(0, 500));
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      let text = '';
+      try { text = await (res as any).text?.(); } catch {}
+      if (text) console.error('[PRESSACCESS_CLIENT] Error response body:', text.slice(0, 500));
+      throw new Error(`HTTP ${(res as any).status}: ${(res as any).statusText}`);
     }
 
     const data: RSOApiIncident[] = await res.json();
