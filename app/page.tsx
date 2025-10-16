@@ -48,11 +48,14 @@ const LeafletMap = dynamic(() => import("@/components/leaflet-map"), {
  * - List view for browsing all incidents
  */
 export default function Page() {
-  // UI state
+  // UI state - Always start with landing page on server, check URL on client
   const [showLanding, setShowLanding] = useState(true)
   const [showListView, setShowListView] = useState(false)
   const [showBottomSheet, setShowBottomSheet] = useState(false)
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null)
+  const [locationPermission, setLocationPermission] = useState<'pending' | 'granted' | 'denied'>('pending')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [loadingProgress, setLoadingProgress] = useState<{stage: string; current?: number; total?: number} | null>(null)
 
   // Data state
   const [items, setItems] = useState<Incident[]>([])
@@ -62,31 +65,47 @@ export default function Page() {
   // Filter state
   const [selectedCategory, setSelectedCategory] = useState<string>("")
   const [minPriority, setMinPriority] = useState(100)
-  const [timeRange, setTimeRange] = useState(999)
+  const [timeRange, setTimeRange] = useState(24) // Default to last 24 hours
   const [searchTags, setSearchTags] = useState<string[]>([])
+  const [selectedRegion, setSelectedRegion] = useState<string>("")
+
+  // Auto-refresh toggle
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
 
   // Critical carousel state
   const [criticalCarouselIndex, setCriticalCarouselIndex] = useState(0)
   const [showCriticalCarousel, setShowCriticalCarousel] = useState(true)
 
   /**
+   * Check URL params on client mount to skip landing page if returning
+   */
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('view') === 'map') {
+        setShowLanding(false)
+      }
+    }
+  }, [])
+
+  /**
    * Handles entering the map view from landing page
-   * Requests location permission if available
+   * Updates URL to persist map view on refresh
+   * Location permission will be requested by the map component
    */
   const handleEnterMapView = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setShowLanding(false)
-        },
-        (error) => {
-          setShowLanding(false)
-        },
-        { timeout: 5000 },
-      )
-    } else {
-      setShowLanding(false)
-    }
+    const url = new URL(window.location.href)
+    url.searchParams.set('view', 'map')
+    window.history.pushState({}, '', url)
+    setShowLanding(false)
+  }
+
+  /**
+   * Callback when location permission is granted/denied
+   */
+  const handleLocationPermission = (granted: boolean) => {
+    setLocationPermission(granted ? 'granted' : 'denied')
+    console.log('[PAGE] Location permission:', granted ? 'granted' : 'denied')
   }
 
   /**
@@ -162,39 +181,101 @@ export default function Page() {
 
   /**
    * Fetches incidents from API on mount and every 60 seconds
+   * Applies time range filter to fetch only relevant data
    */
   useEffect(() => {
     if (showLanding) return
 
     let active = true
+    const abortController = new AbortController()
 
     const loadIncidents = async () => {
+      // Calculate time range for API request
+      const now = new Date()
+      const since = timeRange < 999
+        ? new Date(now.getTime() - timeRange * 60 * 60 * 1000).toISOString()
+        : undefined
+
+      console.log('[PAGE] Loading incidents with filters:', {
+        selectedCategory,
+        minPriority,
+        timeRange,
+        since,
+        geocode: true,
+        station: selectedRegion
+      })
+
       setLoading(true)
       setError(null)
+      setIsRefreshing(true)
+      setLoadingProgress({ stage: 'Fetching' })
+
       try {
+        // Show geocoding stage after 1 second (gives time for API fetch to complete)
+        const geocodeTimer = setTimeout(() => {
+          if (active) {
+            setLoadingProgress({ stage: 'Geocoding' })
+          }
+        }, 1000)
+
         const data = await fetchIncidents({
           callCategory: selectedCategory || undefined,
           minPriority,
-          geocode: true
+          since,
+          geocode: true, // Enable geocoding to show markers on map
+          station: selectedRegion || undefined
+        }, {
+          signal: abortController.signal
         })
+
+        clearTimeout(geocodeTimer)
+
+        console.log('[PAGE] Received data:', {
+          count: data.count,
+          itemsLength: data.items?.length,
+          firstItem: data.items?.[0]
+        })
+
         if (!active) return
+        setLoadingProgress({ stage: 'Rendering', current: data.items?.length, total: data.items?.length })
         setItems((data.items || []) as Incident[])
+        console.log('[PAGE] Set items state:', data.items?.length || 0)
       } catch (err: any) {
+        // Don't show error if request was aborted (filter changed)
+        if (err.name === 'AbortError') {
+          console.log('[PAGE] Request aborted (filter changed)')
+          return
+        }
+        console.error('[PAGE] Error loading incidents:', err)
         if (!active) return
         setError(err?.message || "Failed to load incidents")
         setItems([])
       } finally {
-        if (active) setLoading(false)
+        if (active) {
+          setLoading(false)
+          setIsRefreshing(false)
+          setLoadingProgress(null)
+        }
       }
     }
 
     loadIncidents()
-    const interval = setInterval(loadIncidents, 60000)
+
+    // Auto-refresh every 60 seconds if enabled
+    let interval: NodeJS.Timeout | null = null
+    if (autoRefreshEnabled) {
+      interval = setInterval(() => {
+        console.log('[PAGE] Auto-refreshing data (60s interval)')
+        loadIncidents()
+      }, 60000)
+    }
+
     return () => {
       active = false
-      clearInterval(interval)
+      abortController.abort() // Cancel in-flight request when filters change
+      if (interval) clearInterval(interval)
     }
-  }, [selectedCategory, minPriority, showLanding])
+  }, [selectedCategory, minPriority, timeRange, showLanding, autoRefreshEnabled, selectedRegion])
 
   /**
    * Auto-advances critical carousel every 8 seconds
@@ -269,35 +350,107 @@ export default function Page() {
             }
           }}
           selectedIncident={selectedIncident}
+          onLocationPermission={handleLocationPermission}
         />
       </div>
 
-      {/* Filter panel */}
-      <FilterPanel
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
-        minPriority={minPriority}
-        onPriorityChange={setMinPriority}
-        timeRange={timeRange}
-        onTimeRangeChange={setTimeRange}
-        searchTags={searchTags}
-        onSearchTagsChange={setSearchTags}
-        availableTags={availableTags}
-      />
+      {/* Right-side HUD stack */}
+      <div className="absolute top-20 right-6 z-30 flex flex-col items-end gap-3">
+        {/* Location disabled indicator */}
+        {locationPermission === 'denied' && (
+          <div className="flex items-center gap-2 bg-yellow-500/20 backdrop-blur-2xl border border-yellow-500/30 rounded-full px-4 py-2 shadow-lg">
+            <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              <line x1="15" y1="9" x2="9" y2="15" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+            </svg>
+            <span className="text-xs font-bold tracking-wider text-yellow-500">LOCATION DISABLED</span>
+          </div>
+        )}
 
-      {/* LIVE indicator badge */}
-      <div className="absolute top-20 left-6 z-30 flex items-center gap-2 bg-red-500/20 backdrop-blur-2xl border border-red-500/30 rounded-full px-4 py-2 shadow-lg">
-        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse-red" />
-        <span className="text-xs font-bold tracking-wider">LIVE</span>
+        {/* Incident count button */}
+        <button
+          onClick={() => setShowListView(true)}
+          disabled={loading || isRefreshing}
+          className={`bg-white/10 backdrop-blur-2xl border border-white/20 rounded-full px-6 py-3 text-sm font-bold tracking-wide transition-all shadow-2xl ${
+            (loading || isRefreshing)
+              ? 'opacity-50 cursor-not-allowed'
+              : 'hover:bg-white/20 cursor-pointer'
+          }`}
+        >
+          {selectedCategory ? selectedCategory.toUpperCase() : "ALL INCIDENTS"} • {filteredItems.length}
+        </button>
       </div>
 
-      {/* Incident count button */}
-      <button
-        onClick={() => setShowListView(true)}
-        className="absolute top-24 right-6 z-40 bg-white/10 backdrop-blur-2xl border border-white/20 rounded-full px-6 py-3 text-sm font-bold tracking-wide hover:bg-white/20 transition-all shadow-2xl"
-      >
-        {selectedCategory ? selectedCategory.toUpperCase() : "ALL INCIDENTS"} • {filteredItems.length}
-      </button>
+      {/* Left-side HUD stack */}
+      <div className="absolute top-20 left-6 z-[70] flex flex-col items-start gap-3">
+        {/* LIVE indicator badge - toggle for auto-refresh */}
+        <button
+          onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
+          disabled={loading || isRefreshing}
+          className={`flex items-center gap-2 backdrop-blur-2xl border rounded-full px-4 py-2 shadow-lg transition-all ${
+            (loading || isRefreshing)
+              ? 'cursor-not-allowed'
+              : 'hover:scale-105 cursor-pointer'
+          } ${
+            autoRefreshEnabled
+              ? `bg-red-500/20 border-red-500/30 ${isRefreshing ? 'scale-110 border-red-500/60' : ''}`
+              : 'bg-gray-500/20 border-gray-500/30'
+          }`}
+          title={autoRefreshEnabled ? 'Auto-refresh ON (click to disable)' : 'Auto-refresh OFF (click to enable)'}
+        >
+          {isRefreshing || loading ? (
+            <svg className="w-3 h-3 animate-spin text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          ) : (
+            <div className={`w-2 h-2 rounded-full ${
+              autoRefreshEnabled ? 'bg-red-500 animate-pulse-red' : 'bg-gray-500'
+            }`} />
+          )}
+          <span className="text-xs font-bold tracking-wider whitespace-nowrap">
+            {loading || isRefreshing ? (
+              loadingProgress ? (
+                loadingProgress.current && loadingProgress.total ? (
+                  `${loadingProgress.stage} ${loadingProgress.current}/${loadingProgress.total}`
+                ) : (
+                  loadingProgress.stage
+                )
+              ) : (
+                loading ? 'LOADING' : 'UPDATING'
+              )
+            ) : (
+              autoRefreshEnabled ? 'LIVE' : 'PAUSED'
+            )}
+          </span>
+        </button>
+
+        {/* Filter panel */}
+        <FilterPanel
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          minPriority={minPriority}
+          onPriorityChange={setMinPriority}
+          timeRange={timeRange}
+          onTimeRangeChange={setTimeRange}
+          searchTags={searchTags}
+          onSearchTagsChange={setSearchTags}
+          availableTags={availableTags}
+          selectedRegion={selectedRegion}
+          onRegionChange={setSelectedRegion}
+        />
+      </div>
+
+      {/* Loading overlay - visual feedback only, doesn't block interaction */}
+      {(loading || isRefreshing) && (
+        <div className="absolute inset-0 z-[60] bg-black/10 backdrop-blur-[2px] pointer-events-none"
+          style={{
+            backdropFilter: "blur(2px)",
+            WebkitBackdropFilter: "blur(2px)"
+          }}
+        />
+      )}
 
       {/* Critical incidents carousel - Added navigation buttons */}
       {criticalIncidents.length > 0 && showCriticalCarousel && !showBottomSheet && (
@@ -584,7 +737,7 @@ export default function Page() {
           rel="noopener noreferrer"
           className="text-xs text-white/40 hover:text-white/60 transition-colors pointer-events-auto bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/5"
         >
-          Built with ♥ by Circle Creative Group
+          Built with ♥ by Circle Creative Group • v1.0
         </a>
       </div>
     </div>
