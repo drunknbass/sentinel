@@ -133,7 +133,7 @@ export default function IncidentListView({
             item.call_category,
             item.area,
             getPriorityLabel(item.priority),
-          ].filter(Boolean).map(f => f.toLowerCase()).join(" ")
+          ].filter((f): f is string => Boolean(f)).map(f => f.toLowerCase()).join(" ")
 
           return searchableFields.includes(query)
         })
