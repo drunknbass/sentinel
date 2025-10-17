@@ -415,36 +415,6 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           className: "custom-marker",
           html: `
             <div style="position: relative; width: ${size.outer}px; height: ${size.outer}px;">
-              <!-- Radar ring 1 - outermost expanding -->
-              <div style="
-                position: absolute;
-                inset: 0;
-                border: 2px solid ${color};
-                border-radius: 50%;
-                opacity: 0;
-                animation: radar-ping 3s ease-out infinite;
-              "></div>
-
-              <!-- Radar ring 2 - middle expanding -->
-              <div style="
-                position: absolute;
-                inset: 0;
-                border: 2px solid ${color};
-                border-radius: 50%;
-                opacity: 0;
-                animation: radar-ping 3s ease-out infinite 1s;
-              "></div>
-
-              <!-- Radar ring 3 - inner expanding -->
-              <div style="
-                position: absolute;
-                inset: 0;
-                border: 2px solid ${color};
-                border-radius: 50%;
-                opacity: 0;
-                animation: radar-ping 3s ease-out infinite 2s;
-              "></div>
-
               <!-- Large uncertainty radius -->
               <div style="
                 position: absolute;
@@ -453,6 +423,54 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
                 border-radius: 50%;
                 opacity: ${size.opacity};
                 animation: pulse-approximate 2s ease-in-out infinite;
+              "></div>
+
+              <!-- Corner brackets (top-left) -->
+              <div style="
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 10px;
+                height: 10px;
+                border-top: 2px solid ${color};
+                border-left: 2px solid ${color};
+                opacity: 0.6;
+              "></div>
+
+              <!-- Corner brackets (top-right) -->
+              <div style="
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 10px;
+                height: 10px;
+                border-top: 2px solid ${color};
+                border-right: 2px solid ${color};
+                opacity: 0.6;
+              "></div>
+
+              <!-- Corner brackets (bottom-left) -->
+              <div style="
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 10px;
+                height: 10px;
+                border-bottom: 2px solid ${color};
+                border-left: 2px solid ${color};
+                opacity: 0.6;
+              "></div>
+
+              <!-- Corner brackets (bottom-right) -->
+              <div style="
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                width: 10px;
+                height: 10px;
+                border-bottom: 2px solid ${color};
+                border-right: 2px solid ${color};
+                opacity: 0.6;
               "></div>
 
               <!-- Rotating dashed border -->
