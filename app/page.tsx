@@ -778,7 +778,7 @@ export default function Page() {
 
       {/* Top navigation bar - Amber MDT style - Hide when loading */}
       {!(loading && !isRefreshing) && (
-        <div className="absolute top-0 left-0 right-0 z-50 bg-black border-b-2 border-amber-500 safe-top">
+        <div className="absolute top-0 left-0 right-0 z-[100] bg-black border-b-2 border-amber-500 safe-top">
         <div className="flex items-center justify-between px-4 py-2">
           <div className="text-xs font-mono text-amber-500">
             ╔═══════════════════════════════════════════════════════════════════════════════╗
@@ -838,7 +838,7 @@ export default function Page() {
 
       {/* Mobile segmented control - iOS style */}
       {!(loading && !isRefreshing) && (
-        <div className="md:hidden absolute left-0 right-0 safe-top-with-offset z-50 bg-black border-b-2 border-amber-500 px-4 py-3">
+        <div className="md:hidden absolute left-0 right-0 safe-top-with-offset z-[90] bg-black border-b-2 border-amber-500 px-4 py-3">
           <div className="flex items-center gap-2">
             <div className="flex flex-1 gap-2">
               <button

@@ -99,7 +99,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
 
       <div className="fixed inset-0 bg-black/70 z-[1]" />
 
-      <div className="sticky top-0 left-0 right-0 z-10 bg-black border-b-2 border-amber-500 p-4">
+      <div className="sticky top-0 left-0 right-0 z-[100] bg-black border-b-2 border-amber-500 p-4">
         <div className="text-center font-mono text-amber-500 text-[10px] md:text-xs leading-tight">
           <div className="hidden md:block">
             ╔═══════════════════════════════════════════════════════════════════════════════╗
