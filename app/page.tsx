@@ -1047,22 +1047,21 @@ export default function Page() {
       {/* Top navigation bar - Amber MDT style - Hide when loading */}
       {!(loading && !isRefreshing) && (
         <div ref={navRef} className="fixed top-0 left-0 right-0 z-[100] bg-black border-b-2 border-amber-500 safe-top">
-        {/* Decorative header bar — hide on mobile to prevent overflow */}
-        <div className="hidden md:flex items-center justify-between px-4 py-2">
-          <div className="text-xs font-mono text-amber-500 truncate w-full">
-            ╔═══════════════════════════════════════════════════════════════════════════════╗
+        {/* Decorative header bar — desktop only */}
+        {!isMobile && (
+          <div className="flex items-center justify-between px-4 py-2">
+            <div className="text-xs font-mono text-amber-500 truncate w-full">
+              ╔═══════════════════════════════════════════════════════════════════════════════╗
+            </div>
           </div>
-        </div>
+        )}
         <div className="flex items-center justify-between px-3 sm:px-6 py-2 bg-black flex-wrap gap-2">
           {/* Brand */}
-          <div className="text-xs font-mono font-bold text-amber-500 min-w-0">
-            <span className="md:hidden">RSO‑MDT</span>
-            <span className="hidden md:inline">RSO‑MDT v2.1</span>
-          </div>
+          <div className="text-xs font-mono font-bold text-amber-500 min-w-0">{isMobile ? 'RSO‑MDT' : 'RSO‑MDT v2.1'}</div>
           {/* Title (desktop only) */}
-          <div className="text-sm font-mono font-bold text-amber-500 tracking-wider hidden md:block min-w-0 truncate">
-            RIVERSIDE SHERIFF MOBILE DATA TERMINAL
-          </div>
+          {!isMobile && (
+            <div className="text-sm font-mono font-bold text-amber-500 tracking-wider min-w-0 truncate">RIVERSIDE SHERIFF MOBILE DATA TERMINAL</div>
+          )}
           {/* Controls */}
           <div className="flex items-center gap-2 min-w-0">
             {/* GPS toggle button */}
@@ -1150,11 +1149,11 @@ export default function Page() {
             </button>
           </div>
         </div>
-        <div className="hidden md:flex items-center justify-between px-4 py-2">
-          <div className="text-xs font-mono text-amber-500">
-            ╚═══════════════════════════════════════════════════════════════════════════════╝
+        {!isMobile && (
+          <div className="flex items-center justify-between px-4 py-2">
+            <div className="text-xs font-mono text-amber-500">╚═══════════════════════════════════════════════════════════════════════════════╝</div>
           </div>
-        </div>
+        )}
       </div>
       )}
 
