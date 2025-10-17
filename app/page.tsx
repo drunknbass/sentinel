@@ -811,10 +811,10 @@ export default function Page() {
       </div>
       )}
 
-      {/* Left-side HUD stack - Terminal style - Hide when loading */}
+      {/* Left-side HUD stack - Terminal style - Desktop only */}
       {!(loading && !isRefreshing) && (
-        <div className="absolute top-32 left-6 z-[70] flex flex-col items-start gap-3">
-        {/* Filter panel - hidden on mobile */}
+        <div className="hidden md:flex absolute top-32 left-6 z-[70] flex-col items-start gap-3">
+        {/* Filter panel - desktop only */}
         <FilterPanel
           selectedCategory={selectedCategory}
           onCategoryChange={setSelectedCategory}
@@ -1220,35 +1220,153 @@ export default function Page() {
               )}
 
               {mobileSheetType === 'incidents' && (
-                <IncidentListView
-                  items={filteredItems}
-                  onClose={() => setMobileSheetType(null)}
-                  onSelectIncident={(incident) => {
-                    setSelectedIncident(incident)
-                    setMobileSheetType(null)
-                    setShowBottomSheet(true)
-                  }}
-                  getPriorityLabel={getPriorityLabel}
-                  getPriorityColor={getPriorityColor}
-                  searchQuery={searchQuery}
-                  onSearchQueryChange={setSearchQuery}
-                />
+                <div className="p-6 space-y-3 font-mono">
+                  <div className="flex items-center justify-between border-b-2 border-amber-500 pb-3 mb-4">
+                    <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ ALL INCIDENTS ({filteredItems.length}) ╗</div>
+                    <button
+                      onClick={() => setMobileSheetType(null)}
+                      className="w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
+                    >
+                      X
+                    </button>
+                  </div>
+
+                  {filteredItems.map((item) => {
+                    const locationInfo = (() => {
+                      const hasLocation = !!(item.lat && item.lon)
+                      if (!item.address_raw) return { label: "NO LOCATION", hasLocation: false }
+                      const address = item.address_raw.trim()
+                      if (/^\d+/.test(address) && /\*\*\*/.test(address)) return { label: "BLOCK LEVEL", hasLocation }
+                      if (/^\d+/.test(address)) return { label: "BLOCK LEVEL", hasLocation }
+                      if (/\b(AND|&|\/)\b/i.test(address)) return { label: "INTERSECTION", hasLocation }
+                      return { label: "AREA ONLY", hasLocation }
+                    })()
+
+                    return (
+                      <button
+                        key={item.incident_id}
+                        onClick={() => {
+                          setSelectedIncident(item)
+                          setMobileSheetType(null)
+                          setShowBottomSheet(true)
+                        }}
+                        className="w-full text-left bg-black border-2 border-amber-500 p-4 hover:bg-amber-500/10 transition-all group"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <div
+                              className="inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase"
+                              style={{
+                                borderColor: getPriorityColor(item.priority),
+                                color: getPriorityColor(item.priority),
+                                boxShadow: `0 0 4px ${getPriorityColor(item.priority)}40`
+                              }}
+                            >
+                              [P-{item.priority} {getPriorityLabel(item.priority)}]
+                            </div>
+                            {item.call_category && (
+                              <div className="inline-block px-3 py-1 border-2 border-amber-500/50 text-xs font-bold tracking-wider uppercase text-amber-500/70">
+                                [{item.call_category}]
+                              </div>
+                            )}
+                            <div className={`inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase ${
+                              locationInfo.hasLocation ? 'border-green-500/50 text-green-500/70' : 'border-red-500/50 text-red-500/70'
+                            }`}>
+                              [{locationInfo.hasLocation ? '📍' : '⚠'} {locationInfo.label}]
+                            </div>
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-lg mb-1 group-hover:text-amber-400 transition-colors text-amber-500">
+                              &gt; {item.call_type}
+                            </h3>
+                            <p className="text-sm text-amber-500/70 truncate">LOCATION: {item.address_raw || "UNKNOWN"}</p>
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+
+                  {filteredItems.length === 0 && (
+                    <div className="text-center py-12 text-amber-500/70 tracking-wider">
+                      &gt; NO INCIDENTS FOUND
+                    </div>
+                  )}
+                </div>
               )}
 
               {mobileSheetType === 'critical' && (
-                <IncidentListView
-                  items={criticalIncidents}
-                  onClose={() => setMobileSheetType(null)}
-                  onSelectIncident={(incident) => {
-                    setSelectedIncident(incident)
-                    setMobileSheetType(null)
-                    setShowBottomSheet(true)
-                  }}
-                  getPriorityLabel={getPriorityLabel}
-                  getPriorityColor={getPriorityColor}
-                  searchQuery={searchQuery}
-                  onSearchQueryChange={setSearchQuery}
-                />
+                <div className="p-6 space-y-3 font-mono">
+                  <div className="flex items-center justify-between border-b-2 border-red-600 pb-3 mb-4">
+                    <div className="text-xs text-red-600/70 uppercase tracking-wider">╔ CRITICAL INCIDENTS ({criticalIncidents.length}) ╗</div>
+                    <button
+                      onClick={() => setMobileSheetType(null)}
+                      className="w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
+                    >
+                      X
+                    </button>
+                  </div>
+
+                  {criticalIncidents.map((item) => {
+                    const locationInfo = (() => {
+                      const hasLocation = !!(item.lat && item.lon)
+                      if (!item.address_raw) return { label: "NO LOCATION", hasLocation: false }
+                      const address = item.address_raw.trim()
+                      if (/^\d+/.test(address) && /\*\*\*/.test(address)) return { label: "BLOCK LEVEL", hasLocation }
+                      if (/^\d+/.test(address)) return { label: "BLOCK LEVEL", hasLocation }
+                      if (/\b(AND|&|\/)\b/i.test(address)) return { label: "INTERSECTION", hasLocation }
+                      return { label: "AREA ONLY", hasLocation }
+                    })()
+
+                    return (
+                      <button
+                        key={item.incident_id}
+                        onClick={() => {
+                          setSelectedIncident(item)
+                          setMobileSheetType(null)
+                          setShowBottomSheet(true)
+                        }}
+                        className="w-full text-left bg-black border-2 border-red-600 p-4 hover:bg-red-600/10 transition-all group"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <div
+                              className="inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase"
+                              style={{
+                                borderColor: getPriorityColor(item.priority),
+                                color: getPriorityColor(item.priority),
+                                boxShadow: `0 0 4px ${getPriorityColor(item.priority)}40`
+                              }}
+                            >
+                              [P-{item.priority} {getPriorityLabel(item.priority)}]
+                            </div>
+                            {item.call_category && (
+                              <div className="inline-block px-3 py-1 border-2 border-amber-500/50 text-xs font-bold tracking-wider uppercase text-amber-500/70">
+                                [{item.call_category}]
+                              </div>
+                            )}
+                            <div className={`inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase ${
+                              locationInfo.hasLocation ? 'border-green-500/50 text-green-500/70' : 'border-red-500/50 text-red-500/70'
+                            }`}>
+                              [{locationInfo.hasLocation ? '📍' : '⚠'} {locationInfo.label}]
+                            </div>
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-lg mb-1 group-hover:text-amber-400 transition-colors text-red-600">
+                              &gt; {item.call_type}
+                            </h3>
+                            <p className="text-sm text-amber-500/70 truncate">LOCATION: {item.address_raw || "UNKNOWN"}</p>
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+
+                  {criticalIncidents.length === 0 && (
+                    <div className="text-center py-12 text-amber-500/70 tracking-wider">
+                      &gt; NO CRITICAL INCIDENTS
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
