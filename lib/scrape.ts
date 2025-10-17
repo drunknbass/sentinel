@@ -20,6 +20,8 @@ export type Item = {
   lat: number | null;
   lon: number | null;
   location_approximate?: boolean; // True if geocoded from area/street only (not exact address)
+  geocode_strategy?: 'apple_maps' | 'census' | 'nominatim'; // Which service provided the geocoding
+  geocode_centroid?: string; // Which centroid was used (e.g., 'area:TEMECULA', 'region:jurupa', 'county_center')
 };
 
 const SOURCES = [
@@ -174,10 +176,14 @@ export async function scrapeIncidents({
 
       let completed = 0;
       await mapLimit(candidates, Math.max(1, geocodeConcurrency), async ({ idx, it }) => {
-        const result = await geocodeOne(it.address_raw!, it.area, nocache);
+        // Pass station info if available for better regional geocoding
+        const station = (it as any).station;
+        const result = await geocodeOne(it.address_raw!, it.area, nocache, station);
         items[idx].lat = result.lat;
         items[idx].lon = result.lon;
         if (result.approximate) (items[idx] as any).location_approximate = true;
+        if (result.strategy) (items[idx] as any).geocode_strategy = result.strategy;
+        if (result.centroid_used) (items[idx] as any).geocode_centroid = result.centroid_used;
         completed++;
         if (completed % 5 === 0 || completed === candidates.length) {
           onProgress?.('Geocoding', completed, candidates.length);
@@ -190,9 +196,28 @@ export async function scrapeIncidents({
     const exactCount = items.filter(item => item.lat !== null && item.lon !== null && !item.location_approximate).length;
     const approximateCount = items.filter(item => item.lat !== null && item.lon !== null && item.location_approximate).length;
     const addressCount = items.filter(item => item.address_raw !== null).length;
+
+    // Track geocoding strategies and centroids
+    const strategyCount: Record<string, number> = {};
+    const centroidCount: Record<string, number> = {};
+    items.forEach(item => {
+      if (item.geocode_strategy) {
+        strategyCount[item.geocode_strategy] = (strategyCount[item.geocode_strategy] || 0) + 1;
+      }
+      if (item.geocode_centroid && item.lat !== null && item.lon !== null) {
+        centroidCount[item.geocode_centroid] = (centroidCount[item.geocode_centroid] || 0) + 1;
+      }
+    });
+
     console.log('[SCRAPER] Final items count:', items.length);
     console.log('[SCRAPER] Items with addresses:', addressCount, '/', items.length);
     console.log('[SCRAPER] Successfully geocoded:', geocodedCount, '/', addressCount, `(${exactCount} exact, ${approximateCount} approximate)`);
+    if (Object.keys(strategyCount).length > 0) {
+      console.log('[SCRAPER] Geocoding strategies used:', strategyCount);
+    }
+    if (Object.keys(centroidCount).length > 0) {
+      console.log('[SCRAPER] Centroids that worked:', centroidCount);
+    }
 
     // Only cache if nocache is false
     if (!nocache) {
@@ -267,10 +292,14 @@ export async function scrapeIncidents({
 
       let completed = 0;
       await mapLimit(candidates, Math.max(1, geocodeConcurrency), async ({ idx, it }) => {
-        const result = await geocodeOne(it.address_raw!, it.area, nocache);
+        // Pass station info if available for better regional geocoding
+        const station = (it as any).station;
+        const result = await geocodeOne(it.address_raw!, it.area, nocache, station);
         items[idx].lat = result.lat;
         items[idx].lon = result.lon;
         if (result.approximate) (items[idx] as any).location_approximate = true;
+        if (result.strategy) (items[idx] as any).geocode_strategy = result.strategy;
+        if (result.centroid_used) (items[idx] as any).geocode_centroid = result.centroid_used;
         completed++;
         if (completed % 5 === 0 || completed === candidates.length) {
           onProgress?.('Geocoding', completed, candidates.length);

@@ -29,8 +29,9 @@ type RSOApiIncident = {
   [key: string]: any;
 };
 
-// Normalized incident format
+// Normalized incident format with all original properties mapped
 export type NormalizedIncident = {
+  // Core fields we use
   incident_id: string;
   call_type: string;
   call_category: string;
@@ -39,6 +40,15 @@ export type NormalizedIncident = {
   address_raw: string | null;
   area: string | null;
   disposition: string | null;
+
+  // Additional fields from raw API - all optional
+  station?: string;        // cd_Station - Regional dispatch center
+  division?: string;       // cd_Div - Division
+  confidential?: boolean;  // cd_Confidential_Type
+  row_num?: number;        // cd_RowNum - Row number in results
+
+  // Store the raw data for inspection
+  raw_data?: Record<string, any>; // Complete raw API response for debugging
 };
 
 const BASE_URL = 'https://publicaccess.riversidesheriff.org/api/publicaccess/incidents';
@@ -75,6 +85,7 @@ function normalizeIncident(raw: RSOApiIncident): NormalizedIncident {
   const { category, priority } = classify(call_type);
 
   return {
+    // Core fields
     incident_id,
     call_type,
     call_category: category,
@@ -82,7 +93,16 @@ function normalizeIncident(raw: RSOApiIncident): NormalizedIncident {
     received_at: received_at.toISOString(),
     address_raw,
     area,
-    disposition
+    disposition,
+
+    // Additional optional fields
+    station: raw.cd_Station?.trim() || undefined,
+    division: raw.cd_Div?.trim() || undefined,
+    confidential: raw.cd_Confidential_Type || undefined,
+    row_num: raw.cd_RowNum || undefined,
+
+    // Include complete raw data for debugging/inspection
+    raw_data: raw
   };
 }
 
