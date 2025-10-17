@@ -408,9 +408,23 @@ export default function Page() {
       console.log('[PAGE] Calling location request function directly')
       locationRequestFnRef.current()
     } else {
-      console.warn('[PAGE] Location request function not ready yet, falling back to trigger method')
-      // Fallback to trigger method if function isn't ready
-      setLocationRequestTrigger(prev => prev + 1)
+      console.warn('[PAGE] Location request function not ready; requesting directly now (keeps user gesture)')
+      // Guarantee a prompt even if the map isn't mounted yet
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLocationPermission('granted')
+          const lat = pos.coords.latitude
+          const lon = pos.coords.longitude
+          const loc = `${lat},${lon}`
+          console.log('[PAGE] Direct geolocation success:', loc)
+          setUserLocation(loc)
+        },
+        (err) => {
+          console.error('[PAGE] Direct geolocation error:', err)
+          setLocationPermission('denied')
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      )
     }
   }
 
