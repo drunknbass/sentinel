@@ -49,17 +49,13 @@ export default function FilterPanel({
       {!isExpanded && (
         <button
           onClick={() => setIsExpanded(true)}
-          className="w-full bg-black/60 backdrop-blur-xl border border-white/20 rounded-2xl px-5 py-4 text-left hover:bg-black/70 transition-all shadow-2xl"
-          style={{
-            backdropFilter: "blur(30px) saturate(180%)",
-            WebkitBackdropFilter: "blur(30px) saturate(180%)",
-            boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
-          }}
+          className="relative w-full bg-black/80 backdrop-blur-xl terminal-border rounded-lg px-5 py-4 text-left hover:bg-green-500/10 transition-all shadow-2xl"
         >
+          <div className="terminal-scanlines" />
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Filters</div>
-              <div className="font-bold">{activeFiltersCount > 0 ? `${activeFiltersCount} active` : "No filters"}</div>
+              <div className="text-xs text-green-400 font-mono uppercase tracking-wider mb-1 terminal-text">Filters</div>
+              <div className="font-mono font-bold text-green-400">{activeFiltersCount > 0 ? `${activeFiltersCount} active` : "No filters"}</div>
             </div>
           </div>
         </button>
@@ -67,18 +63,12 @@ export default function FilterPanel({
 
       {/* Expanded state */}
       {isExpanded && (
-        <div
-          className="bg-black/60 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden animate-slide-down"
-          style={{
-            backdropFilter: "blur(30px) saturate(180%)",
-            WebkitBackdropFilter: "blur(30px) saturate(180%)",
-            boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
-          }}
-        >
+        <div className="relative bg-black/80 backdrop-blur-xl terminal-border rounded-lg shadow-2xl overflow-hidden animate-slide-down">
+          <div className="terminal-scanlines" />
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-            <h3 className="font-bold text-lg">Filters</h3>
-            <button onClick={() => setIsExpanded(false)} className="text-gray-400 hover:text-white transition-colors">
+          <div className="flex items-center justify-between px-5 py-4 border-b terminal-border">
+            <h3 className="font-mono font-bold text-lg text-green-400 terminal-text">Filters</h3>
+            <button onClick={() => setIsExpanded(false)} className="text-green-400 hover:text-green-300 transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>

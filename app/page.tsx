@@ -242,7 +242,10 @@ export default function Page() {
 
       setLoading(true)
       setError(null)
-      setIsRefreshing(true)
+      // Only set isRefreshing if we already have data (this is a refresh, not initial load)
+      if (hasInitialLoad) {
+        setIsRefreshing(true)
+      }
       setLoadingProgress({ stage: 'Fetching' })
 
       try {
@@ -365,17 +368,22 @@ export default function Page() {
         }}
       />
 
-      {/* Top navigation bar */}
-      <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-black/40 backdrop-blur-xl border-b border-white/5">
-        <div className="text-sm font-semibold tracking-wider"></div>
-        <div className="text-sm font-bold tracking-wider">RIVERSIDE INCIDENTS</div>
+      {/* Top navigation bar - Terminal style */}
+      <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 bg-black/90 backdrop-blur-xl border-b terminal-border">
+        <div className="relative">
+          <div className="terminal-scanlines" />
+          <div className="text-xs font-mono tracking-wider text-green-400 terminal-text">MDT-3A12</div>
+        </div>
+        <div className="relative">
+          <div className="text-sm font-mono font-bold tracking-widest text-green-400 terminal-text">RIVERSIDE INCIDENTS</div>
+        </div>
         {/* Filter button for mobile */}
         <button
           onClick={() => setShowFilterSheet(true)}
-          className="md:hidden relative p-2 bg-white/10 backdrop-blur-xl rounded-lg hover:bg-white/20 transition-all"
+          className="md:hidden relative p-2 bg-black/60 terminal-border rounded-lg hover:bg-green-500/10 transition-all"
           aria-label="Open filters"
         >
-          <Filter className="w-5 h-5" />
+          <Filter className="w-5 h-5 text-green-400" />
           {activeFilterCount > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">
               {activeFilterCount}
@@ -403,17 +411,17 @@ export default function Page() {
         />
       </div>
 
-      {/* Right-side HUD stack */}
+      {/* Right-side HUD stack - Terminal style */}
       <div className="absolute top-20 right-6 z-30 flex flex-col items-end gap-3">
         {/* Location disabled indicator */}
         {locationPermission === 'denied' && (
-          <div className="flex items-center gap-2 bg-yellow-500/20 backdrop-blur-2xl border border-yellow-500/30 rounded-full px-4 py-2 shadow-lg">
-            <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center gap-2 bg-black/80 backdrop-blur-2xl terminal-border rounded-lg px-4 py-2 shadow-lg">
+            <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               <line x1="15" y1="9" x2="9" y2="15" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
             </svg>
-            <span className="text-xs font-bold tracking-wider text-yellow-500">LOCATION DISABLED</span>
+            <span className="text-xs font-mono font-bold tracking-wider text-yellow-400">LOCATION DISABLED</span>
           </div>
         )}
 
@@ -421,44 +429,48 @@ export default function Page() {
         <button
           onClick={() => setShowListView(true)}
           disabled={loading || isRefreshing}
-          className={`bg-white/10 backdrop-blur-2xl border border-white/20 rounded-full px-6 py-3 text-sm font-bold tracking-wide transition-all shadow-2xl ${
+          className={`relative bg-black/80 backdrop-blur-2xl terminal-border rounded-lg px-6 py-3 text-sm font-mono font-bold tracking-wide transition-all shadow-2xl ${
             (loading || isRefreshing)
               ? 'opacity-50 cursor-not-allowed'
-              : 'hover:bg-white/20 cursor-pointer'
+              : 'hover:bg-green-500/10 cursor-pointer'
           }`}
         >
-          {selectedCategory ? selectedCategory.toUpperCase() : "ALL INCIDENTS"} • {filteredItems.length}
+          <div className="terminal-scanlines" />
+          <span className="text-green-400 terminal-text">
+            {selectedCategory ? selectedCategory.toUpperCase() : "ALL INCIDENTS"} • {filteredItems.length}
+          </span>
         </button>
       </div>
 
-      {/* Left-side HUD stack */}
+      {/* Left-side HUD stack - Terminal style */}
       <div className="absolute top-20 left-6 z-[70] flex flex-col items-start gap-3">
         {/* LIVE indicator badge - toggle for auto-refresh */}
         <button
           onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
           disabled={loading || isRefreshing}
-          className={`flex items-center gap-2 backdrop-blur-2xl border rounded-full px-4 py-2 shadow-lg transition-all ${
+          className={`relative flex items-center gap-2 backdrop-blur-2xl terminal-border rounded-lg px-4 py-2 shadow-lg transition-all ${
             (loading || isRefreshing)
               ? 'cursor-not-allowed'
               : 'hover:scale-105 cursor-pointer'
           } ${
             autoRefreshEnabled
-              ? `bg-red-500/20 border-red-500/30 ${isRefreshing ? 'scale-110 border-red-500/60' : ''}`
-              : 'bg-gray-500/20 border-gray-500/30'
+              ? `bg-black/80 ${isRefreshing ? 'scale-110' : ''}`
+              : 'bg-black/80'
           }`}
           title={autoRefreshEnabled ? 'Auto-refresh ON (click to disable)' : 'Auto-refresh OFF (click to enable)'}
         >
+          <div className="terminal-scanlines" />
           {isRefreshing || loading ? (
-            <svg className="w-3 h-3 animate-spin text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 animate-spin text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           ) : (
             <div className={`w-2 h-2 rounded-full ${
-              autoRefreshEnabled ? 'bg-red-500 animate-pulse-red' : 'bg-gray-500'
+              autoRefreshEnabled ? 'bg-green-400 animate-pulse' : 'bg-gray-500'
             }`} />
           )}
-          <span className="text-xs font-bold tracking-wider whitespace-nowrap">
+          <span className="text-xs font-mono font-bold tracking-wider whitespace-nowrap terminal-text text-green-400">
             {loading || isRefreshing ? (
               loadingProgress ? (
                 loadingProgress.current && loadingProgress.total ? (
@@ -479,17 +491,14 @@ export default function Page() {
         {criticalIncidents.length > 0 && (
           <button
             onClick={() => setShowCriticalCarousel(!showCriticalCarousel)}
-            className={`flex items-center gap-2 backdrop-blur-2xl border rounded-full px-4 py-2 shadow-lg transition-all hover:scale-105 cursor-pointer ${
-              showCriticalCarousel
-                ? 'bg-red-500/20 border-red-500/30'
-                : 'bg-yellow-500/20 border-yellow-500/30'
-            }`}
+            className={`relative flex items-center gap-2 backdrop-blur-2xl terminal-border rounded-lg px-4 py-2 shadow-lg transition-all hover:scale-105 cursor-pointer bg-black/80`}
             title={showCriticalCarousel ? 'Hide critical alerts carousel' : 'Show critical alerts carousel'}
           >
+            <div className="terminal-scanlines" />
             <div className={`w-2 h-2 rounded-full ${
               showCriticalCarousel ? 'bg-red-500 animate-pulse-red' : 'bg-yellow-500'
             }`} />
-            <span className="text-xs font-bold tracking-wider whitespace-nowrap">
+            <span className="text-xs font-mono font-bold tracking-wider whitespace-nowrap text-red-400 terminal-text">
               {criticalIncidents.length} CRITICAL
             </span>
           </button>
@@ -741,18 +750,9 @@ export default function Page() {
                   {getPriorityLabel(selectedIncident.priority)} PRIORITY
                 </div>
                 <h2 className="text-2xl font-bold leading-tight mb-2">{selectedIncident.call_type}</h2>
-                <button
-                  onClick={() => {
-                    // Re-trigger the zoom by clearing and re-setting the incident
-                    const incident = selectedIncident
-                    setSelectedIncident(null)
-                    setTimeout(() => setSelectedIncident(incident), 50)
-                  }}
-                  className="text-left text-gray-400 hover:text-white transition-colors group"
-                  title="Click to refocus on map"
-                >
-                  <span className="group-hover:underline">{selectedIncident.address_raw || "No address available"}</span>
-                </button>
+                <div className="text-left text-gray-400">
+                  {selectedIncident.address_raw || "No address available"}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700">
@@ -844,8 +844,9 @@ export default function Page() {
           onClose={() => setShowListView(false)}
           onSelectIncident={(incident) => {
             setSelectedIncident(incident)
-            // Only show bottom sheet on mobile, keep list open on desktop
+            // On mobile: close list and show bottom sheet
             if (window.innerWidth < 768) {
+              setShowListView(false)
               setShowBottomSheet(true)
             }
           }}
