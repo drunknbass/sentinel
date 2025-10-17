@@ -70,7 +70,8 @@ export default function Page() {
   const [selectedCategory, setSelectedCategory] = useState<string>("")
   const [minPriority, setMinPriority] = useState(100)
   const [timeRange, setTimeRange] = useState(2) // Default to last 2 hours for better UX
-  const [selectedRegion, setSelectedRegion] = useState<string>("")
+  const [searchTags, setSearchTags] = useState<string[]>([])
+  const [filterPanelExpanded, setFilterPanelExpanded] = useState(false)
 
   // Auto-refresh toggle
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
@@ -155,7 +156,21 @@ export default function Page() {
   }
 
   /**
-   * Filters incidents based on time range and geographic bounds
+   * Extracts all available tags from incidents for search functionality
+   */
+  const availableTags = useMemo(() => {
+    const tags = new Set<string>()
+    items.forEach((item) => {
+      if (item.call_category) tags.add(item.call_category)
+      if (item.area) tags.add(item.area)
+      const priority = getPriorityLabel(item.priority)
+      tags.add(priority.toLowerCase())
+    })
+    return Array.from(tags).sort()
+  }, [items])
+
+  /**
+   * Filters incidents based on time range, search tags, and geographic bounds
    */
   const filteredItems = useMemo(() => {
     let filtered = items
@@ -164,6 +179,19 @@ export default function Page() {
     if (timeRange < 999) {
       const cutoffTime = Date.now() - timeRange * 60 * 60 * 1000
       filtered = filtered.filter((item) => new Date(item.received_at).getTime() >= cutoffTime)
+    }
+
+    // Filter by search tags
+    if (searchTags.length > 0) {
+      filtered = filtered.filter((item) => {
+        const itemTags = [
+          item.call_category?.toLowerCase(),
+          item.area?.toLowerCase(),
+          getPriorityLabel(item.priority).toLowerCase(),
+          item.call_type?.toLowerCase(),
+        ].filter(Boolean)
+        return searchTags.some((tag) => itemTags.includes(tag.toLowerCase()))
+      })
     }
 
     // Filter out incidents with coordinates outside Riverside County bounds
@@ -192,7 +220,7 @@ export default function Page() {
     })
 
     return filtered
-  }, [items, timeRange])
+  }, [items, timeRange, searchTags])
 
   /**
    * Identifies critical incidents for the carousel
@@ -210,9 +238,9 @@ export default function Page() {
     if (selectedCategory) count++
     if (minPriority < 100) count++
     if (timeRange < 999) count++
-    if (selectedRegion) count++
+    count += searchTags.length
     return count
-  }, [selectedCategory, minPriority, timeRange, selectedRegion])
+  }, [selectedCategory, minPriority, timeRange, searchTags])
 
   /**
    * Fetches incidents from API on mount and every 60 seconds
@@ -237,7 +265,6 @@ export default function Page() {
         timeRange,
         since,
         geocode: true,
-        station: selectedRegion,
         nocache
       })
 
@@ -262,7 +289,6 @@ export default function Page() {
           minPriority,
           since,
           geocode: true, // Enable geocoding to show markers on map
-          station: selectedRegion || undefined,
           nocache
         }, {
           signal: abortController.signal
@@ -319,7 +345,7 @@ export default function Page() {
       abortController.abort() // Cancel in-flight request when filters change
       if (interval) clearInterval(interval)
     }
-  }, [selectedCategory, minPriority, timeRange, showLanding, autoRefreshEnabled, selectedRegion, nocache, isTabVisible])
+  }, [selectedCategory, minPriority, timeRange, showLanding, autoRefreshEnabled, nocache, isTabVisible])
 
   /**
    * Auto-advances critical carousel every 8 seconds
@@ -369,28 +395,39 @@ export default function Page() {
         }}
       />
 
-      {/* Top navigation bar - Terminal style */}
-      <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-3 bg-black/90 backdrop-blur-xl border-b terminal-border">
-        <div className="relative">
-          <div className="terminal-scanlines" />
-          <div className="text-xs font-mono tracking-wider text-green-400 terminal-text">MDT-3A12</div>
+      {/* Top navigation bar - Amber MDT style */}
+      <div className="absolute top-0 left-0 right-0 z-50 bg-black border-b-2 border-amber-500">
+        <div className="flex items-center justify-between px-4 py-2">
+          <div className="text-xs font-mono text-amber-500">
+            ╔═══════════════════════════════════════════════════════════════════════════════╗
+          </div>
         </div>
-        <div className="relative">
-          <div className="text-sm font-mono tracking-widest text-green-400 terminal-text">RIVERSIDE INCIDENTS</div>
+        <div className="flex items-center justify-between px-6 py-2 bg-black">
+          <div className="text-xs font-mono font-bold text-amber-500">RSO-MDT v2.1</div>
+          <div className="text-sm font-mono font-bold text-amber-500 tracking-wider hidden md:block">
+            RIVERSIDE SHERIFF MOBILE DATA TERMINAL
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowFilterSheet(true)}
+              className="md:hidden flex items-center gap-2 text-xs font-mono text-amber-500 border-2 border-amber-500 px-3 py-1 hover:bg-amber-500 hover:text-black transition-all"
+            >
+              <span>FILTERS</span>
+            </button>
+            <button
+              onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
+              className="flex items-center gap-2 text-xs font-mono text-amber-500 border-2 border-amber-500 px-3 py-1 hover:bg-amber-500 hover:text-black transition-all"
+            >
+              <span className={autoRefreshEnabled ? "animate-blink" : "opacity-50"}>█</span>
+              <span className={autoRefreshEnabled ? "" : "opacity-50"}>{autoRefreshEnabled ? "ONLINE" : "OFFLINE"}</span>
+            </button>
+          </div>
         </div>
-        {/* Filter button for mobile */}
-        <button
-          onClick={() => setShowFilterSheet(true)}
-          className="md:hidden relative p-2 bg-black/60 terminal-border rounded-lg hover:bg-green-500/10 transition-all"
-          aria-label="Open filters"
-        >
-          <Filter className="w-5 h-5 text-green-400" />
-          {activeFilterCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
+        <div className="flex items-center justify-between px-4 py-2">
+          <div className="text-xs font-mono text-amber-500">
+            ╚═══════════════════════════════════════════════════════════════════════════════╝
+          </div>
+        </div>
       </div>
 
       {/* Main map view */}
@@ -508,19 +545,20 @@ export default function Page() {
         {/* Theme Switcher */}
         <ThemeSwitcher />
 
-        {/* Filter panel - hidden on mobile, aligned to badge */}
-        <div className="hidden md:block">
-          <FilterPanel
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-            minPriority={minPriority}
-            onPriorityChange={setMinPriority}
-            timeRange={timeRange}
-            onTimeRangeChange={setTimeRange}
-            selectedRegion={selectedRegion}
-            onRegionChange={setSelectedRegion}
-          />
-        </div>
+        {/* Filter panel - hidden on mobile */}
+        <FilterPanel
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          minPriority={minPriority}
+          onPriorityChange={setMinPriority}
+          timeRange={timeRange}
+          onTimeRangeChange={setTimeRange}
+          searchTags={searchTags}
+          onSearchTagsChange={setSearchTags}
+          availableTags={availableTags}
+          isExpanded={filterPanelExpanded}
+          onExpandedChange={setFilterPanelExpanded}
+        />
       </div>
 
       {/* Terminal loading overlay - only show on initial load, not refreshes */}
@@ -826,8 +864,11 @@ export default function Page() {
                 onPriorityChange={setMinPriority}
                 timeRange={timeRange}
                 onTimeRangeChange={setTimeRange}
-                selectedRegion={selectedRegion}
-                onRegionChange={setSelectedRegion}
+                searchTags={searchTags}
+                onSearchTagsChange={setSearchTags}
+                availableTags={availableTags}
+                isExpanded={true}
+                onExpandedChange={() => {}}
               />
 
               <button
