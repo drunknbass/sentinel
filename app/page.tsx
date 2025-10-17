@@ -488,6 +488,26 @@ export default function Page() {
           </span>
         </button>
 
+        {/* Critical alerts toggle button */}
+        {criticalIncidents.length > 0 && (
+          <button
+            onClick={() => setShowCriticalCarousel(!showCriticalCarousel)}
+            className={`flex items-center gap-2 backdrop-blur-2xl border rounded-full px-4 py-2 shadow-lg transition-all hover:scale-105 cursor-pointer ${
+              showCriticalCarousel
+                ? 'bg-red-500/20 border-red-500/30'
+                : 'bg-yellow-500/20 border-yellow-500/30'
+            }`}
+            title={showCriticalCarousel ? 'Hide critical alerts carousel' : 'Show critical alerts carousel'}
+          >
+            <div className={`w-2 h-2 rounded-full ${
+              showCriticalCarousel ? 'bg-red-500 animate-pulse-red' : 'bg-yellow-500'
+            }`} />
+            <span className="text-xs font-bold tracking-wider whitespace-nowrap">
+              {criticalIncidents.length} CRITICAL
+            </span>
+          </button>
+        )}
+
         {/* Filter panel - hidden on mobile, aligned to badge */}
         <div className="hidden md:block">
           <FilterPanel
