@@ -713,7 +713,7 @@ export default function Page() {
                 </div>
                 <button
                   onClick={() => setShowCriticalCarousel(false)}
-                  className="w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
+                  className="flex items-center justify-center w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-mono font-bold"
                   aria-label="Dismiss"
                 >
                   X
