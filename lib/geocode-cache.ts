@@ -55,11 +55,16 @@ export async function getFromVercelKV(address: string, area: string | null): Pro
 
   try {
     const key = `${KV_PREFIX}${address}|${area || ''}`;
-    const value = await redis.get<GeocodeResult>(key);
+    const raw = await redis.get(key as any);
+    let value: any = raw;
+    // Upstash may return strings for values set with JSON.stringify; parse if needed
+    if (typeof raw === 'string') {
+      try { value = JSON.parse(raw); } catch { value = null; }
+    }
 
     if (value && typeof value === 'object' && 'lat' in value && 'lon' in value) {
       console.log('[GEOCODE] Upstash Redis cache hit:', key);
-      return value;
+      return value as GeocodeResult;
     }
 
     return null;
@@ -86,7 +91,8 @@ export async function saveToVercelKV(address: string, area: string | null, value
 
   try {
     const key = `${KV_PREFIX}${address}|${area || ''}`;
-    await redis.set(key, JSON.stringify(value), { ex: KV_TTL_SECONDS });
+    // Store as JSON object; client will handle serialization
+    await redis.set(key as any, value as any, { ex: KV_TTL_SECONDS } as any);
     console.log('[GEOCODE] Saved to Upstash Redis:', key);
   } catch (err) {
     // Redis failure is non-fatal

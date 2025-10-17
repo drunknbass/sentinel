@@ -8,7 +8,9 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest watch"
+    "test:watch": "vitest watch",
+    "test:geocode-live": "RUN_LIVE_GEOCODE_TESTS=1 vitest run tests/geocode-live.test.ts --reporter=dot",
+    "geocode:last50": "npx tsx scripts/geocode-last-50.ts"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.14",

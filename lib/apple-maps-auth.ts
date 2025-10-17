@@ -23,14 +23,37 @@ export async function generateAppleMapsToken(): Promise<string | null> {
     return null;
   }
 
-  // Fix private key formatting - Vercel often strips newlines
-  // Support both escaped \n and actual newlines
+  // Strip any accidental quotes that might wrap the key
+  privateKey = privateKey.trim().replace(/^["']|["']$/g, '');
+
+  // Auto-detect and handle base64-encoded keys
+  const looksLikeBase64 = !privateKey.includes('-----BEGIN') &&
+                          !privateKey.includes('\n') &&
+                          /^[A-Za-z0-9+/]+=*$/.test(privateKey.replace(/\s/g, ''));
+
+  if (looksLikeBase64) {
+    console.log('[APPLE_MAPS] Detected base64-encoded private key, decoding...');
+    try {
+      privateKey = Buffer.from(privateKey, 'base64').toString('utf-8');
+      console.log('[APPLE_MAPS] Successfully decoded base64 private key');
+    } catch (e) {
+      console.error('[APPLE_MAPS] Failed to decode base64 private key:', e);
+      return null;
+    }
+  }
+
+  // Fix escaped newlines (common in env vars)
   privateKey = privateKey.replace(/\\n/g, '\n');
 
   // Ensure proper PEM format
   if (!privateKey.includes('-----BEGIN')) {
+    console.log('[APPLE_MAPS] Private key missing PEM headers, adding them...');
     privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
   }
+
+  // Log key format info (safely, just first few chars)
+  const keyPreview = privateKey.substring(0, 50).replace(/\n/g, '\\n');
+  console.log('[APPLE_MAPS] Key format check - starts with:', keyPreview + '...');
 
   try {
     // Step 1: Generate JWT auth token
@@ -62,7 +85,16 @@ export async function generateAppleMapsToken(): Promise<string | null> {
     if (!response.ok) {
       const error = await response.text();
       console.error('[APPLE_MAPS] Token exchange failed:', response.status, error);
-      console.error('[APPLE_MAPS] Auth token payload:', { teamId, keyId });
+      console.error('[APPLE_MAPS] Credentials used - Team ID:', teamId, 'Key ID:', keyId);
+
+      if (response.status === 401) {
+        console.error('[APPLE_MAPS] 401 typically means:');
+        console.error('  1. Team ID and Key ID mismatch');
+        console.error('  2. Private key doesn\'t match the Key ID');
+        console.error('  3. Private key is malformed (check Vercel env var)');
+        console.error('[APPLE_MAPS] Verify the private key starts with:',
+                     privateKey.substring(0, 30).replace(/\n/g, '\\n'));
+      }
       return null;
     }
 
@@ -85,10 +117,19 @@ export async function generateAppleMapsToken(): Promise<string | null> {
     return accessToken;
   } catch (err: any) {
     console.error('[APPLE_MAPS] Failed to get access token:', err?.message || err);
+
     if (err?.message?.includes('secretOrPrivateKey')) {
-      console.error('[APPLE_MAPS] Private key format issue. Ensure the key is properly formatted.');
+      console.error('[APPLE_MAPS] Private key format issue detected!');
       console.error('[APPLE_MAPS] Key should start with: -----BEGIN PRIVATE KEY-----');
-      console.error('[APPLE_MAPS] Key length:', privateKey?.length || 0);
+      console.error('[APPLE_MAPS] Current key length:', privateKey?.length || 0);
+      console.error('[APPLE_MAPS] First 50 chars:', privateKey?.substring(0, 50).replace(/\n/g, '\\n'));
+      console.error('[APPLE_MAPS] Tip: In Vercel, paste the raw .p8 content, no base64 encoding needed');
+    } else if (err?.code === 'ERR_OSSL_EC_INVALID_PRIVATE_KEY') {
+      console.error('[APPLE_MAPS] Invalid EC private key format');
+      console.error('[APPLE_MAPS] The private key is corrupted or not an ES256 key');
+    } else if (err?.message?.includes('error:')) {
+      console.error('[APPLE_MAPS] OpenSSL error - likely malformed private key');
+      console.error('[APPLE_MAPS] Check that the private key in Vercel matches your .p8 file exactly');
     }
     return null;
   }
