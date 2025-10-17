@@ -946,17 +946,31 @@ export default function Page() {
               </div>
 
               <div>
-                {selectedIncident.call_category && (
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
+                  {/* Priority badge - colored by priority */}
                   <div
-                    className="inline-block px-3 py-1 border-2 text-xs font-bold mb-3 tracking-wider uppercase"
+                    className="inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase"
                     style={{
-                      borderColor: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
-                      color: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
+                      borderColor: getPriorityColor(selectedIncident.priority),
+                      color: getPriorityColor(selectedIncident.priority),
+                      boxShadow: `0 0 4px ${getPriorityColor(selectedIncident.priority)}40`
                     }}
                   >
-                    [{selectedIncident.call_category}]
+                    [P-{selectedIncident.priority} {getPriorityLabel(selectedIncident.priority)}]
                   </div>
-                )}
+                  {/* Category badge */}
+                  {selectedIncident.call_category && (
+                    <div
+                      className="inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase"
+                      style={{
+                        borderColor: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
+                        color: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
+                      }}
+                    >
+                      [{selectedIncident.call_category}]
+                    </div>
+                  )}
+                </div>
                 <h2 className="text-xl font-bold mb-2 text-amber-500 tracking-wide">
                   &gt; {selectedIncident.call_type}
                 </h2>
@@ -1031,17 +1045,31 @@ export default function Page() {
               </div>
 
               <div>
-                {selectedIncident.call_category && (
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
+                  {/* Priority badge - colored by priority */}
                   <div
-                    className="inline-block px-3 py-1 border-2 text-xs font-bold mb-3 tracking-wider uppercase"
+                    className="inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase"
                     style={{
-                      borderColor: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
-                      color: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
+                      borderColor: getPriorityColor(selectedIncident.priority),
+                      color: getPriorityColor(selectedIncident.priority),
+                      boxShadow: `0 0 4px ${getPriorityColor(selectedIncident.priority)}40`
                     }}
                   >
-                    [{selectedIncident.call_category}]
+                    [P-{selectedIncident.priority} {getPriorityLabel(selectedIncident.priority)}]
                   </div>
-                )}
+                  {/* Category badge */}
+                  {selectedIncident.call_category && (
+                    <div
+                      className="inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase"
+                      style={{
+                        borderColor: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
+                        color: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
+                      }}
+                    >
+                      [{selectedIncident.call_category}]
+                    </div>
+                  )}
+                </div>
                 <h2 className="text-xl font-bold mb-2 text-amber-500 tracking-wide">
                   &gt; {selectedIncident.call_type}
                 </h2>
