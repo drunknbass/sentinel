@@ -8,17 +8,15 @@ type MobileSheetProps = {
   onClose: () => void
   title?: string
   children: React.ReactNode
-  snapPoints?: number[]
 }
 
-export default function MobileSheet({ open, onClose, title, children, snapPoints = [600, 0.9] }: MobileSheetProps) {
+export default function MobileSheet({ open, onClose, title, children }: MobileSheetProps) {
   return (
     <Sheet
       isOpen={open}
       onClose={onClose}
-      snapPoints={snapPoints}
-      initialSnap={0}
-      className="mobile-sheet"
+      snapPoints={[0.9, 0.5, 0]}
+      initialSnap={1}
     >
       <Sheet.Container
         style={{
