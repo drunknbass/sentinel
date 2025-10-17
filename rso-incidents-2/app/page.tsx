@@ -453,6 +453,22 @@ export default function Page() {
         onExpandedChange={setFilterPanelExpanded}
       />
 
+      {/* Desktop HUD badges - left side aligned with filter panel */}
+      <div className="hidden md:flex absolute top-32 left-6 z-40 gap-3">
+        {/* Live status badge */}
+        <div className="bg-black border-2 border-amber-500 px-4 py-3 text-xs font-mono font-bold text-amber-500 tracking-wider">
+          <span className={isOnline ? "animate-blink" : "opacity-50"}>█</span> {isOnline ? "LIVE" : "OFFLINE"}
+        </div>
+
+        {/* Critical incidents badge */}
+        {criticalIncidents.length > 0 && (
+          <div className="bg-black border-2 border-red-600 px-4 py-3 text-xs font-mono font-bold text-red-600 tracking-wider crt-bloom-red">
+            <span className="animate-blink">█</span> CRITICAL: {criticalIncidents.length}
+          </div>
+        )}
+      </div>
+
+      {/* All incidents button - right side */}
       <button
         onClick={() => setShowListView(true)}
         className="hidden md:block absolute top-32 right-6 z-40 bg-black border-2 border-amber-500 px-6 py-3 text-xs font-mono font-bold hover:bg-amber-500 hover:text-black transition-all text-amber-500 tracking-wider"
