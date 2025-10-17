@@ -617,16 +617,16 @@ export default function Page() {
             </button>
             <button
               onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
-              disabled={loading || isRefreshing}
+              disabled={loading && !isRefreshing}
               className={`flex items-center gap-2 text-xs font-mono border-2 border-amber-500 px-3 py-1 transition-all ${
-                (loading || isRefreshing)
+                (loading && !isRefreshing)
                   ? 'text-amber-500 cursor-not-allowed'
                   : autoRefreshEnabled
                     ? 'text-amber-500 hover:bg-amber-500 hover:text-black'
                     : 'text-amber-500/50 hover:bg-amber-500 hover:text-black'
               }`}
             >
-              {loading || isRefreshing ? (
+              {loading && !isRefreshing ? (
                 <>
                   <svg className="w-3 h-3 animate-spin text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -640,7 +640,7 @@ export default function Page() {
                         loadingProgress.stage
                       )
                     ) : (
-                      loading ? 'LOADING' : 'UPDATING'
+                      'LOADING'
                     )}
                   </span>
                 </>
@@ -704,9 +704,9 @@ export default function Page() {
             {/* Left column: All incidents */}
             <button
               onClick={() => setShowListView(true)}
-              disabled={loading || isRefreshing}
+              disabled={loading && !isRefreshing}
               className={`group px-6 py-3 text-xs font-mono font-bold transition-all text-amber-500 tracking-wider ${
-                (loading || isRefreshing)
+                (loading && !isRefreshing)
                   ? 'opacity-50 cursor-not-allowed'
                   : 'hover:bg-amber-500 hover:text-black cursor-pointer'
               }`}
