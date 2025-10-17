@@ -16,6 +16,37 @@ interface IncidentListViewProps {
   onSearchQueryChange: (query: string) => void
 }
 
+/**
+ * Returns address accuracy tier based on available information
+ */
+const getLocationAccuracy = (incident: Incident): { label: string; hasLocation: boolean } => {
+  const hasLocation = !!(incident.lat && incident.lon)
+
+  if (!incident.address_raw) {
+    return { label: "NO LOCATION", hasLocation: false }
+  }
+
+  const address = incident.address_raw.trim()
+
+  // Check if it has numbers with redaction stars - most accurate
+  if (/^\d+/.test(address) && /\*\*\*/.test(address)) {
+    return { label: "BLOCK LEVEL", hasLocation }
+  }
+
+  // Check if it has numbers without stars - moderately accurate
+  if (/^\d+/.test(address)) {
+    return { label: "BLOCK LEVEL", hasLocation }
+  }
+
+  // Check for intersection - less accurate
+  if (/\b(AND|&|\/)\b/i.test(address)) {
+    return { label: "INTERSECTION", hasLocation }
+  }
+
+  // Just area name - least accurate
+  return { label: "AREA ONLY", hasLocation }
+}
+
 export default function IncidentListView({
   items,
   onClose,
@@ -152,30 +183,52 @@ export default function IncidentListView({
               }}
               className="w-full text-left bg-black border-2 border-amber-500 p-4 hover:bg-amber-500/10 transition-all group font-mono"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span
-                      className="inline-block px-2 py-1 border-2 text-xs font-bold tracking-wider"
-                      style={{
-                        borderColor: getPriorityColor(item.priority),
-                        color: getPriorityColor(item.priority),
-                        boxShadow: `0 0 4px ${getPriorityColor(item.priority)}40`
-                      }}
-                    >
-                      [P-{item.priority} {getPriorityLabel(item.priority)}]
-                    </span>
-                    {item.call_category && (
-                      <span className="text-xs text-amber-500/70 uppercase tracking-wide">{item.call_category}</span>
-                    )}
+              <div className="space-y-3">
+                {/* Badges row */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Priority badge */}
+                  <div
+                    className="inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase"
+                    style={{
+                      borderColor: getPriorityColor(item.priority),
+                      color: getPriorityColor(item.priority),
+                      boxShadow: `0 0 4px ${getPriorityColor(item.priority)}40`
+                    }}
+                  >
+                    [P-{item.priority} {getPriorityLabel(item.priority)}]
                   </div>
-                  <h3 className="font-bold text-lg mb-1 group-hover:text-amber-400 transition-colors text-amber-500">
-                    &gt; {item.call_type}
-                  </h3>
-                  <p className="text-sm text-amber-500/70 truncate">LOCATION: {item.address_raw || "UNKNOWN"}</p>
+                  {/* Category badge */}
+                  {item.call_category && (
+                    <div className="inline-block px-3 py-1 border-2 border-amber-500/50 text-xs font-bold tracking-wider uppercase text-amber-500/70">
+                      [{item.call_category}]
+                    </div>
+                  )}
+                  {/* Location accuracy indicator */}
+                  {(() => {
+                    const locationInfo = getLocationAccuracy(item)
+                    return (
+                      <div className={`inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase ${
+                        locationInfo.hasLocation
+                          ? 'border-green-500/50 text-green-500/70'
+                          : 'border-red-500/50 text-red-500/70'
+                      }`}>
+                        [{locationInfo.hasLocation ? '📍' : '⚠'} {locationInfo.label}]
+                      </div>
+                    )
+                  })()}
                 </div>
-                <div className="text-right text-sm text-amber-500/70 whitespace-nowrap font-mono">
-                  {new Date(item.received_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+
+                {/* Incident details */}
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-lg mb-1 group-hover:text-amber-400 transition-colors text-amber-500">
+                      &gt; {item.call_type}
+                    </h3>
+                    <p className="text-sm text-amber-500/70 truncate">LOCATION: {item.address_raw || "UNKNOWN"}</p>
+                  </div>
+                  <div className="text-right text-sm text-amber-500/70 whitespace-nowrap font-mono">
+                    {new Date(item.received_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </div>
                 </div>
               </div>
             </button>
