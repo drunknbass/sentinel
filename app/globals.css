@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "react-spring-bottom-sheet/dist/style.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -635,4 +634,59 @@ button, a, input, textarea, select, label {
 .no-overscroll {
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
+}
+
+/* ===========================================
+   REACT-MODAL-SHEET CUSTOM STYLING
+   =========================================== */
+
+/* Override react-modal-sheet default styles for amber MDT theme */
+.react-modal-sheet-backdrop {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(4px);
+}
+
+.react-modal-sheet-container {
+  background-color: #000000 !important;
+  border-top: 4px solid #ffb000 !important;
+  box-shadow: 0 0 16px rgba(255, 176, 0, 0.3) !important;
+  border-radius: 0 !important;
+}
+
+.react-modal-sheet-header {
+  background-color: #000000 !important;
+  border-bottom: 2px solid #ffb000 !important;
+}
+
+.react-modal-sheet-drag-indicator {
+  background-color: rgba(255, 176, 0, 0.6) !important;
+  width: 48px !important;
+  height: 6px !important;
+  border-radius: 3px !important;
+}
+
+.react-modal-sheet-content {
+  background-color: #000000 !important;
+  color: #ffb000 !important;
+  font-family: 'BBH Sans Bogle', 'Space Grotesk', monospace !important;
+}
+
+/* Custom scrollbar for modal sheet */
+.react-modal-sheet-content ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.react-modal-sheet-content ::-webkit-scrollbar-track {
+  background: #000000;
+  border-left: 1px solid #ffb000;
+}
+
+.react-modal-sheet-content ::-webkit-scrollbar-thumb {
+  background: #ffb000;
+  border: 2px solid #000000;
+  border-radius: 0;
+}
+
+.react-modal-sheet-content ::-webkit-scrollbar-thumb:hover {
+  background: #ffc933;
 }

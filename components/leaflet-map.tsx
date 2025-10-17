@@ -330,14 +330,15 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           zoom: initialZoom || defaultZoom,
           zoomControl: false,
           scrollWheelZoom: false,
-          doubleClickZoom: false,
+          doubleClickZoom: true,
           touchZoom: true,
           dragging: true,
           preferCanvas: true,
           inertia: false,
           fadeAnimation: true,
-          zoomAnimation: false,
-          markerZoomAnimation: false,
+          zoomAnimation: true,
+          zoomAnimationThreshold: 4,
+          markerZoomAnimation: true,
         })
 
         const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN

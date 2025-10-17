@@ -13,9 +13,11 @@
     "geocode:last50": "npx tsx scripts/geocode-last-50.ts"
   },
   "dependencies": {
+    "@react-spring/web": "^9.7.2",
     "@tailwindcss/postcss": "^4.1.14",
     "@types/jsonwebtoken": "^9.0.10",
     "@upstash/redis": "^1.35.6",
+    "@use-gesture/react": "^10.3.0",
     "cheerio": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -27,12 +29,11 @@
     "postcss": "^8.4.47",
     "react": "19.0.0",
     "react-dom": "19.0.0",
+    "react-modal-sheet": "^5.2.1",
+    "react-spring-bottom-sheet": "^3.4.1",
     "react-type-animation": "^3.2.0",
     "tailwind-merge": "^2.5.5",
     "tailwindcss": "^4.1.9",
-    "react-spring-bottom-sheet": "^3.4.1",
-    "@use-gesture/react": "^10.3.0",
-    "@react-spring/web": "^9.7.2",
     "tailwindcss-animate": "^1.0.7",
     "tw-animate-css": "latest"
   },
