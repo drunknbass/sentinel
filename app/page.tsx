@@ -443,8 +443,8 @@ export default function Page() {
         />
       </div>
 
-      {/* Terminal loading overlay */}
-      {(loading || isRefreshing) && <TerminalLoading />}
+      {/* Terminal loading overlay - only show on initial load, not refreshes */}
+      {loading && !isRefreshing && <TerminalLoading />}
 
       {/* Critical incidents carousel - Added navigation buttons */}
       {criticalIncidents.length > 0 && showCriticalCarousel && !showBottomSheet && (
