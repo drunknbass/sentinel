@@ -1640,7 +1640,6 @@ export default function Page() {
           open={!!(selectedIncident && showBottomSheet)}
           onClose={() => window.history.back()}
           title="INCIDENT DETAILS"
-          snapPoints={[600, window.innerHeight * 0.8]}
         >
           <div className="allow-text-select space-y-4">
             <div>
@@ -1730,7 +1729,6 @@ export default function Page() {
             mobileSheetType === 'incidents' ? 'ALL INCIDENTS' :
             mobileSheetType === 'critical' ? 'CRITICAL ALERTS' : ''
           }
-          snapPoints={[window.innerHeight * 0.9]}
         >
           <div
             ref={(el) => {

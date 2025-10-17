@@ -11,7 +11,7 @@ type MobileSheetProps = {
   snapPoints?: number[]
 }
 
-export default function MobileSheet({ open, onClose, title, children, snapPoints }: MobileSheetProps) {
+export default function MobileSheet({ open, onClose, title, children, snapPoints = [600, 0.9] }: MobileSheetProps) {
   return (
     <Sheet
       isOpen={open}
