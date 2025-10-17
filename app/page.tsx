@@ -154,7 +154,7 @@ export default function Page() {
   }
 
   /**
-   * Filters incidents based on time range
+   * Filters incidents based on time range and geographic bounds
    */
   const filteredItems = useMemo(() => {
     let filtered = items
@@ -164,6 +164,31 @@ export default function Page() {
       const cutoffTime = Date.now() - timeRange * 60 * 60 * 1000
       filtered = filtered.filter((item) => new Date(item.received_at).getTime() >= cutoffTime)
     }
+
+    // Filter out incidents with coordinates outside Riverside County bounds
+    // Riverside County approximate bounds: lat 33.4-34.2, lon -117.8 to -116.8
+    filtered = filtered.filter((item) => {
+      // Keep incidents without coordinates (they won't show on map anyway)
+      if (!item.lat || !item.lon) return true
+
+      // Drop incidents outside Riverside County bounds
+      const isInRiverside =
+        item.lat >= 33.4 &&
+        item.lat <= 34.2 &&
+        item.lon >= -117.8 &&
+        item.lon <= -116.8
+
+      if (!isInRiverside) {
+        console.log('[PAGE] Dropping incident outside Riverside bounds:', {
+          id: item.incident_id,
+          lat: item.lat,
+          lon: item.lon,
+          address: item.address_raw
+        })
+      }
+
+      return isInRiverside
+    })
 
     return filtered
   }, [items, timeRange])
