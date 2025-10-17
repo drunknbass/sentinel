@@ -1,5 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import { ThemeProvider } from '@/lib/themes/theme-provider';
 
 export const metadata: Metadata = {
   title: 'RSO PressAccess Intelligence',
@@ -9,7 +10,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ThemeProvider defaultTheme="terminal-green">
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

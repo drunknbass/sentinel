@@ -6,6 +6,7 @@ import FilterPanel from "@/components/filter-panel"
 import LandingPage from "@/components/landing-page"
 import IncidentListView from "@/components/incident-list-view"
 import TerminalLoading from "@/components/terminal-loading"
+import ThemeSwitcher from "@/components/theme-switcher"
 import { fetchIncidents, type IncidentsResponse } from "@/lib/api/incidents"
 import { X, ChevronLeft, ChevronRight, Filter } from "lucide-react"
 
@@ -503,6 +504,9 @@ export default function Page() {
             </span>
           </button>
         )}
+
+        {/* Theme Switcher */}
+        <ThemeSwitcher />
 
         {/* Filter panel - hidden on mobile, aligned to badge */}
         <div className="hidden md:block">
