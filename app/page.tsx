@@ -8,7 +8,6 @@ import IncidentListView from "@/components/incident-list-view"
 import TerminalLoading from "@/components/terminal-loading"
 import { fetchIncidents, type IncidentsResponse } from "@/lib/api/incidents"
 import { X, ChevronLeft, ChevronRight, Filter } from "lucide-react"
-import { TypeAnimation } from "react-type-animation"
 
 type Incident = IncidentsResponse["items"][number]
 
@@ -476,53 +475,7 @@ export default function Page() {
                 loadingProgress.current && loadingProgress.total ? (
                   `${loadingProgress.stage} ${loadingProgress.current}/${loadingProgress.total}`
                 ) : (
-                  loadingProgress.stage === 'Geocoding' ? (
-                    <div className="inline-block overflow-hidden">
-                      <span
-                        className="inline-block"
-                        style={{
-                          background: 'linear-gradient(90deg, #ffffff 0%, #ff0000 50%, #ffffff 100%)',
-                          backgroundClip: 'text',
-                          WebkitBackgroundClip: 'text',
-                          WebkitTextFillColor: 'transparent',
-                          backgroundSize: '200% 100%',
-                          animation: 'gradient-shift 2s ease infinite'
-                        }}
-                      >
-                        <TypeAnimation
-                          sequence={[
-                            'G',
-                            150,
-                            'Ge',
-                            150,
-                            'Geo',
-                            150,
-                            'Geoc',
-                            150,
-                            'Geoco',
-                            150,
-                            'Geocod',
-                            150,
-                            'Geocodi',
-                            150,
-                            'Geocodin',
-                            150,
-                            'Geocoding',
-                            1000,
-                            'Geocoding.',
-                            200,
-                            'Geocoding..',
-                            200,
-                            'Geocoding...',
-                            500,
-                          ]}
-                          repeat={Infinity}
-                          cursor={false}
-                          speed={50}
-                        />
-                      </span>
-                    </div>
-                  ) : loadingProgress.stage
+                  loadingProgress.stage
                 )
               ) : (
                 loading ? 'LOADING' : 'UPDATING'
