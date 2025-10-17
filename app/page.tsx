@@ -584,16 +584,14 @@ export default function Page() {
 
               <button
                 onClick={() => {
-                  // Dismiss carousel immediately
-                  setShowCriticalCarousel(false)
+                  // Set selected incident first to trigger map zoom
                   setSelectedIncident(criticalIncidents[criticalCarouselIndex])
 
-                  // Delay showing the detail view to allow map to pan/zoom first
+                  // Wait for map zoom animation to complete (500ms), then show detail view
                   setTimeout(() => {
+                    setShowCriticalCarousel(false)
                     if (window.innerWidth < 768) {
                       setShowBottomSheet(true)
-                    } else {
-                      setShowBottomSheet(false)
                     }
                   }, 600)
                 }}
