@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useMemo } from "react"
 import type { IncidentsResponse } from "@/lib/api/incidents"
 import { X, Search, MapPin, AlertTriangle } from "lucide-react"
 
@@ -14,6 +14,8 @@ interface IncidentListViewProps {
   getPriorityColor: (priority: number) => string
   searchQuery: string
   onSearchQueryChange: (query: string) => void
+  hideWithoutLocation: boolean
+  onHideWithoutLocationChange: (hide: boolean) => void
 }
 
 /**
@@ -55,8 +57,9 @@ export default function IncidentListView({
   getPriorityColor,
   searchQuery,
   onSearchQueryChange,
+  hideWithoutLocation,
+  onHideWithoutLocationChange,
 }: IncidentListViewProps) {
-  const [hideWithoutLocation, setHideWithoutLocation] = useState(false)
 
   const sortedAndFilteredItems = useMemo(() => {
     let filtered = [...items]
@@ -146,7 +149,7 @@ export default function IncidentListView({
 
             {/* Toggle to hide incidents without location - Amber MDT style */}
             <button
-              onClick={() => setHideWithoutLocation(!hideWithoutLocation)}
+              onClick={() => onHideWithoutLocationChange(!hideWithoutLocation)}
               className="w-full px-4 py-2.5 bg-black border-2 border-amber-500 hover:bg-amber-500/10 text-sm font-mono font-bold text-amber-500 transition-all flex items-center gap-2 tracking-wide"
             >
               <div className={`w-5 h-5 border-2 flex items-center justify-center transition-all ${

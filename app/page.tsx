@@ -77,6 +77,7 @@ export default function Page() {
   const [filterPanelExpanded, setFilterPanelExpanded] = useState(false)
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [mobileFilterSearchInput, setMobileFilterSearchInput] = useState("")
+  const [hideWithoutLocation, setHideWithoutLocation] = useState(false)
 
   // Auto-refresh toggle
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
@@ -142,6 +143,11 @@ export default function Page() {
       if (searchParam) {
         setSearchQuery(searchParam)
       }
+      // Read hideWithoutLocation from URL
+      const hideParam = params.get('hideWithoutLocation')
+      if (hideParam === '1' || hideParam === 'true') {
+        setHideWithoutLocation(true)
+      }
       // Read map position from URL
       const latParam = params.get('lat')
       const lonParam = params.get('lon')
@@ -182,7 +188,7 @@ export default function Page() {
   }, [])
 
   /**
-   * Sync search query to URL params
+   * Sync search query and hideWithoutLocation to URL params
    */
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -192,10 +198,15 @@ export default function Page() {
       } else {
         params.delete('search')
       }
+      if (hideWithoutLocation) {
+        params.set('hideWithoutLocation', '1')
+      } else {
+        params.delete('hideWithoutLocation')
+      }
       const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`
       window.history.replaceState({}, '', newUrl)
     }
-  }, [searchQuery])
+  }, [searchQuery, hideWithoutLocation])
 
   /**
    * Restore selected incident from URL after items are loaded
@@ -265,6 +276,14 @@ export default function Page() {
       const incidentParam = params.get('incident')
 
       console.log('[PAGE] Popstate - panel:', panelParam, 'incident:', incidentParam)
+
+      // Restore search query
+      const searchParam = params.get('search')
+      setSearchQuery(searchParam || '')
+
+      // Restore hideWithoutLocation
+      const hideParam = params.get('hideWithoutLocation')
+      setHideWithoutLocation(hideParam === '1' || hideParam === 'true')
 
       // Restore panel state
       if (panelParam === 'incidents') {
@@ -1715,6 +1734,8 @@ export default function Page() {
             getPriorityColor={getPriorityColor}
             searchQuery={searchQuery}
             onSearchQueryChange={setSearchQuery}
+            hideWithoutLocation={hideWithoutLocation}
+            onHideWithoutLocationChange={setHideWithoutLocation}
           />
         </div>
       )}
