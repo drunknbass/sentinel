@@ -362,12 +362,15 @@ export default function Page() {
    * Location permission will be requested by the map component
    */
   const handleEnterMapView = () => {
+    // IMPORTANT: Request geolocation first inside the same user gesture
+    // iOS Safari is strict about gesture timing; call this before state changes
+    try { handleRequestLocation() } catch {}
+
+    // Then switch to the map view
     const url = new URL(window.location.href)
     url.searchParams.set('view', 'map')
     window.history.pushState({}, '', url)
     setShowLanding(false)
-    // Immediately request location on enter (user gesture)
-    try { handleRequestLocation() } catch {}
   }
 
   /**
