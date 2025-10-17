@@ -11,6 +11,7 @@ type LeafletMapProps = {
   selectedIncident: Incident | null
   onLocationPermission?: (granted: boolean) => void
   isRefreshing?: boolean
+  sidePanelOpen?: boolean
 }
 
 const getPriorityColor = (priority: number) => {
@@ -20,7 +21,7 @@ const getPriorityColor = (priority: number) => {
   return "#6b7280"
 }
 
-export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing }: LeafletMapProps) {
+export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing, sidePanelOpen }: LeafletMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -315,11 +316,19 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         console.log('[MAP] Saved user view:', savedViewRef.current)
       }
 
-      // Zoom in close to the selected incident
-      mapInstanceRef.current.flyTo([selectedIncident.lat, selectedIncident.lon], 17, {
+      // Calculate padding to center pin in visible area (accounting for side panel on desktop)
+      const sidePanelWidth = 384 // 96 * 4 = 384px (w-96)
+      const paddingOptions = sidePanelOpen ? {
+        paddingTopLeft: [0, 0],
+        paddingBottomRight: [sidePanelWidth, 0]
+      } : {}
+
+      // Zoom in close to the selected incident (level 18 for detailed view)
+      mapInstanceRef.current.flyTo([selectedIncident.lat, selectedIncident.lon], 18, {
         duration: 0.5,
+        ...paddingOptions
       })
-      console.log('[MAP] Zoomed to incident:', selectedIncident.incident_id)
+      console.log('[MAP] Zoomed to incident:', selectedIncident.incident_id, sidePanelOpen ? 'with panel offset' : '')
     }
     // When deselecting, restore previous view
     else if (!selectedIncident && savedViewRef.current) {
@@ -329,7 +338,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       })
       savedViewRef.current = null
     }
-  }, [selectedIncident])
+  }, [selectedIncident, sidePanelOpen])
 
   return (
     <>

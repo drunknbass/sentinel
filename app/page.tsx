@@ -411,6 +411,7 @@ export default function Page() {
           selectedIncident={selectedIncident}
           onLocationPermission={handleLocationPermission}
           isRefreshing={isRefreshing}
+          sidePanelOpen={!!selectedIncident && !showBottomSheet}
         />
       </div>
 
