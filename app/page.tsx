@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef } from "react"
 import dynamic from "next/dynamic"
+import { useRef as useDomRef } from 'react'
 import { useIsMobile } from "@/hooks/use-mobile"
 import FilterPanel from "@/components/filter-panel"
 import LandingPage from "@/components/landing-page"
@@ -88,6 +89,21 @@ export default function Page() {
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
   const [locationEnabled, setLocationEnabled] = useState(false)
   const isMobile = useIsMobile()
+  const navRef = useDomRef<HTMLDivElement | null>(null)
+
+  // Measure nav height to position mobile filters exactly under it
+  useEffect(() => {
+    if (!navRef.current) return
+    const setHeight = () => {
+      try {
+        const h = navRef.current?.offsetHeight || 0
+        document.documentElement.style.setProperty('--nav-height', `${h}px`)
+      } catch {}
+    }
+    setHeight()
+    window.addEventListener('resize', setHeight)
+    return () => window.removeEventListener('resize', setHeight)
+  }, [])
 
   // Body scroll/interaction lock when any mobile panel is open
   useEffect(() => {
@@ -1029,7 +1045,7 @@ export default function Page() {
 
       {/* Top navigation bar - Amber MDT style - Hide when loading */}
       {!(loading && !isRefreshing) && (
-        <div className="absolute top-0 left-0 right-0 z-[100] bg-black border-b-2 border-amber-500 safe-top">
+        <div ref={navRef} className="absolute top-0 left-0 right-0 z-[100] bg-black border-b-2 border-amber-500 safe-top">
         {/* Decorative header bar — hide on mobile to prevent overflow */}
         <div className="hidden md:flex items-center justify-between px-4 py-2">
           <div className="text-xs font-mono text-amber-500 truncate w-full">

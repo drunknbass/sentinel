@@ -603,7 +603,8 @@ button, a, input, textarea, select, label {
 }
 
 .safe-top-with-offset {
-  top: calc(140px + env(safe-area-inset-top));
+  /* Position directly below measured nav height (fallback to 96px) */
+  top: calc(var(--nav-height, 96px) + env(safe-area-inset-top));
 }
 
 .safe-top-with-filters-offset {
