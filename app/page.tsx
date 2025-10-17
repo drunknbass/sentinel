@@ -212,10 +212,30 @@ export default function Page() {
   }
 
   /**
-   * Returns address privacy message
+   * Returns address accuracy tier based on available information
    */
   const getLocationAccuracy = (incident: Incident): string => {
-    return "APPROXIMATE (PRIVACY REDACTED)"
+    if (!incident.address_raw) return "APPROXIMATE - AREA ONLY"
+
+    const address = incident.address_raw.trim()
+
+    // Check if it has numbers with redaction stars - most accurate
+    if (/^\d+/.test(address) && /\*\*\*/.test(address)) {
+      return "APPROXIMATE - BLOCK LEVEL (REDACTED)"
+    }
+
+    // Check if it has numbers without stars - moderately accurate
+    if (/^\d+/.test(address)) {
+      return "APPROXIMATE - BLOCK LEVEL"
+    }
+
+    // Check for intersection - less accurate
+    if (/\b(AND|&|\/)\b/i.test(address)) {
+      return "APPROXIMATE - INTERSECTION"
+    }
+
+    // Just area name - least accurate
+    return "APPROXIMATE - AREA ONLY"
   }
 
   /**
@@ -589,11 +609,17 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Address privacy note */}
+            {/* Address accuracy tiers */}
             <div className="pt-2 border-t border-amber-500">
-              <div className="text-amber-500/70 mb-2 text-[10px] tracking-wider">ADDRESS INFO:</div>
-              <div className="text-[9px] text-amber-500/60 leading-relaxed">
-                All addresses are approximate and redacted for privacy by RSO.
+              <div className="text-amber-500/70 mb-2 text-[10px] tracking-wider">ADDRESS ACCURACY:</div>
+              <div className="space-y-1">
+                <div className="text-[9px] text-amber-500/90">• Block Level (Redacted) - Most accurate</div>
+                <div className="text-[9px] text-amber-500/80">• Block Level - Moderately accurate</div>
+                <div className="text-[9px] text-amber-500/70">• Intersection - Less accurate</div>
+                <div className="text-[9px] text-amber-500/60">• Area Only - Least accurate</div>
+              </div>
+              <div className="text-[8px] text-amber-500/50 mt-2 leading-relaxed">
+                All addresses privacy-redacted by RSO
               </div>
             </div>
           </div>
