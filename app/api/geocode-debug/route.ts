@@ -97,19 +97,19 @@ export async function GET(request: Request) {
   console.log('[DEBUG] Running full geocoding for:', address, area);
 
   // Force Apple Maps
-  const appleResult = await geocodeOne(address, area || null, true, station, 'apple');
+  const appleResult = await geocodeOne(address, area, true, station ?? undefined, 'apple');
   results.results.apple = appleResult;
 
   // Force Census
-  const censusResult = await geocodeOne(address, area || null, true, station, 'census');
+  const censusResult = await geocodeOne(address, area, true, station ?? undefined, 'census');
   results.results.census = censusResult;
 
   // Force Nominatim
-  const nominatimResult = await geocodeOne(address, area || null, true, station, 'nominatim');
+  const nominatimResult = await geocodeOne(address, area, true, station ?? undefined, 'nominatim');
   results.results.nominatim = nominatimResult;
 
   // Normal fallback chain
-  const normalResult = await geocodeOne(address, area || null, true, station);
+  const normalResult = await geocodeOne(address, area, true, station ?? undefined);
   results.results.normal = normalResult;
 
   return NextResponse.json(results, {

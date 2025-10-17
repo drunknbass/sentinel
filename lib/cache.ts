@@ -22,6 +22,10 @@ export class TTLCache<T = unknown> {
     this.store.set(key, { value, expires: Date.now() + this.ttlMs });
   }
 
+  delete(key: string) {
+    this.store.delete(key);
+  }
+
   has(key: string) {
     return this.get(key) !== undefined;
   }
