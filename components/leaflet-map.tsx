@@ -64,12 +64,33 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
   // Reusable function to request user location
   const requestUserLocation = () => {
-    if (typeof window === "undefined" || !navigator.geolocation || !mapInstanceRef.current) return
+    if (typeof window === "undefined") {
+      console.log('[MAP] Window is undefined, cannot request location')
+      return
+    }
+
+    if (!navigator.geolocation) {
+      console.error('[MAP] Geolocation is not supported by this browser')
+      onLocationPermission?.(false)
+      return
+    }
+
+    if (!mapInstanceRef.current) {
+      console.log('[MAP] Map not ready yet, will retry when map loads')
+      return
+    }
 
     const L = (window as any).L
-    if (!L) return
+    if (!L) {
+      console.log('[MAP] Leaflet not loaded yet')
+      return
+    }
 
-    console.log('[MAP] Requesting user location')
+    console.log('[MAP] Requesting user location...', {
+      protocol: window.location.protocol,
+      isSecure: window.location.protocol === 'https:',
+      userAgent: navigator.userAgent
+    })
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -201,10 +222,31 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         }
       },
       (error) => {
-        console.log('[MAP] Location permission denied:', error.message)
+        console.error('[MAP] Location error:', {
+          code: error.code,
+          message: error.message,
+          PERMISSION_DENIED: error.code === 1,
+          POSITION_UNAVAILABLE: error.code === 2,
+          TIMEOUT: error.code === 3,
+        })
+
+        // Provide specific error messages
+        if (error.code === 1) {
+          console.log('[MAP] Location permission denied by user or blocked by browser')
+          console.log('[MAP] On iOS: Check Settings > Safari > Location Services')
+        } else if (error.code === 2) {
+          console.log('[MAP] Position unavailable - GPS may be disabled')
+        } else if (error.code === 3) {
+          console.log('[MAP] Location request timed out')
+        }
+
         onLocationPermission?.(false)
       },
-      { timeout: 10000, maximumAge: 0, enableHighAccuracy: true },
+      {
+        timeout: 10000,
+        maximumAge: 0,
+        enableHighAccuracy: true
+      },
     )
   }
 
