@@ -52,12 +52,33 @@
         } else {
           log('Permissions API not available');
         }
+        // Shared watch helpers
+        var wid = null;
         function renderLocation(lat, lon){
           const msg = 'LAT,LON = '+lat+','+lon;
           hintEl.textContent = 'Location acquired.';
           log(msg);
           // Also write to localStorage for convenience (no redirect)
           try { localStorage.setItem('gps:userLocation', lat+','+lon); localStorage.setItem('gps:ts', String(Date.now())); } catch{}
+        }
+        function startWatch(){
+          if (!('geolocation' in navigator)) { log('no geolocation in navigator'); return; }
+          if (wid != null) { log('watch already running id='+wid); return; }
+          try {
+            wid = navigator.geolocation.watchPosition(function(pos){
+              renderLocation(pos.coords.latitude, pos.coords.longitude);
+            }, function(err){
+              log('watch error code='+err.code+' msg='+err.message);
+            }, { enableHighAccuracy: true, maximumAge: 0 });
+            log('starting watchPosition id='+wid);
+          } catch(e){ log('watch exception '+(e&&e.message||e)); }
+        }
+        function stopWatch(){
+          if (wid != null) {
+            try { navigator.geolocation.clearWatch(wid); } catch{}
+            log('stopped watchPosition id='+wid);
+            wid = null;
+          }
         }
         function ask(){
           log('requesting geolocation...');
@@ -66,6 +87,8 @@
             const lat = pos.coords.latitude, lon = pos.coords.longitude;
             log('SUCCESS '+lat+','+lon);
             renderLocation(lat, lon);
+            // Auto-start watch after first success
+            startWatch();
           }, function(err){
             log('ERROR code='+err.code+' msg='+err.message);
             if (err.code === 1) {
@@ -87,36 +110,19 @@
         // Watch/Unwatch controls
         (function(){
           if (!('geolocation' in navigator)) return;
-          let wid = null;
           const wbtn = document.getElementById('watch');
           const sbtn = document.getElementById('stop');
-          wbtn.addEventListener('click', function(){
-            if (wid != null) return;
-            log('starting watchPosition');
-            wid = navigator.geolocation.watchPosition(function(pos){
-              renderLocation(pos.coords.latitude, pos.coords.longitude);
-            }, function(err){
-              log('watch error code='+err.code+' msg='+err.message);
-            }, { enableHighAccuracy: true, maximumAge: 0 });
-          });
-          sbtn.addEventListener('click', function(){
-            if (wid != null) {
-              navigator.geolocation.clearWatch(wid);
-              log('stopped watchPosition');
-              wid = null;
-            }
-          });
+          wbtn.addEventListener('click', function(){ startWatch(); });
+          sbtn.addEventListener('click', function(){ stopWatch(); });
         })();
-        // If permission already granted, fetch immediately on load (no redirect)
+        // If permission already granted, auto-start watch immediately on load
         (function(){
           if (!('geolocation' in navigator)) return;
           if ('permissions' in navigator && navigator.permissions?.query) {
             navigator.permissions.query({ name: 'geolocation' }).then(p=>{
               if (p.state === 'granted') {
-                log('permission already granted; fetching position now');
-                navigator.geolocation.getCurrentPosition(function(pos){
-                  renderLocation(pos.coords.latitude, pos.coords.longitude);
-                }, function(err){ log('prefetch error code='+err.code+' msg='+err.message); });
+                log('permission already granted; starting watch now');
+                startWatch();
               }
             }).catch(()=>{});
           }
