@@ -8,6 +8,9 @@ export type GeocodeResult = {
   approximate?: boolean; // True if geocoded from area/street only
   strategy?: 'apple_maps' | 'census' | 'nominatim'; // Which service provided the result
   centroid_used?: string; // Which centroid was used for userLocation (e.g., 'jurupa', 'TEMECULA', 'county_center')
+  error?: string; // Error message if geocoding failed
+  query?: string; // The query sent to the geocoding service
+  user_location?: string; // The userLocation coordinates used
 };
 
 const geocodeCache = new TTLCache<GeocodeResult>(
@@ -223,7 +226,12 @@ async function geocodeWithAppleMaps(address: string, area: string | null, statio
   const token = await generateAppleMapsToken();
   if (!token) {
     console.log('[GEOCODE] Apple Maps token generation failed, falling back');
-    return { lat: null, lon: null };
+    return {
+      lat: null,
+      lon: null,
+      error: 'No Apple Maps token available',
+      query: `${address}${area ? `, ${area}` : ''}`
+    };
   }
 
   // Construct the query - just address and area, no extra county/state
@@ -256,10 +264,11 @@ async function geocodeWithAppleMaps(address: string, area: string | null, statio
     }
   }
 
+  const userLocationStr = `${userLocation.lat},${userLocation.lon}`;
   const url = new URL('https://maps-api.apple.com/v1/geocode');
   url.searchParams.append('q', q);
   url.searchParams.append('limitToCountries', 'US');
-  url.searchParams.append('userLocation', `${userLocation.lat},${userLocation.lon}`);
+  url.searchParams.append('userLocation', userLocationStr);
 
   try {
     const res = await fetch(url.toString(), {
@@ -270,8 +279,15 @@ async function geocodeWithAppleMaps(address: string, area: string | null, statio
     });
 
     if (!res.ok) {
-      console.log('[GEOCODE] Apple Maps error:', res.status, res.statusText);
-      return { lat: null, lon: null };
+      const errorText = await res.text();
+      console.log('[GEOCODE] Apple Maps error:', res.status, res.statusText, errorText);
+      return {
+        lat: null,
+        lon: null,
+        error: `Apple Maps API error: ${res.status} ${res.statusText}`,
+        query: q,
+        user_location: userLocationStr
+      };
     }
 
     const data: any = await res.json();
@@ -282,14 +298,35 @@ async function geocodeWithAppleMaps(address: string, area: string | null, statio
 
       if (lat && lon) {
         console.log('[GEOCODE] Apple Maps success:', address, '→', { lat, lon }, `using ${centroidUsed}`);
-        return { lat, lon, approximate: false, strategy: 'apple_maps', centroid_used: centroidUsed };
+        return {
+          lat,
+          lon,
+          approximate: false,
+          strategy: 'apple_maps',
+          centroid_used: centroidUsed,
+          query: q,
+          user_location: userLocationStr
+        };
       }
     }
 
-    return { lat: null, lon: null };
-  } catch (err) {
-    console.log('[GEOCODE] Apple Maps fetch error:', err);
-    return { lat: null, lon: null };
+    console.log('[GEOCODE] Apple Maps returned no results for:', q, 'with userLocation:', userLocationStr);
+    return {
+      lat: null,
+      lon: null,
+      error: 'No results from Apple Maps',
+      query: q,
+      user_location: userLocationStr
+    };
+  } catch (err: any) {
+    console.log('[GEOCODE] Apple Maps fetch error:', err.message);
+    return {
+      lat: null,
+      lon: null,
+      error: `Apple Maps fetch error: ${err.message}`,
+      query: q,
+      user_location: userLocationStr
+    };
   }
 }
 

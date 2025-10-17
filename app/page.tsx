@@ -352,6 +352,7 @@ export default function Page() {
           }}
           selectedIncident={selectedIncident}
           onLocationPermission={handleLocationPermission}
+          isRefreshing={isRefreshing}
         />
       </div>
 

@@ -22,6 +22,12 @@ export type Item = {
   location_approximate?: boolean; // True if geocoded from area/street only (not exact address)
   geocode_strategy?: 'apple_maps' | 'census' | 'nominatim'; // Which service provided the geocoding
   geocode_centroid?: string; // Which centroid was used (e.g., 'area:TEMECULA', 'region:jurupa', 'county_center')
+
+  // Debug properties
+  geocode_attempted?: boolean; // True if geocoding was attempted
+  geocode_error?: string; // Error message if geocoding failed
+  geocode_query?: string; // The actual query sent to geocoding service
+  geocode_user_location?: string; // The userLocation used for context
 };
 
 const SOURCES = [
@@ -181,9 +187,13 @@ export async function scrapeIncidents({
         const result = await geocodeOne(it.address_raw!, it.area, nocache, station);
         items[idx].lat = result.lat;
         items[idx].lon = result.lon;
+        (items[idx] as any).geocode_attempted = true;
         if (result.approximate) (items[idx] as any).location_approximate = true;
         if (result.strategy) (items[idx] as any).geocode_strategy = result.strategy;
         if (result.centroid_used) (items[idx] as any).geocode_centroid = result.centroid_used;
+        if (result.error) (items[idx] as any).geocode_error = result.error;
+        if (result.query) (items[idx] as any).geocode_query = result.query;
+        if (result.user_location) (items[idx] as any).geocode_user_location = result.user_location;
         completed++;
         if (completed % 5 === 0 || completed === candidates.length) {
           onProgress?.('Geocoding', completed, candidates.length);
@@ -297,9 +307,13 @@ export async function scrapeIncidents({
         const result = await geocodeOne(it.address_raw!, it.area, nocache, station);
         items[idx].lat = result.lat;
         items[idx].lon = result.lon;
+        (items[idx] as any).geocode_attempted = true;
         if (result.approximate) (items[idx] as any).location_approximate = true;
         if (result.strategy) (items[idx] as any).geocode_strategy = result.strategy;
         if (result.centroid_used) (items[idx] as any).geocode_centroid = result.centroid_used;
+        if (result.error) (items[idx] as any).geocode_error = result.error;
+        if (result.query) (items[idx] as any).geocode_query = result.query;
+        if (result.user_location) (items[idx] as any).geocode_user_location = result.user_location;
         completed++;
         if (completed % 5 === 0 || completed === candidates.length) {
           onProgress?.('Geocoding', completed, candidates.length);

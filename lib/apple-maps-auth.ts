@@ -16,11 +16,20 @@ export async function generateAppleMapsToken(): Promise<string | null> {
 
   const teamId = process.env.APPLE_MAPKIT_TEAM_ID;
   const keyId = process.env.APPLE_MAPKIT_KEY_ID;
-  const privateKey = process.env.APPLE_MAPKIT_PRIVATE_KEY;
+  let privateKey = process.env.APPLE_MAPKIT_PRIVATE_KEY;
 
   if (!teamId || !keyId || !privateKey) {
     console.log('[APPLE_MAPS] Missing Apple MapKit credentials');
     return null;
+  }
+
+  // Fix private key formatting - Vercel often strips newlines
+  // Support both escaped \n and actual newlines
+  privateKey = privateKey.replace(/\\n/g, '\n');
+
+  // Ensure proper PEM format
+  if (!privateKey.includes('-----BEGIN')) {
+    privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
   }
 
   try {
@@ -39,6 +48,7 @@ export async function generateAppleMapsToken(): Promise<string | null> {
     );
 
     console.log('[APPLE_MAPS] Generated auth token, exchanging for access token...');
+    console.log('[APPLE_MAPS] Team ID:', teamId, 'Key ID:', keyId);
 
     // Step 2: Exchange auth token for access token
     const tokenUrl = 'https://maps-api.apple.com/v1/token';
@@ -52,6 +62,7 @@ export async function generateAppleMapsToken(): Promise<string | null> {
     if (!response.ok) {
       const error = await response.text();
       console.error('[APPLE_MAPS] Token exchange failed:', response.status, error);
+      console.error('[APPLE_MAPS] Auth token payload:', { teamId, keyId });
       return null;
     }
 
@@ -72,8 +83,13 @@ export async function generateAppleMapsToken(): Promise<string | null> {
 
     console.log('[APPLE_MAPS] Got access token, expires in', expiresInSeconds, 'seconds');
     return accessToken;
-  } catch (err) {
-    console.error('[APPLE_MAPS] Failed to get access token:', err);
+  } catch (err: any) {
+    console.error('[APPLE_MAPS] Failed to get access token:', err?.message || err);
+    if (err?.message?.includes('secretOrPrivateKey')) {
+      console.error('[APPLE_MAPS] Private key format issue. Ensure the key is properly formatted.');
+      console.error('[APPLE_MAPS] Key should start with: -----BEGIN PRIVATE KEY-----');
+      console.error('[APPLE_MAPS] Key length:', privateKey?.length || 0);
+    }
     return null;
   }
 }

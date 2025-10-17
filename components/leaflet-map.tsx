@@ -10,6 +10,7 @@ type LeafletMapProps = {
   onMarkerClick: (item: Incident) => void
   selectedIncident: Incident | null
   onLocationPermission?: (granted: boolean) => void
+  isRefreshing?: boolean
 }
 
 const getPriorityColor = (priority: number) => {
@@ -19,7 +20,7 @@ const getPriorityColor = (priority: number) => {
   return "#6b7280"
 }
 
-export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission }: LeafletMapProps) {
+export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing }: LeafletMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -277,8 +278,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       markersRef.current.push(marker)
     })
 
-    // Always zoom to fit all pins after loading (unless a specific incident is selected)
-    if (validItems.length > 0 && !selectedIncident) {
+    // Only zoom to fit all pins on initial load or when filters change (not during polling/refresh)
+    if (validItems.length > 0 && !selectedIncident && !isRefreshing) {
       // Add a small delay to ensure markers are rendered first
       setTimeout(() => {
         if (mapInstanceRef.current) {
@@ -292,7 +293,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         }
       }, 100)
     }
-  }, [items, onMarkerClick, selectedIncident])
+  }, [items, onMarkerClick, selectedIncident, isRefreshing])
 
   useEffect(() => {
     if (!mapInstanceRef.current || !selectedIncident || typeof window === "undefined") return
