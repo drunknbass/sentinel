@@ -113,6 +113,9 @@ export default function Page() {
   const [incidentsScrollPos, setIncidentsScrollPos] = useState(0)
   const incidentsScrollRef = useRef<HTMLDivElement | null>(null)
 
+  // Store reference to location request function from map component
+  const locationRequestFnRef = useRef<(() => void) | null>(null)
+
   /**
    * Helper functions for mobile filter tag management
    */
@@ -373,7 +376,17 @@ export default function Page() {
   }
 
   /**
+   * Callback to receive location request function from map component
+   * This allows us to call it directly from button clicks (maintains iOS user gesture context)
+   */
+  const handleLocationRequestReady = (requestFn: () => void) => {
+    console.log('[PAGE] Received location request function from map')
+    locationRequestFnRef.current = requestFn
+  }
+
+  /**
    * Request location permission when GPS button is clicked
+   * Calls the location function directly to maintain iOS user gesture context
    */
   const handleRequestLocation = () => {
     if (typeof window === 'undefined' || !navigator.geolocation) return
@@ -382,8 +395,15 @@ export default function Page() {
     setLocationPermission('pending')
     setShowLocationPrompt(false)
 
-    // Trigger the map to request location by incrementing the trigger
-    setLocationRequestTrigger(prev => prev + 1)
+    // Call the location request function directly (maintains user gesture context for iOS)
+    if (locationRequestFnRef.current) {
+      console.log('[PAGE] Calling location request function directly')
+      locationRequestFnRef.current()
+    } else {
+      console.warn('[PAGE] Location request function not ready yet, falling back to trigger method')
+      // Fallback to trigger method if function isn't ready
+      setLocationRequestTrigger(prev => prev + 1)
+    }
   }
 
   /**
@@ -979,6 +999,7 @@ export default function Page() {
           }}
           selectedIncident={selectedIncident}
           onLocationPermission={handleLocationPermission}
+          onLocationRequestReady={handleLocationRequestReady}
           isRefreshing={isRefreshing}
           sidePanelOpen={!showBottomSheet && (showListView || !!selectedIncident)}
           panelWidth={showListView ? 500 : 320}
