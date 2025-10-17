@@ -71,7 +71,6 @@ export default function Page() {
   const [showFilterSheet, setShowFilterSheet] = useState(false)  // Mobile filter sheet state
   const [hasInitialLoad, setHasInitialLoad] = useState(false)  // Track if we've loaded data at least once
   const [mobileSheetType, setMobileSheetType] = useState<'filters' | 'incidents' | 'critical' | null>(null)  // Track which mobile sheet is open
-  const [sheetDragOffset, setSheetDragOffset] = useState(0)  // Track drag position for bottom sheet
 
   // Data state
   const [items, setItems] = useState<Incident[]>([])
@@ -1636,146 +1635,111 @@ export default function Page() {
       )}
 
       {/* Incident detail sheet for mobile - Amber MDT style */}
-      {selectedIncident && showBottomSheet && (
-        <div className="md:hidden absolute bottom-0 left-0 right-0 z-40 animate-slide-up">
-          <div className="relative w-full max-h-[80vh] bg-black border-t-4 border-amber-500">
-            <div className="flex justify-center py-3 border-b-2 border-amber-500">
-              <div className="w-12 h-1 bg-amber-500" />
-            </div>
-
-                  <div className="allow-text-select p-6 space-y-4 overflow-y-auto max-h-[calc(80vh-3rem)] font-mono pb-safe safe-bottom" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'auto' }}>
-              <div className="flex items-center justify-between border-b-2 border-amber-500 pb-3 mb-4">
-                <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ INCIDENT DETAILS ╗</div>
-                <button
-                  onClick={() => window.history.back()}
-                  className="w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
-                >
-                  X
-                </button>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-2 mb-3 flex-wrap">
-                  {/* Priority badge - colored by priority */}
-                  <div
-                    className="inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase"
-                    style={{
-                      borderColor: getPriorityColor(selectedIncident.priority),
-                      color: getPriorityColor(selectedIncident.priority),
-                      boxShadow: `0 0 4px ${getPriorityColor(selectedIncident.priority)}40`
-                    }}
-                  >
-                    [P-{selectedIncident.priority} {getPriorityLabel(selectedIncident.priority)}]
-                  </div>
-                  {/* Category badge */}
-                  {selectedIncident.call_category && (
+      <div className="md:hidden">
+        <MobileSheet
+          open={!!(selectedIncident && showBottomSheet)}
+          onClose={() => window.history.back()}
+          title="INCIDENT DETAILS"
+          snapPoints={[600, window.innerHeight * 0.8]}
+        >
+          <div className="allow-text-select space-y-4">
+            <div>
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
+                {/* Priority badge - colored by priority */}
+                {selectedIncident && (
+                  <>
                     <div
                       className="inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase"
                       style={{
-                        borderColor: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
-                        color: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
+                        borderColor: getPriorityColor(selectedIncident.priority),
+                        color: getPriorityColor(selectedIncident.priority),
+                        boxShadow: `0 0 4px ${getPriorityColor(selectedIncident.priority)}40`
                       }}
                     >
-                      [{selectedIncident.call_category}]
+                      [P-{selectedIncident.priority} {getPriorityLabel(selectedIncident.priority)}]
                     </div>
-                  )}
-                </div>
-                <h2 className="text-xl font-bold mb-2 text-amber-500 tracking-wide">
-                  &gt; {selectedIncident.call_type}
-                </h2>
-                <p className="text-amber-400 text-sm">LOCATION: {selectedIncident.address_raw || "UNKNOWN"}</p>
+                    {/* Category badge */}
+                    {selectedIncident.call_category && (
+                      <div
+                        className="inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase"
+                        style={{
+                          borderColor: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
+                          color: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
+                        }}
+                      >
+                        [{selectedIncident.call_category}]
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
+              {selectedIncident && (
+                <>
+                  <h2 className="text-xl font-bold mb-2 text-amber-500 tracking-wide">
+                    &gt; {selectedIncident.call_type}
+                  </h2>
+                  <p className="text-amber-400 text-sm">LOCATION: {selectedIncident.address_raw || "UNKNOWN"}</p>
+                </>
+              )}
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-xs text-amber-500/70 mb-1 tracking-wider">AREA:</div>
-                  <div className="font-bold text-amber-500">{selectedIncident.area || "N/A"}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-amber-500/70 mb-1 tracking-wider">TIME:</div>
-                  <div className="font-bold text-amber-500">
-                    {new Date(selectedIncident.received_at).toLocaleTimeString()}
+            {selectedIncident && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-xs text-amber-500/70 mb-1 tracking-wider">AREA:</div>
+                    <div className="font-bold text-amber-500">{selectedIncident.area || "N/A"}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-amber-500/70 mb-1 tracking-wider">TIME:</div>
+                    <div className="font-bold text-amber-500">
+                      {new Date(selectedIncident.received_at).toLocaleTimeString()}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div>
-                <div className="text-xs text-amber-500/70 mb-1 tracking-wider">ADDRESS INFO:</div>
-                <div className="font-bold text-amber-500">{getLocationAccuracy(selectedIncident)}</div>
-              </div>
-
-              {selectedIncident.disposition && (
-                <div className="pt-2 border-t-2 border-amber-500">
-                  <div className="text-xs text-amber-500/70 mb-1 tracking-wider">STATUS:</div>
-                  <div className="font-bold text-amber-500">{selectedIncident.disposition}</div>
+                <div>
+                  <div className="text-xs text-amber-500/70 mb-1 tracking-wider">ADDRESS INFO:</div>
+                  <div className="font-bold text-amber-500">{getLocationAccuracy(selectedIncident)}</div>
                 </div>
-              )}
 
-              <div className="pt-2 border-t-2 border-amber-500">
-                <div className="text-xs text-amber-500/70 mb-1 tracking-wider">INCIDENT ID:</div>
-                <div className="text-sm text-amber-400">{selectedIncident.incident_id}</div>
-              </div>
-            </div>
+                {selectedIncident.disposition && (
+                  <div className="pt-2 border-t-2 border-amber-500">
+                    <div className="text-xs text-amber-500/70 mb-1 tracking-wider">STATUS:</div>
+                    <div className="font-bold text-amber-500">{selectedIncident.disposition}</div>
+                  </div>
+                )}
+
+                <div className="pt-2 border-t-2 border-amber-500">
+                  <div className="text-xs text-amber-500/70 mb-1 tracking-wider">INCIDENT ID:</div>
+                  <div className="text-sm text-amber-400">{selectedIncident.incident_id}</div>
+                </div>
+              </>
+            )}
           </div>
-        </div>
-      )}
+        </MobileSheet>
+      </div>
 
-      {/* Mobile unified bottom sheet - Terminal style with drag support */}
-      {mobileSheetType && (
-        <div className="md:hidden absolute left-0 right-0 bottom-0 safe-top-with-filters-offset z-50 flex flex-col no-overscroll">
+      {/* Mobile unified bottom sheet - react-modal-sheet */}
+      <div className="md:hidden">
+        <MobileSheet
+          open={!!mobileSheetType}
+          onClose={() => setMobileSheetType(null)}
+          title={
+            mobileSheetType === 'filters' ? 'FILTERS' :
+            mobileSheetType === 'incidents' ? 'ALL INCIDENTS' :
+            mobileSheetType === 'critical' ? 'CRITICAL ALERTS' : ''
+          }
+          snapPoints={[window.innerHeight * 0.9]}
+        >
           <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm no-overscroll"
-            onClick={() => setMobileSheetType(null)}
-            onTouchMove={(e) => e.preventDefault()}
-          />
-
-          <div
-            className="relative w-full h-full bg-black border-t-4 border-amber-500 overflow-hidden flex flex-col"
-            style={{
-              transform: `translateY(${sheetDragOffset}px)`,
-              transition: sheetDragOffset === 0 ? 'transform 0.3s ease-out' : 'none'
-            }}
-            onTouchStart={(e) => {
-              const touch = e.touches[0]
-              const startY = touch.clientY
-              const startOffset = sheetDragOffset
-
-              const handleTouchMove = (moveEvent: TouchEvent) => {
-                const currentTouch = moveEvent.touches[0]
-                const deltaY = currentTouch.clientY - startY
-                // Only allow dragging down
-                if (deltaY > 0) {
-                  setSheetDragOffset(deltaY)
-                }
+            ref={(el) => {
+              if (mobileSheetType === 'incidents') {
+                incidentsScrollRef.current = el
               }
-
-              const handleTouchEnd = (endEvent: TouchEvent) => {
-                // If dragged more than 100px, close the sheet
-                if (sheetDragOffset > 100) {
-                  setMobileSheetType(null)
-                }
-                setSheetDragOffset(0)
-                document.removeEventListener('touchmove', handleTouchMove)
-                document.removeEventListener('touchend', handleTouchEnd)
-              }
-
-              document.addEventListener('touchmove', handleTouchMove)
-              document.addEventListener('touchend', handleTouchEnd)
             }}
+            className="h-full"
           >
-            {/* Drag handle */}
-            <div className="flex justify-center py-3 border-b-2 border-amber-500 cursor-grab active:cursor-grabbing">
-              <div className="w-12 h-1 bg-amber-500" />
-            </div>
-
-            <div
-              ref={(el) => {
-                if (mobileSheetType === 'incidents') {
-                  incidentsScrollRef.current = el
-                }
-              }}
-              className="overflow-y-auto flex-1"
-            >
               {mobileSheetType === 'filters' && (
                 <div className="p-6 space-y-6 font-mono">
                   {/* Search & Tags */}
@@ -2104,10 +2068,9 @@ export default function Page() {
                   )}
                 </div>
               )}
-            </div>
           </div>
-        </div>
-      )}
+        </MobileSheet>
+      </div>
 
       {/* List view for browsing incidents - Desktop only */}
       {showListView && (
