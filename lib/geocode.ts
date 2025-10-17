@@ -77,8 +77,14 @@ async function geocodeWithAppleMaps(address: string, area: string | null): Promi
  * Better at handling partial addresses than Census Bureau
  */
 async function geocodeWithNominatim(address: string, area: string | null): Promise<GeocodeResult> {
-  const q = `${address}${area ? `, ${area}` : ''}, Riverside County, CA`;
+  // Try to parse block addresses
+  const parsedAddress = parseBlockAddress(address);
+  const useAddress = parsedAddress || address;
+
+  const q = `${useAddress}${area ? `, ${area}` : ''}, Riverside County, CA`;
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1`;
+
+  console.log('[GEOCODE] Nominatim trying:', q);
 
   // Fallback only: keep a small delay to be nice to OSM
   await sleep(Number(process.env.NOMINATIM_DELAY_MS || 800));
@@ -104,7 +110,7 @@ async function geocodeWithNominatim(address: string, area: string | null): Promi
 
       if (lat && lon) {
         console.log('[GEOCODE] Nominatim success:', address, '→', { lat, lon });
-        return { lat, lon, approximate: false };
+        return { lat, lon, approximate: parsedAddress !== null };
       }
     }
 
@@ -121,9 +127,12 @@ async function geocodeWithNominatim(address: string, area: string | null): Promi
  */
 function parseBlockAddress(address: string): string | null {
   // Match patterns like "2600 *** BLOCK AMANDA AV" or "100 BLOCK MAIN ST"
-  const blockMatch = address.match(/\d+\s+(?:\*+\s+)?BLOCK\s+(.+)/i);
+  const blockMatch = address.match(/(\d+)\s+(?:\*+\s+)?BLOCK\s+(.+)/i);
   if (blockMatch) {
-    return blockMatch[1].trim(); // Return just the street name
+    const blockNumber = blockMatch[1];
+    const streetName = blockMatch[2].trim();
+    // Return approximate address with block number for better geocoding
+    return `${blockNumber} ${streetName}`;
   }
   return null;
 }
