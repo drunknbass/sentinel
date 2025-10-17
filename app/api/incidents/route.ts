@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
   const station = url.searchParams.get('station');
   const maxGeocode = Number(url.searchParams.get('maxGeocode') || process.env.MAX_GEOCODE_PER_REQUEST || 100);
   const geocodeConcurrency = Number(url.searchParams.get('geocodeConcurrency') || process.env.GEOCODE_CONCURRENCY || 3);
+  const nocache = ['1', 'true', 'yes'].includes((url.searchParams.get('nocache') || '').toLowerCase());
 
   try {
     console.log('[API] Request params:', {
@@ -47,13 +48,14 @@ export async function GET(req: NextRequest) {
       withGeocode,
       station
     });
-    console.log('[API] Fetching incidents, geocode:', withGeocode, 'since:', since, 'station:', station);
+    console.log('[API] Fetching incidents, geocode:', withGeocode, 'since:', since, 'station:', station, 'nocache:', nocache);
     const all = await scrapeIncidents({
       geocode: withGeocode,
       since: since || undefined,
       station: station || undefined,
       maxGeocode,
-      geocodeConcurrency
+      geocodeConcurrency,
+      nocache
     });
     console.log('[API] Got', all.length, 'incidents');
     console.log('[API] Sample incident:', all[0]);

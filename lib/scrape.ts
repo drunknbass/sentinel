@@ -107,7 +107,8 @@ export async function scrapeIncidents({
   onProgress,
   station,
   maxGeocode = Number(process.env.MAX_GEOCODE_PER_REQUEST || 100),
-  geocodeConcurrency = Number(process.env.GEOCODE_CONCURRENCY || 3)
+  geocodeConcurrency = Number(process.env.GEOCODE_CONCURRENCY || 3),
+  nocache = false
 }: {
   geocode?: boolean;
   since?: string;
@@ -115,16 +116,21 @@ export async function scrapeIncidents({
   station?: string;
   maxGeocode?: number;
   geocodeConcurrency?: number;
+  nocache?: boolean;
 } = {}): Promise<Item[]> {
   // Include 'since' and 'station' in cache key for time-aware caching
   const cacheKey = `incidents:geocode=${geocode}:since=${since || 'all'}:station=${station || 'all'}`;
-  const cached = sharedCache.get(cacheKey);
-  if (cached) {
-    console.log('[SCRAPER] Cache hit:', cacheKey);
-    return cached as Item[];
+
+  // Skip cache if nocache is true
+  if (!nocache) {
+    const cached = sharedCache.get(cacheKey);
+    if (cached) {
+      console.log('[SCRAPER] Cache hit:', cacheKey);
+      return cached as Item[];
+    }
   }
 
-  console.log('[SCRAPER] Cache miss, fetching fresh data');
+  console.log('[SCRAPER] Cache miss, fetching fresh data', nocache ? '(nocache enabled)' : '');
   console.log('[SCRAPER] Starting fetch. Geocode:', geocode, 'Since:', since);
   console.log('[SCRAPER] Cache key:', cacheKey);
 
@@ -168,7 +174,7 @@ export async function scrapeIncidents({
 
       let completed = 0;
       await mapLimit(candidates, Math.max(1, geocodeConcurrency), async ({ idx, it }) => {
-        const result = await geocodeOne(it.address_raw!, it.area);
+        const result = await geocodeOne(it.address_raw!, it.area, nocache);
         items[idx].lat = result.lat;
         items[idx].lon = result.lon;
         if (result.approximate) (items[idx] as any).location_approximate = true;
@@ -187,8 +193,15 @@ export async function scrapeIncidents({
     console.log('[SCRAPER] Final items count:', items.length);
     console.log('[SCRAPER] Items with addresses:', addressCount, '/', items.length);
     console.log('[SCRAPER] Successfully geocoded:', geocodedCount, '/', addressCount, `(${exactCount} exact, ${approximateCount} approximate)`);
-    console.log('[SCRAPER] Caching results...');
-    sharedCache.set(cacheKey, items);
+
+    // Only cache if nocache is false
+    if (!nocache) {
+      console.log('[SCRAPER] Caching results...');
+      sharedCache.set(cacheKey, items);
+    } else {
+      console.log('[SCRAPER] Skipping cache save (nocache enabled)');
+    }
+
     return items;
   } catch (apiError) {
     console.error('[SCRAPER] API fetch failed:', apiError);
@@ -254,7 +267,7 @@ export async function scrapeIncidents({
 
       let completed = 0;
       await mapLimit(candidates, Math.max(1, geocodeConcurrency), async ({ idx, it }) => {
-        const result = await geocodeOne(it.address_raw!, it.area);
+        const result = await geocodeOne(it.address_raw!, it.area, nocache);
         items[idx].lat = result.lat;
         items[idx].lon = result.lon;
         if (result.approximate) (items[idx] as any).location_approximate = true;
@@ -266,7 +279,11 @@ export async function scrapeIncidents({
       });
     }
 
-    sharedCache.set(cacheKey, items);
+    // Only cache if nocache is false
+    if (!nocache) {
+      sharedCache.set(cacheKey, items);
+    }
+
     return items;
   }
 }

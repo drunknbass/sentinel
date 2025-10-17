@@ -210,24 +210,27 @@ async function geocodeWithCensus(address: string, area: string | null, allowAppr
  * 4. US Census Bureau (fallback - good for exact addresses)
  * 5. OpenStreetMap Nominatim (final fallback)
  */
-export async function geocodeOne(address: string | null, area: string | null): Promise<GeocodeResult> {
+export async function geocodeOne(address: string | null, area: string | null, nocache: boolean = false): Promise<GeocodeResult> {
   if (!address) return { lat: null, lon: null };
 
   const key = `geo:${address}|${area || ''}`;
 
-  // Tier 1: Check local memory cache (instant)
-  const localHit = geocodeCache.get(key);
-  if (localHit) {
-    console.log('[GEOCODE] Local cache hit:', key);
-    return localHit;
-  }
+  // Skip all caches if nocache is true
+  if (!nocache) {
+    // Tier 1: Check local memory cache (instant)
+    const localHit = geocodeCache.get(key);
+    if (localHit) {
+      console.log('[GEOCODE] Local cache hit:', key);
+      return localHit;
+    }
 
-  // Tier 2: Check Vercel KV edge cache (fast, shared across instances)
-  const kvHit = await getFromVercelKV(address, area);
-  if (kvHit) {
-    // Populate local cache for next time
-    geocodeCache.set(key, kvHit);
-    return kvHit;
+    // Tier 2: Check Vercel KV edge cache (fast, shared across instances)
+    const kvHit = await getFromVercelKV(address, area);
+    if (kvHit) {
+      // Populate local cache for next time
+      geocodeCache.set(key, kvHit);
+      return kvHit;
+    }
   }
 
   // Tier 3, 4 & 5: Geocode from APIs (slow)
@@ -246,8 +249,8 @@ export async function geocodeOne(address: string | null, area: string | null): P
     value = await geocodeWithNominatim(address, area);
   }
 
-  // Only cache successful geocoding results (don't cache null results)
-  if (value.lat !== null && value.lon !== null) {
+  // Only cache successful geocoding results (don't cache null results) and when nocache is false
+  if (value.lat !== null && value.lon !== null && !nocache) {
     geocodeCache.set(key, value);
     saveToVercelKV(address, area, value).catch(() => {}); // Non-blocking
   }
