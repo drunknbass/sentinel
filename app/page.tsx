@@ -1548,7 +1548,7 @@ export default function Page() {
               <div className="w-12 h-1 bg-amber-500" />
             </div>
 
-            <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(80vh-3rem)] font-mono pb-safe safe-bottom" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'auto' }}>
+                  <div className="allow-text-select p-6 space-y-4 overflow-y-auto max-h-[calc(80vh-3rem)] font-mono pb-safe safe-bottom" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'auto' }}>
               <div className="flex items-center justify-between border-b-2 border-amber-500 pb-3 mb-4">
                 <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ INCIDENT DETAILS ╗</div>
                 <button

@@ -185,6 +185,18 @@ button, a, input, textarea, select, label {
   touch-action: manipulation;
 }
 
+/* Global: Disable text selection on touch devices, unless explicitly allowed */
+@media (pointer: coarse) {
+  .mobile-lock-select *:not(input):not(textarea):not(.allow-text-select):not(.allow-text-select *) {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+  }
+  .allow-text-select, .allow-text-select * {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+  }
+}
+
 /* Allow Leaflet to handle multi-touch gestures itself while page zoom is locked */
 .leaflet-container {
   touch-action: none; /* enables JS pinch zoom in the map while preventing browser page zoom */
