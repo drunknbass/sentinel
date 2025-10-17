@@ -875,6 +875,16 @@ export default function Page() {
                   [ENTER] ACKNOWLEDGE & CONTINUE
                 </button>
                 <button
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      window.open('/gps-start.html','_blank','noopener');
+                    }
+                  }}
+                  className="px-4 border-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black font-bold tracking-wider"
+                >
+                  [ALT] OPEN GPS TEST (NEW TAB)
+                </button>
+                <button
                   onClick={() => setShowDisclaimer(false)}
                   className="px-4 border-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black font-bold tracking-wider"
                 >

@@ -25,6 +25,8 @@
         </div>
         <div class="row">
           <button id="ask" class="btn">[ENTER] ENABLE LOCATION</button>
+          <button id="watch" class="btn alt">[W] WATCH POSITION</button>
+          <button id="stop" class="btn alt">[S] STOP WATCH</button>
           <a href="/" class="btn alt">[ESC] BACK TO APP</a>
         </div>
         <div id="hint" class="muted" style="margin-top:10px"></div>
@@ -81,6 +83,29 @@
           const run = () => { if (fired) return; fired = true; ask(); };
           btn.addEventListener('click', run, { passive: true, once: true });
           btn.addEventListener('touchstart', run, { passive: true, once: true });
+        })();
+        // Watch/Unwatch controls
+        (function(){
+          if (!('geolocation' in navigator)) return;
+          let wid = null;
+          const wbtn = document.getElementById('watch');
+          const sbtn = document.getElementById('stop');
+          wbtn.addEventListener('click', function(){
+            if (wid != null) return;
+            log('starting watchPosition');
+            wid = navigator.geolocation.watchPosition(function(pos){
+              renderLocation(pos.coords.latitude, pos.coords.longitude);
+            }, function(err){
+              log('watch error code='+err.code+' msg='+err.message);
+            }, { enableHighAccuracy: true, maximumAge: 0 });
+          });
+          sbtn.addEventListener('click', function(){
+            if (wid != null) {
+              navigator.geolocation.clearWatch(wid);
+              log('stopped watchPosition');
+              wid = null;
+            }
+          });
         })();
         // If permission already granted, fetch immediately on load (no redirect)
         (function(){
