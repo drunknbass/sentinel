@@ -3,67 +3,129 @@
 import { useEffect, useState, useRef } from "react"
 
 const TERMINAL_LINES = [
-  "root@dispatch:~# systemctl start riverside-dispatch.service",
-  "[  OK  ] Started Riverside County Dispatch Service",
-  "root@dispatch:~# cat /etc/dispatch/config.yml | grep priority",
-  "  min_priority: 10",
-  "  max_priority: 100",
-  "  auto_escalate: true",
-  "root@dispatch:~# nmap -sS -p 8080,443,22 dispatch.riverside.gov",
-  "Starting Nmap 7.94 scan...",
-  "PORT     STATE SERVICE",
-  "22/tcp   open  ssh",
-  "443/tcp  open  https",
-  "8080/tcp open  http-proxy",
-  "root@dispatch:~# curl -X POST https://api.ncic.fbi.gov/v3/query -H 'Auth: Bearer ***'",
-  '{"status": "authenticated", "access_level": 5, "clearance": "TOP_SECRET"}',
-  "root@dispatch:~# tail -f /var/log/dispatch/incidents.log",
-  "[2025-10-17 01:45:23] NEW: 211 IN PROGRESS - 4TH ST & MAIN",
-  "[2025-10-17 01:45:24] PRIORITY: HIGH",
-  "[2025-10-17 01:45:25] UNITS DISPATCHED: 3-ADAM-12, 1-ADAM-20",
-  "[2025-10-17 01:45:26] ETA: 3 MINUTES",
-  "root@dispatch:~# python3 /opt/scripts/criminal_lookup.py --ssn ***-**-1234",
-  "Querying NCIC database...",
-  "Subject: John Doe",
-  "DOB: 1985-03-15",
-  "Priors: 2x DUI (2019, 2021), 1x Assault (2022)",
-  "Warrants: NONE ACTIVE",
-  "root@dispatch:~# ./alpr_scan --radius 5mi --realtime",
-  "Initializing ALPR system...",
-  "Camera feeds: 247 active",
-  "Recognition rate: 97.3%",
-  "Processing...",
-  "ALERT: Stolen vehicle detected - CA 7ABC123",
-  "Location: Main St & 5th Ave",
-  "root@dispatch:~# ssh tower-01.riverside.gov 'grep HIGH /var/log/priority.log | wc -l'",
-  "47",
-  "root@dispatch:~# redis-cli HGETALL active_incidents",
-  "1) incident_2025102",
-  "2) {type: 'ROBBERY', priority: 10, units: 3}",
-  "3) incident_2025103",
-  "4) {type: 'DUI', priority: 50, units: 1}",
-  "root@dispatch:~# docker exec dispatch-db psql -c 'SELECT COUNT(*) FROM incidents WHERE received_at > NOW() - INTERVAL \"2 hours\"'",
-  " count ",
-  "-------",
-  "   89  ",
-  "(1 row)",
-  "root@dispatch:~# grep 'CRITICAL' /var/log/syslog | head -3",
-  "Oct 17 01:40:12 dispatch kernel: CRITICAL: High priority dispatch",
-  "Oct 17 01:42:33 dispatch daemon: CRITICAL: All units respond",
-  "Oct 17 01:44:55 dispatch alert: CRITICAL: Officer needs assistance",
-  "root@dispatch:~# netstat -tulpn | grep LISTEN",
-  "tcp   0   0 0.0.0.0:443    0.0.0.0:*   LISTEN   2847/nginx",
-  "tcp   0   0 0.0.0.0:8080   0.0.0.0:*   LISTEN   3921/dispatch",
-  "tcp   0   0 0.0.0.0:5432   0.0.0.0:*   LISTEN   1247/postgres",
-  "root@dispatch:~# cat /proc/meminfo | grep MemAvailable",
-  "MemAvailable:   12485632 kB",
-  "root@dispatch:~# tcpdump -i eth0 -c 5 'port 443'",
-  "01:45:27.123456 IP client.42358 > dispatch.443: Flags [S]",
-  "01:45:27.123789 IP dispatch.443 > client.42358: Flags [S.]",
-  "01:45:27.124012 IP client.42358 > dispatch.443: Flags [.]",
-  "01:45:27.124234 IP client.42358 > dispatch.443: Flags [P.]",
-  "01:45:27.124567 IP dispatch.443 > client.42358: Flags [P.]",
-  "root@dispatch:~# watch -n 1 'echo Active: $(redis-cli get incident_count)'",
+  "> login badge:7734",
+  "RIVERSIDE COUNTY SHERIFF DISPATCH SYSTEM v4.2",
+  "Authentication successful. Welcome Officer Martinez",
+  "Last login: 2025-10-17 01:42:33 from unit 3-ADAM-12",
+  "",
+  "> run_plate CA 7ABC123",
+  "Running plate CA 7ABC123...",
+  "===============================================",
+  "Vehicle Registration Check",
+  "Plate: CA 7ABC123",
+  "Make: Honda",
+  "Model: Civic",
+  "Year: 2019",
+  "Color: Black",
+  "VIN: 1HGBH41JXMN109876",
+  "Registered Owner: JOHNSON, MICHAEL A",
+  "Address: 1847 Oak Street, Riverside CA 92501",
+  "STATUS: **STOLEN** - Reported 10/15/2025",
+  "===============================================",
+  "",
+  "> lookup_subject johnson_michael_a",
+  "Searching NCIC database...",
+  "Subject Found:",
+  "Name: JOHNSON, MICHAEL ANTHONY",
+  "DOB: 03/15/1985",
+  "DL#: B2847563",
+  "Height: 5'11\"",
+  "Weight: 180 lbs",
+  "Hair: Brown",
+  "Eyes: Blue",
+  "",
+  "Criminal History:",
+  "- 2019: DUI - CONVICTED",
+  "- 2021: DUI 2nd - CONVICTED",
+  "- 2022: Assault & Battery - CONVICTED",
+  "- 2023: Possession of Controlled Substance - DISMISSED",
+  "",
+  "**ACTIVE WARRANT**",
+  "Case #: 2025-CR-00847",
+  "Charge: Failure to Appear",
+  "Bail: $15,000",
+  "Issued: 09/22/2025",
+  "",
+  "> check_wants_warrants johnson_michael 03/15/1985",
+  "CAUTION: Subject has history of violence",
+  "CAUTION: Subject known to carry weapons",
+  "Approach with backup recommended",
+  "",
+  "> run_plate CA 5XYZ789",
+  "Running plate CA 5XYZ789...",
+  "Vehicle: 2022 Ford F-150",
+  "Owner: SMITH, JENNIFER L",
+  "Status: CLEAR - No wants/warrants",
+  "",
+  "> lookup_dl B9876543",
+  "Driver License Check:",
+  "Name: RODRIGUEZ, CARLOS",
+  "Status: SUSPENDED - DUI",
+  "Suspension Date: 08/14/2025",
+  "Eligible for Reinstatement: 02/14/2026",
+  "",
+  "> scan_area --radius 1mi",
+  "Scanning for recent incidents within 1 mile...",
+  "3 incidents found:",
+  "1. 211 in progress - 4th & Main (0.3 mi)",
+  "2. Traffic collision - Hwy 91 & Tyler (0.7 mi)",
+  "3. Domestic disturbance - 1200 block Maple (0.9 mi)",
+  "",
+  "> run_plate TX 8DEF234",
+  "Running plate TX 8DEF234...",
+  "Out of state plate detected",
+  "Vehicle: 2020 Chevrolet Tahoe",
+  "Owner: WILLIAMS, DAVID R",
+  "Texas DL: 48572938",
+  "No local warrants",
+  "NCIC Check: CLEAR",
+  "",
+  "> lookup_address 1847_oak_street",
+  "Property Information:",
+  "1847 Oak Street, Riverside CA",
+  "Resident: JOHNSON, MICHAEL A",
+  "Previous Calls:",
+  "- 10/02/2025: Noise complaint",
+  "- 09/15/2025: Domestic disturbance",
+  "- 08/28/2025: Welfare check",
+  "Known Associates at Address:",
+  "- JOHNSON, SARAH M (spouse)",
+  "- JOHNSON, TYLER M (son, age 17)",
+  "",
+  "> check_probation johnson_michael",
+  "Probation Status Check:",
+  "Subject: JOHNSON, MICHAEL A",
+  "Status: ACTIVE PROBATION",
+  "Probation Officer: Det. K. Thompson",
+  "Requirements:",
+  "- Weekly check-ins",
+  "- Random drug testing",
+  "- No alcohol consumption",
+  "Last Test: 10/10/2025 - FAILED (alcohol detected)",
+  "**PROBATION VIOLATION ALERT**",
+  "",
+  "> unit_status",
+  "Active Units in Area:",
+  "3-ADAM-12: Code 6 - Traffic stop",
+  "1-ADAM-20: En route to 211",
+  "2-ADAM-15: Available",
+  "K9-UNIT-1: 10-8 (In service)",
+  "",
+  "> run_plate CA 3ABC456",
+  "Running plate CA 3ABC456...",
+  "Vehicle: 2018 Toyota Camry",
+  "Owner: CHEN, LISA M",
+  "Status: EXPIRED REGISTRATION (30 days overdue)",
+  "",
+  "> dispatch --priority HIGH",
+  "All units: Be on lookout for black Honda Civic",
+  "Plate: CA 7ABC123",
+  "Armed and dangerous suspect",
+  "Last seen: Main St heading northbound",
+  "Units responding: 3-ADAM-12, 2-ADAM-15, K9-1",
+  "",
+  "> status_update",
+  "Syncing with dispatch...",
 ];
 
 export default function TerminalLoading() {
@@ -89,19 +151,23 @@ export default function TerminalLoading() {
           });
           setCurrentCharIndex(prev => prev + 1);
         } else {
-          // Move to next line
-          setCurrentLineIndex(prev => prev + 1);
-          setCurrentCharIndex(0);
+          // Move to next line with a small delay for empty lines
+          setTimeout(() => {
+            setCurrentLineIndex(prev => prev + 1);
+            setCurrentCharIndex(0);
+          }, currentLine === "" ? 100 : 0);
         }
       } else {
         // Loop back to beginning
-        setLines([]);
-        setCurrentLineIndex(0);
-        setCurrentCharIndex(0);
+        setTimeout(() => {
+          setLines([]);
+          setCurrentLineIndex(0);
+          setCurrentCharIndex(0);
+        }, 1000);
       }
     };
 
-    const timer = setInterval(typeCharacter, 15); // Fast typing speed for hacker effect
+    const timer = setInterval(typeCharacter, 20); // Typing speed
     return () => clearInterval(timer);
   }, [currentLineIndex, currentCharIndex]);
 
@@ -113,11 +179,31 @@ export default function TerminalLoading() {
   }, [lines]);
 
   const getLineColor = (line: string) => {
-    if (line.startsWith('root@dispatch:~#')) return 'text-green-400';
-    if (line.startsWith('[') && line.includes('OK')) return 'text-green-300';
-    if (line.includes('ALERT') || line.includes('CRITICAL')) return 'text-red-400';
-    if (line.includes('HIGH') || line.includes('WARNING')) return 'text-yellow-400';
-    if (line.startsWith('{') || line.startsWith('"')) return 'text-blue-400';
+    // Commands
+    if (line.startsWith('>')) return 'text-green-400';
+
+    // Headers and system messages
+    if (line.includes('RIVERSIDE COUNTY') || line.includes('===============')) return 'text-green-300';
+
+    // Alerts and warnings
+    if (line.includes('**STOLEN**') || line.includes('**ACTIVE WARRANT**') || line.includes('**PROBATION VIOLATION')) return 'text-red-500 font-bold animate-pulse';
+    if (line.includes('CAUTION:')) return 'text-yellow-400 font-bold';
+
+    // Status messages
+    if (line.includes('STATUS:') || line.includes('Status:')) return 'text-blue-400';
+    if (line.includes('CLEAR')) return 'text-green-400';
+    if (line.includes('SUSPENDED') || line.includes('FAILED')) return 'text-orange-400';
+
+    // Field labels
+    if (line.includes(':') && !line.startsWith('-')) {
+      const beforeColon = line.split(':')[0];
+      if (beforeColon.length < 20) return 'text-cyan-400';
+    }
+
+    // Criminal history items
+    if (line.startsWith('-')) return 'text-yellow-300';
+
+    // Default
     return 'text-green-500';
   };
 
@@ -125,39 +211,54 @@ export default function TerminalLoading() {
     <div className="fixed inset-0 z-[60] bg-black flex flex-col">
       {/* CRT scanline effect */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-10"
+        className="absolute inset-0 pointer-events-none opacity-20"
         style={{
           background: `repeating-linear-gradient(
             0deg,
             transparent,
             transparent 2px,
-            rgba(0, 255, 0, 0.05) 2px,
-            rgba(0, 255, 0, 0.05) 4px
+            rgba(0, 255, 0, 0.03) 2px,
+            rgba(0, 255, 0, 0.03) 4px
           )`,
           animation: "scanline 8s linear infinite"
         }}
       />
+
+      {/* Terminal header */}
+      <div className="bg-green-900/20 border-b border-green-500/30 px-4 py-2">
+        <div className="flex items-center justify-between">
+          <span className="text-green-400 font-mono text-xs tracking-wider">
+            MDT-3A12 | RIVERSIDE COUNTY SHERIFF | UNIT 3-ADAM-12
+          </span>
+          <span className="text-green-400 font-mono text-xs animate-pulse">
+            ● CONNECTED
+          </span>
+        </div>
+      </div>
 
       {/* Terminal content */}
       <div
         ref={containerRef}
         className="flex-1 overflow-y-auto overflow-x-hidden p-4 font-mono text-xs sm:text-sm"
         style={{
-          textShadow: "0 0 10px rgba(0, 255, 0, 0.8)",
-          filter: "contrast(1.4) brightness(1.3)"
+          textShadow: "0 0 8px rgba(0, 255, 0, 0.5)",
+          filter: "contrast(1.2) brightness(1.1)",
+          fontFamily: "'Courier New', monospace"
         }}
       >
         {lines.map((line, index) => (
           <div
             key={index}
-            className={`${getLineColor(line)} whitespace-pre-wrap break-all`}
+            className={`${getLineColor(line)} whitespace-pre-wrap`}
             style={{
-              animation: index === lines.length - 1 ? "glow 0.1s ease-out" : undefined
+              animation: index === lines.length - 1 && line.length > 0 ? "glow 0.1s ease-out" : undefined
             }}
           >
             {line}
             {index === lines.length - 1 && currentCharIndex < TERMINAL_LINES[currentLineIndex]?.length && (
-              <span className="inline-block w-2 h-4 bg-green-400 ml-0.5 animate-pulse" />
+              <span className="inline-block w-2 h-4 bg-green-400 ml-0.5" style={{
+                animation: "blink 1s infinite"
+              }} />
             )}
           </div>
         ))}
@@ -175,10 +276,19 @@ export default function TerminalLoading() {
 
         @keyframes glow {
           0% {
-            opacity: 0.6;
+            opacity: 0.7;
           }
           100% {
             opacity: 1;
+          }
+        }
+
+        @keyframes blink {
+          0%, 49% {
+            opacity: 1;
+          }
+          50%, 100% {
+            opacity: 0;
           }
         }
       `}</style>
