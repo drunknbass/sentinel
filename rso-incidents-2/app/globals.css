@@ -107,6 +107,27 @@ body {
  * instead of applying to body element (which has position: fixed)
  */
 
+/* Safe area utility classes */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-bottom-with-offset {
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
+}
+
+.safe-bottom-footer {
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-top-with-offset {
+  top: calc(92px + env(safe-area-inset-top));
+}
+
 /* Terminal-style scrollbar with amber accent */
 ::-webkit-scrollbar {
   width: 12px;

@@ -701,8 +701,7 @@ export default function Page() {
       {/* Legend - Bottom left corner with hover-to-expand - Hide when loading */}
       {!(loading && !isRefreshing) && (
         <div
-          className="absolute left-6 z-20 md:z-40 bg-black border border-amber-500 max-w-xs group hover:max-w-sm transition-all duration-300"
-          style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
+          className="absolute left-6 safe-bottom-with-offset z-20 md:z-40 bg-black border border-amber-500 max-w-xs group hover:max-w-sm transition-all duration-300"
           onMouseEnter={() => setFilterPanelExpanded(false)}
         >
         <div className="border border-amber-500/50 p-1.5">
@@ -758,10 +757,7 @@ export default function Page() {
 
       {/* Top navigation bar - Amber MDT style - Hide when loading */}
       {!(loading && !isRefreshing) && (
-        <div
-          className="absolute top-0 left-0 right-0 z-50 bg-black border-b-2 border-amber-500"
-          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
-        >
+        <div className="absolute top-0 left-0 right-0 z-50 bg-black border-b-2 border-amber-500 safe-top">
         <div className="flex items-center justify-between px-4 py-2">
           <div className="text-xs font-mono text-amber-500">
             ╔═══════════════════════════════════════════════════════════════════════════════╗
@@ -821,10 +817,7 @@ export default function Page() {
 
       {/* Mobile segmented control - iOS style */}
       {!(loading && !isRefreshing) && (
-        <div
-          className="md:hidden absolute left-0 right-0 z-50 bg-black border-b-2 border-amber-500 px-4 py-3"
-          style={{ top: 'calc(92px + env(safe-area-inset-top, 0px))' }}
-        >
+        <div className="md:hidden absolute left-0 right-0 safe-top-with-offset z-50 bg-black border-b-2 border-amber-500 px-4 py-3">
           <div className="flex items-center gap-2">
             <div className="flex flex-1 gap-2">
               <button
@@ -1693,10 +1686,7 @@ export default function Page() {
       )}
 
       {/* Footer credit */}
-      <div
-        className="absolute left-0 right-0 z-20 flex justify-center pointer-events-none"
-        style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
-      >
+      <div className="absolute left-0 right-0 safe-bottom-footer z-20 flex justify-center pointer-events-none">
         <a
           href="https://circlecreativegroup.com"
           target="_blank"
