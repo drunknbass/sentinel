@@ -323,7 +323,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           zoomControl: false,
           scrollWheelZoom: false,
           doubleClickZoom: false,
-          touchZoom: false,
+          touchZoom: true,
           dragging: true,
           preferCanvas: true,
           inertia: false,

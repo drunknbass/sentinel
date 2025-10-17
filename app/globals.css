@@ -185,6 +185,12 @@ button, a, input, textarea, select, label {
   touch-action: manipulation;
 }
 
+/* Allow Leaflet to handle multi-touch gestures itself while page zoom is locked */
+.leaflet-container {
+  touch-action: none; /* enables JS pinch zoom in the map while preventing browser page zoom */
+  -ms-touch-action: none;
+}
+
 /* Custom scrollbar styling for Citizen aesthetic */
 ::-webkit-scrollbar {
   width: 8px;
