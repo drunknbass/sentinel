@@ -457,6 +457,64 @@ export default function Page() {
     return <LandingPage onEnter={handleEnterMapView} />
   }
 
+  // Show error state if API failed and we have no data
+  if (error && !hasInitialLoad && !loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black text-amber-500 font-mono p-6">
+        <div className="max-w-2xl w-full">
+          <div className="border-4 border-amber-500 p-8 space-y-6">
+            <div className="border-2 border-amber-500/50 p-6">
+              <div className="text-xs text-amber-500/70 uppercase tracking-wider mb-4">╔ CONNECTION ERROR ╗</div>
+
+              <h1 className="text-2xl font-bold mb-4 text-red-600">
+                █ UNABLE TO LOAD DATA
+              </h1>
+
+              <p className="text-sm mb-6">
+                Failed to connect to the incident data service. This could be temporary.
+              </p>
+
+              <div className="bg-amber-500/10 border-2 border-amber-500/50 p-4 mb-6">
+                <div className="text-xs text-amber-500/70 uppercase tracking-wider mb-2">ERROR DETAILS:</div>
+                <code className="text-xs text-amber-400 break-all">
+                  {error}
+                </code>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setError(null)
+                    setLoading(true)
+                  }}
+                  className="w-full bg-amber-500 text-black py-3 px-6 hover:bg-amber-400 transition-all font-bold tracking-wider"
+                >
+                  [ENTER] RETRY CONNECTION
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      const url = new URL(window.location.href)
+                      url.searchParams.delete('view')
+                      url.searchParams.delete('lat')
+                      url.searchParams.delete('lon')
+                      url.searchParams.delete('zoom')
+                      window.location.href = url.toString()
+                    }
+                  }}
+                  className="w-full border-2 border-amber-500 text-amber-500 py-3 px-6 hover:bg-amber-500 hover:text-black transition-all font-bold tracking-wider"
+                >
+                  [ESC] RETURN TO START
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black">
       {/* Legend - Bottom left corner with hover-to-expand */}
