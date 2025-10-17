@@ -704,7 +704,7 @@ export default function Page() {
       {/* Legend - Bottom left corner with hover-to-expand - Hide when loading */}
       {!(loading && !isRefreshing) && (
         <div
-          className="absolute left-6 safe-bottom-with-offset z-20 md:z-40 bg-black border border-amber-500 max-w-xs group hover:max-w-sm transition-all duration-300"
+          className="absolute left-6 safe-bottom-with-offset z-[25] md:z-40 bg-black border border-amber-500 max-w-xs group hover:max-w-sm transition-all duration-300 pointer-events-auto"
           onMouseEnter={() => setFilterPanelExpanded(false)}
         >
         <div className="border border-amber-500/50 p-1.5">
@@ -1211,12 +1211,12 @@ export default function Page() {
       {/* Incident detail sheet for mobile - Amber MDT style */}
       {selectedIncident && showBottomSheet && (
         <div className="md:hidden absolute bottom-0 left-0 right-0 z-40 animate-slide-up">
-          <div className="relative w-full max-h-[80vh] bg-black border-t-4 border-amber-500 overflow-hidden">
+          <div className="relative w-full max-h-[80vh] bg-black border-t-4 border-amber-500">
             <div className="flex justify-center py-3 border-b-2 border-amber-500">
               <div className="w-12 h-1 bg-amber-500" />
             </div>
 
-            <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(80vh-3rem)] font-mono">
+            <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(80vh-3rem)] font-mono pb-safe safe-bottom" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'auto' }}>
               <div className="flex items-center justify-between border-b-2 border-amber-500 pb-3 mb-4">
                 <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ INCIDENT DETAILS ╗</div>
                 <button
