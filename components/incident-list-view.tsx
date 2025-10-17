@@ -12,6 +12,8 @@ interface IncidentListViewProps {
   onSelectIncident: (incident: Incident) => void
   getPriorityLabel: (priority: number) => string
   getPriorityColor: (priority: number) => string
+  searchQuery: string
+  onSearchQueryChange: (query: string) => void
 }
 
 export default function IncidentListView({
@@ -20,9 +22,10 @@ export default function IncidentListView({
   onSelectIncident,
   getPriorityLabel,
   getPriorityColor,
+  searchQuery,
+  onSearchQueryChange,
 }: IncidentListViewProps) {
   const [hideWithoutLocation, setHideWithoutLocation] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
 
   const sortedAndFilteredItems = useMemo(() => {
     let filtered = [...items]
@@ -95,13 +98,13 @@ export default function IncidentListView({
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => onSearchQueryChange(e.target.value)}
                 placeholder="TYPE TO SEARCH..."
                 className="w-full pl-11 pr-10 py-2.5 bg-black border-2 border-amber-500 text-sm font-mono font-bold text-amber-500 placeholder:text-amber-500/50 focus:outline-none focus:bg-amber-500/10 transition-all tracking-wide"
               />
               {searchQuery && (
                 <button
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => onSearchQueryChange("")}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-amber-500/20 transition-all"
                   aria-label="Clear search"
                 >

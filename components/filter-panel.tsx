@@ -15,6 +15,8 @@ interface FilterPanelProps {
   availableTags: string[]
   isExpanded: boolean
   onExpandedChange: (expanded: boolean) => void
+  searchQuery: string
+  onSearchQueryChange: (query: string) => void
 }
 
 const TIME_RANGES = [
@@ -39,6 +41,8 @@ export default function FilterPanel({
   availableTags,
   isExpanded,
   onExpandedChange,
+  searchQuery,
+  onSearchQueryChange,
 }: FilterPanelProps) {
   const [searchInput, setSearchInput] = useState("")
 
@@ -62,6 +66,7 @@ export default function FilterPanel({
     minPriority < 100 ? 1 : 0,
     timeRange < 999 ? 1 : 0,
     searchTags.length,
+    searchQuery ? 1 : 0,
   ].reduce((a, b) => a + b, 0)
 
   return (
@@ -97,7 +102,20 @@ export default function FilterPanel({
           <div className="p-5 space-y-6 max-h-[70vh] overflow-y-auto bg-black">
             <div>
               <label className="text-xs text-amber-500/70 uppercase tracking-wider mb-2 block">
-                &gt; SEARCH &amp; TAGS
+                &gt; SEARCH INCIDENTS
+              </label>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => onSearchQueryChange(e.target.value)}
+                placeholder="SEARCH BY TYPE, ADDRESS..."
+                className="w-full bg-black border-2 border-amber-500 px-4 py-2.5 text-sm placeholder:text-amber-500/50 focus:outline-none focus:border-amber-400 transition-colors text-amber-500 tracking-wide"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs text-amber-500/70 uppercase tracking-wider mb-2 block">
+                &gt; FILTER BY TAGS
               </label>
               <div className="space-y-2">
                 {searchTags.length > 0 && (
@@ -250,6 +268,7 @@ export default function FilterPanel({
                   onPriorityChange(100)
                   onTimeRangeChange(999)
                   onSearchTagsChange([])
+                  onSearchQueryChange("")
                 }}
                 className="w-full py-2.5 bg-red-600/20 border-2 border-red-600 text-sm font-bold hover:bg-red-600/30 transition-colors text-amber-500 tracking-wider"
               >

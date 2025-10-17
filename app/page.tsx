@@ -14,6 +14,7 @@ type Incident = IncidentsResponse["items"][number]
 /**
  * Category color mapping for incident classification
  * Used to color-code markers and badges throughout the app
+ * Maps to the 6 filterable categories from the API
  */
 const CATEGORY_COLORS: Record<string, string> = {
   violent: "#ef4444",
@@ -22,9 +23,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   traffic: "#84cc16",
   disturbance: "#eab308",
   drug: "#a855f7",
-  medical: "#ec4899",
-  admin: "#6b7280",
-  other: "#9ca3af",
 }
 
 // Dynamically import LeafletMap to avoid SSR issues with Leaflet
@@ -68,9 +66,10 @@ export default function Page() {
   // Filter state
   const [selectedCategory, setSelectedCategory] = useState<string>("")
   const [minPriority, setMinPriority] = useState(100)
-  const [timeRange, setTimeRange] = useState(2) // Default to last 2 hours for better UX
+  const [timeRange, setTimeRange] = useState(3) // Default to last 3 hours for better UX
   const [searchTags, setSearchTags] = useState<string[]>([])
   const [filterPanelExpanded, setFilterPanelExpanded] = useState(false)
+  const [searchQuery, setSearchQuery] = useState<string>("")
 
   // Auto-refresh toggle
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
@@ -98,8 +97,29 @@ export default function Page() {
       if (params.get('nocache') === '1' || params.get('nocache') === 'true') {
         setNocache(true)
       }
+      // Read search query from URL
+      const searchParam = params.get('search')
+      if (searchParam) {
+        setSearchQuery(searchParam)
+      }
     }
   }, [])
+
+  /**
+   * Sync search query to URL params
+   */
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (searchQuery) {
+        params.set('search', searchQuery)
+      } else {
+        params.delete('search')
+      }
+      const newUrl = `${window.location.pathname}${params.toString() ? '?' + params.toString() : ''}`
+      window.history.replaceState({}, '', newUrl)
+    }
+  }, [searchQuery])
 
   /**
    * Handle tab visibility changes to pause/resume polling
@@ -459,21 +479,6 @@ export default function Page() {
                   />
                   <span className="text-[#ffb000]">DRUG</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 bg-[#d4af37] border border-[#d4af37]"
-                    style={{ boxShadow: "0 0 4px #d4af37" }}
-                  />
-                  <span className="text-[#d4af37]">MEDICAL</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-[#9b870c] border border-[#9b870c]" />
-                  <span className="text-[#9b870c]">OTHER</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-[#6b7280] border border-[#6b7280]" />
-                  <span className="text-[#6b7280]">ADMIN</span>
-                </div>
               </div>
             </div>
 
@@ -652,6 +657,8 @@ export default function Page() {
           availableTags={availableTags}
           isExpanded={filterPanelExpanded}
           onExpandedChange={setFilterPanelExpanded}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
         />
       </div>
 
@@ -971,6 +978,8 @@ export default function Page() {
                 availableTags={availableTags}
                 isExpanded={true}
                 onExpandedChange={() => {}}
+                searchQuery={searchQuery}
+                onSearchQueryChange={setSearchQuery}
               />
 
               <button
@@ -999,6 +1008,8 @@ export default function Page() {
           }}
           getPriorityLabel={getPriorityLabel}
           getPriorityColor={getPriorityColor}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
         />
       )}
 
