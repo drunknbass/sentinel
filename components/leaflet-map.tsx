@@ -80,6 +80,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               tileSize: 512,
               zoomOffset: -1,
               maxZoom: 19,
+              updateWhenZooming: false, // Prevent tile loading during zoom animation
+              keepBuffer: 4, // Keep more tiles loaded for smoother panning
             },
           ).addTo(map)
         } else {
@@ -88,6 +90,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: "abcd",
             maxZoom: 20,
+            updateWhenZooming: false, // Prevent tile loading during zoom animation
+            keepBuffer: 4, // Keep more tiles loaded for smoother panning
           }).addTo(map)
         }
 
@@ -302,13 +306,66 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
     }
   }, [items, onMarkerClick, selectedIncident])
 
+  // Reusable function to calculate safe area center and animate to a pin
+  const flyToIncidentInSafeArea = (lat: number, lon: number, zoom: number) => {
+    if (!mapInstanceRef.current) return
+
+    const L = (window as any).L
+
+    // Calculate pixel offset to center pin in safe area
+    let offsetX = 0
+    let offsetY = 0
+
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+
+    // Desktop: offset for side panel
+    if (sidePanelOpen && viewportWidth >= 768) {
+      // Panel is on the right, shift view right to center pin in left 2/3rds
+      // Safe area is (viewportWidth - panelWidth), center is at half of that
+      // Offset from viewport center = (safe area center) - (viewport center)
+      offsetX = -(panelWidth / 2)
+    }
+
+    // Mobile: offset for bottom sheet
+    if (showBottomSheet && viewportWidth < 768) {
+      // Bottom sheet is ~45vh from bottom
+      // Visible area is ~55vh, we want pin centered in that area (~27.5vh from top)
+      // Viewport center is at 50vh, so shift up by (50vh - 27.5vh) = 22.5vh
+      offsetY = viewportHeight * 0.225
+    }
+
+    // Get the container point for the pin's actual position at target zoom
+    const targetPoint = mapInstanceRef.current.project([lat, lon], zoom)
+
+    // Add offset to position pin in safe area
+    const offsetPoint = L.point(targetPoint.x - offsetX, targetPoint.y - offsetY)
+
+    // Convert back to lat/lng - this is where the map center should be
+    const targetCenter = mapInstanceRef.current.unproject(offsetPoint, zoom)
+
+    // Fly to the calculated center point
+    mapInstanceRef.current.flyTo(targetCenter, zoom, {
+      duration: 1.5,
+      easeLinearity: 0.25,
+    })
+
+    console.log('[MAP] Flying to incident in safe area:', {
+      incident: [lat, lon],
+      offset: { offsetX, offsetY },
+      targetCenter: [targetCenter.lat, targetCenter.lng],
+      sidePanelOpen,
+      showBottomSheet,
+    })
+  }
+
   useEffect(() => {
     if (!mapInstanceRef.current || typeof window === "undefined") return
 
     const L = (window as any).L
     if (!L) return
 
-    // When selecting an incident, save current view and zoom in
+    // When selecting an incident, save current view and animate to it
     if (selectedIncident && selectedIncident.lat && selectedIncident.lon) {
       // Save current view before zooming
       if (!savedViewRef.current) {
@@ -318,45 +375,15 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         console.log('[MAP] Saved user view:', savedViewRef.current)
       }
 
-      // Smoothly fly to the selected incident (level 18 for detailed view)
-      mapInstanceRef.current.flyTo([selectedIncident.lat, selectedIncident.lon], 18, {
-        duration: 1.5, // Slower animation so user can follow the movement
-      })
-
-      // Handle panning for both desktop side panel and mobile bottom sheet
-      if (sidePanelOpen || showBottomSheet) {
-        setTimeout(() => {
-          if (mapInstanceRef.current) {
-            let panX = 0
-            let panY = 0
-
-            // Desktop: shift map left by half the panel width to keep pin visible in left 2/3rds
-            if (sidePanelOpen) {
-              panX = panelWidth / 2
-            }
-
-            // Mobile: shift map up to center pin in visible area above bottom sheet
-            if (showBottomSheet) {
-              // Bottom sheet is ~45vh, so visible area is ~55vh
-              // To center pin in visible area (at ~27.5vh), need to shift up from center (50vh)
-              // Shift up by ~22.5vh = 0.225 * viewport height
-              const viewportHeight = window.innerHeight
-              panY = -viewportHeight * 0.225
-            }
-
-            mapInstanceRef.current.panBy([panX, panY], { animate: true, duration: 0.8 })
-            console.log('[MAP] Panned map:', { panX, panY, sidePanelOpen, showBottomSheet })
-          }
-        }, 1500) // Wait for flyTo animation to complete
-      }
-
-      console.log('[MAP] Zoomed to incident:', selectedIncident.incident_id, { sidePanelOpen, showBottomSheet })
+      // Fly directly to incident centered in safe area
+      flyToIncidentInSafeArea(selectedIncident.lat, selectedIncident.lon, 18)
     }
     // When deselecting, restore previous view
     else if (!selectedIncident && savedViewRef.current) {
       console.log('[MAP] Restoring user view:', savedViewRef.current)
       mapInstanceRef.current.flyTo(savedViewRef.current.center, savedViewRef.current.zoom, {
-        duration: 1.2, // Smooth animation back to original position
+        duration: 1.2,
+        easeLinearity: 0.25,
       })
       savedViewRef.current = null
     }
