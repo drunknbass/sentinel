@@ -805,9 +805,6 @@ export default function Page() {
                 onPriorityChange={setMinPriority}
                 timeRange={timeRange}
                 onTimeRangeChange={setTimeRange}
-                searchTags={searchTags}
-                onSearchTagsChange={setSearchTags}
-                availableTags={availableTags}
                 selectedRegion={selectedRegion}
                 onRegionChange={setSelectedRegion}
               />
