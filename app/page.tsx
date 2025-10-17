@@ -220,7 +220,11 @@ export default function Page() {
     const hasStreetNumber = /^\d+/.test(incident.address_raw.trim())
     if (!hasStreetNumber) return "APPROXIMATE (MEDIUM AREA)"
 
-    const genericTerms = ["AREA", "VICINITY", "NEAR", "BLOCK OF", "BLK"]
+    // Check for redaction/approximation indicators like "***" or "XX"
+    if (/\*\*\*|XXX|XX/.test(incident.address_raw)) return "APPROXIMATE (MEDIUM AREA)"
+
+    // Check for generic/approximate terms including standalone "BLOCK"
+    const genericTerms = ["AREA", "VICINITY", "NEAR", "BLOCK OF", "BLOCK", "BLK"]
     const isGeneric = genericTerms.some((term) => incident.address_raw?.toUpperCase().includes(term))
 
     if (isGeneric) return "APPROXIMATE (MEDIUM AREA)"
