@@ -286,11 +286,11 @@ export default function Page() {
 
   // (Removed global pointerdown hook; rely on explicit triggers + first-interaction fallback above)
 
-  // Start a persistent watchPosition once permission is granted
+  // Start/stop persistent watchPosition based on toggle + permission
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (!('geolocation' in navigator)) return
-    if (locationPermission !== 'granted') {
+    if (!(locationEnabled && locationPermission === 'granted')) {
       // Tear down any existing watch if permission is not granted
       if (locationWatchIdRef.current != null) {
         try { navigator.geolocation.clearWatch(locationWatchIdRef.current) } catch {}
@@ -322,7 +322,7 @@ export default function Page() {
         locationWatchIdRef.current = null
       }
     }
-  }, [locationPermission])
+  }, [locationEnabled, locationPermission])
 
   // If permission becomes granted (and GPS toggle is ON), ask map to place user marker once
   useEffect(() => {
@@ -806,7 +806,7 @@ export default function Page() {
           since,
           geocode: true, // Enable geocoding to show markers on map
           nocache,
-          userLocation
+          userLocation: locationEnabled && userLocation ? userLocation : undefined
         }, {
           signal: abortController.signal
         })
