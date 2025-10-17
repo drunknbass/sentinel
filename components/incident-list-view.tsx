@@ -84,6 +84,7 @@ export default function IncidentListView({
   const [sortBy, setSortBy] = useState<"time" | "priority">("time")
   const [filterPriority, setFilterPriority] = useState<string>("all")
   const [filterCategory, setFilterCategory] = useState<string>("all")
+  const [hideWithoutLocation, setHideWithoutLocation] = useState(false)
 
   const categories = useMemo(() => {
     const cats = new Set(items.map((item) => item.call_category).filter(Boolean))
@@ -101,6 +102,10 @@ export default function IncidentListView({
       filtered = filtered.filter((item) => item.call_category === filterCategory)
     }
 
+    if (hideWithoutLocation) {
+      filtered = filtered.filter((item) => item.lat && item.lon)
+    }
+
     filtered.sort((a, b) => {
       if (sortBy === "time") {
         return new Date(b.received_at).getTime() - new Date(a.received_at).getTime()
@@ -110,7 +115,7 @@ export default function IncidentListView({
     })
 
     return filtered
-  }, [items, sortBy, filterPriority, filterCategory, getPriorityLabel])
+  }, [items, sortBy, filterPriority, filterCategory, hideWithoutLocation, getPriorityLabel])
 
   const categoryOptions = [
     { value: "all", label: "All Categories" },
@@ -175,6 +180,30 @@ export default function IncidentListView({
               options={categoryOptions}
               onChange={setFilterCategory}
             />
+
+            {/* Checkbox to hide incidents without location */}
+            <button
+              onClick={() => setHideWithoutLocation(!hideWithoutLocation)}
+              className="w-full px-4 py-2.5 bg-black/60 backdrop-blur-xl border border-white/20 rounded-full text-sm font-semibold text-white hover:bg-black/80 hover:border-white/30 transition-all shadow-lg flex items-center gap-2"
+              style={{
+                backdropFilter: "blur(24px) saturate(180%)",
+                WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
+              }}
+            >
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                hideWithoutLocation
+                  ? 'bg-red-500 border-red-500'
+                  : 'border-white/40'
+              }`}>
+                {hideWithoutLocation && (
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+              <span>Hide incidents without location</span>
+            </button>
           </div>
 
           <div className="mt-3 text-sm text-gray-400">
