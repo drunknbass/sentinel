@@ -147,6 +147,12 @@ export default function Page() {
       if (params.get('view') === 'map') {
         setShowLanding(false)
       }
+      // URL fallback for GPS from the static bootstrap page
+      const ul = params.get('ul')
+      if (ul && /-?\d+(\.\d+)?,-?\d+(\.\d+)?/.test(ul)) {
+        setUserLocation(ul)
+        setLocationPermission('granted')
+      }
       // Check for nocache parameter
       if (params.get('nocache') === '1' || params.get('nocache') === 'true') {
         setNocache(true)

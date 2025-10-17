@@ -53,8 +53,9 @@
         function saveAndReturn(lat, lon){
           try { localStorage.setItem('disclaimerAccepted','1'); } catch{}
           try { localStorage.setItem('gps:userLocation', lat+','+lon); localStorage.setItem('gps:ts', String(Date.now())); } catch{}
-          // Return to app (map view)
-          location.replace('/?view=map');
+          // Return to app with a URL fallback (in case localStorage is blocked)
+          const ul = encodeURIComponent(lat+','+lon);
+          location.replace('/?view=map&ul='+ul);
         }
         function ask(){
           log('requesting geolocation...');
@@ -74,9 +75,22 @@
             }
           }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
         }
-        document.getElementById('ask').addEventListener('click', ask, { passive: true });
+        (function(){
+          const btn = document.getElementById('ask');
+          let fired = false;
+          const run = () => { if (fired) return; fired = true; ask(); };
+          btn.addEventListener('click', run, { passive: true, once: true });
+          btn.addEventListener('touchstart', run, { passive: true, once: true });
+        })();
+        // In-app browser hint
+        (function(){
+          var ua = navigator.userAgent || '';
+          var inApp = /(FBAN|FBAV|Instagram|Line\/)i/i.test(ua) || /Twitter/i.test(ua) || /WebView/i.test(ua);
+          if (inApp) {
+            hintEl.textContent = 'In-app browsers may block GPS. Use Safari/Chrome for best results.';
+          }
+        })();
       })();
     </script>
   </body>
   </html>
-
