@@ -1051,7 +1051,7 @@ export default function Page() {
               onClick={() => isMobile && setLegendOpen((v) => !v)}
               className="w-full text-left border border-amber-500/50 p-1.5"
             >
-              <div className="text-[9px] font-mono font-bold text-amber-500 tracking-wider">[LEGEND]</div>
+              <div className="text-[9px] font-mono font-bold text-amber-500 tracking-wider">LEGEND</div>
             </button>
             {(legendOpen || !isMobile) && (
               <div className="space-y-3 text-xs font-mono p-2 border-t border-amber-500">
@@ -1910,7 +1910,7 @@ export default function Page() {
               )}
 
               {mobileSheetType === 'incidents' && (
-                <div className="space-y-3 font-mono">
+                <div className="p-6 space-y-3 font-mono">
                   {filteredItems.map((item) => {
                     const locationInfo = (() => {
                       const hasLocation = !!(item.lat && item.lon)
@@ -1979,7 +1979,7 @@ export default function Page() {
               )}
 
               {mobileSheetType === 'critical' && (
-                <div className="space-y-3 font-mono">
+                <div className="p-6 space-y-3 font-mono">
                   {criticalIncidents.map((item) => {
                     const locationInfo = (() => {
                       const hasLocation = !!(item.lat && item.lon)
