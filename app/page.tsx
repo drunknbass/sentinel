@@ -1352,16 +1352,6 @@ export default function Page() {
             <div className="overflow-y-auto" style={{ maxHeight: 'calc(85vh - 3rem)' }}>
               {mobileSheetType === 'filters' && (
                 <div className="p-6 space-y-6 font-mono">
-                  <div className="flex items-center justify-between border-b-2 border-amber-500 pb-3 mb-4">
-                    <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ FILTER OPTIONS ╗</div>
-                    <button
-                      onClick={() => setMobileSheetType(null)}
-                      className="w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
-                    >
-                      X
-                    </button>
-                  </div>
-
                   {/* Search & Tags */}
                   <div>
                     <label className="text-xs text-amber-500/70 uppercase tracking-wider mb-2 block">
