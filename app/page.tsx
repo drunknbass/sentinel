@@ -1142,7 +1142,7 @@ export default function Page() {
               <div className="flex items-center justify-between border-b-2 border-amber-500 pb-3 mb-4">
                 <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ INCIDENT DETAILS ╗</div>
                 <button
-                  onClick={() => setSelectedIncident(null)}
+                  onClick={() => window.history.back()}
                   className="w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
                 >
                   X
@@ -1238,10 +1238,7 @@ export default function Page() {
               <div className="flex items-center justify-between border-b-2 border-amber-500 pb-3 mb-4">
                 <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ INCIDENT DETAILS ╗</div>
                 <button
-                  onClick={() => {
-                    setShowBottomSheet(false)
-                    setSelectedIncident(null)
-                  }}
+                  onClick={() => window.history.back()}
                   className="w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
                 >
                   X
