@@ -1332,7 +1332,7 @@ export default function Page() {
 
       {/* Mobile unified bottom sheet - Terminal style with drag support */}
       {mobileSheetType && (
-        <div className="md:hidden absolute left-0 right-0 bottom-0 safe-top-with-offset z-50 flex flex-col no-overscroll">
+        <div className="md:hidden absolute left-0 right-0 bottom-0 safe-top-with-filters-offset z-50 flex flex-col no-overscroll">
           <div
             className="absolute inset-0 bg-black/80 backdrop-blur-sm no-overscroll"
             onClick={() => setMobileSheetType(null)}

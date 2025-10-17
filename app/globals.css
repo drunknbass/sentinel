@@ -583,7 +583,7 @@ body {
 }
 
 .safe-bottom-legend {
-  bottom: calc(24px + env(safe-area-inset-bottom));
+  bottom: 24px;
 }
 
 .safe-bottom-footer {
@@ -596,6 +596,10 @@ body {
 
 .safe-top-with-offset {
   top: calc(140px + env(safe-area-inset-top));
+}
+
+.safe-top-with-filters-offset {
+  top: calc(200px + env(safe-area-inset-top));
 }
 
 /* Prevent scroll bounce on iOS and other mobile browsers */
