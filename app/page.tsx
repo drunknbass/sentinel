@@ -84,6 +84,10 @@ export default function Page() {
   const [criticalCarouselIndex, setCriticalCarouselIndex] = useState(0)
   const [showCriticalCarousel, setShowCriticalCarousel] = useState(true)
 
+  // Map position state
+  const [mapCenter, setMapCenter] = useState<[number, number] | undefined>(undefined)
+  const [mapZoom, setMapZoom] = useState<number | undefined>(undefined)
+
   /**
    * Check URL params on client mount to skip landing page if returning
    */
@@ -101,6 +105,23 @@ export default function Page() {
       const searchParam = params.get('search')
       if (searchParam) {
         setSearchQuery(searchParam)
+      }
+      // Read map position from URL
+      const latParam = params.get('lat')
+      const lonParam = params.get('lon')
+      const zoomParam = params.get('zoom')
+      if (latParam && lonParam) {
+        const lat = parseFloat(latParam)
+        const lon = parseFloat(lonParam)
+        if (!isNaN(lat) && !isNaN(lon)) {
+          setMapCenter([lat, lon])
+        }
+      }
+      if (zoomParam) {
+        const zoom = parseFloat(zoomParam)
+        if (!isNaN(zoom)) {
+          setMapZoom(zoom)
+        }
       }
     }
   }, [])
@@ -152,6 +173,22 @@ export default function Page() {
   const handleLocationPermission = (granted: boolean) => {
     setLocationPermission(granted ? 'granted' : 'denied')
     console.log('[PAGE] Location permission:', granted ? 'granted' : 'denied')
+  }
+
+  /**
+   * Callback when map moves or zooms - syncs to URL params
+   */
+  const handleMapMove = (center: [number, number], zoom: number) => {
+    if (typeof window === 'undefined') return
+
+    const params = new URLSearchParams(window.location.search)
+    // Round to 4 decimal places to keep URL clean
+    params.set('lat', center[0].toFixed(4))
+    params.set('lon', center[1].toFixed(4))
+    params.set('zoom', zoom.toFixed(1))
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`
+    window.history.replaceState({}, '', newUrl)
   }
 
   /**
@@ -580,6 +617,9 @@ export default function Page() {
           sidePanelOpen={!showBottomSheet && (showListView || !!selectedIncident)}
           panelWidth={showListView ? 500 : 320}
           showBottomSheet={showBottomSheet}
+          initialCenter={mapCenter}
+          initialZoom={mapZoom}
+          onMapMove={handleMapMove}
         />
       </div>
 

@@ -14,6 +14,9 @@ type LeafletMapProps = {
   sidePanelOpen?: boolean
   panelWidth?: number
   showBottomSheet?: boolean
+  initialCenter?: [number, number]
+  initialZoom?: number
+  onMapMove?: (center: [number, number], zoom: number) => void
 }
 
 const getPriorityColor = (priority: number) => {
@@ -45,7 +48,7 @@ const getApproximateLevel = (item: Incident): "exact" | "small" | "medium" | "la
   return "exact"
 }
 
-export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet }: LeafletMapProps) {
+export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet, initialCenter, initialZoom, onMapMove }: LeafletMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -83,8 +86,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         const defaultZoom = 10
 
         const map = L.map(mapRef.current, {
-          center: riversideCenter,
-          zoom: defaultZoom,
+          center: initialCenter || riversideCenter,
+          zoom: initialZoom || defaultZoom,
           zoomControl: false,
           scrollWheelZoom: true,
           doubleClickZoom: true,
@@ -156,6 +159,15 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         document.head.appendChild(style)
 
         mapInstanceRef.current = map
+
+        // Add event listeners for map position changes
+        if (onMapMove) {
+          map.on('moveend', () => {
+            const center = map.getCenter()
+            const zoom = map.getZoom()
+            onMapMove([center.lat, center.lng], zoom)
+          })
+        }
 
         // Wait for map to be fully loaded before requesting location
         map.whenReady(() => {
@@ -457,7 +469,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
     })
 
     // Only zoom to fit all pins on the very first load (never again after that)
-    if (validItems.length > 0 && !hasInitialZoomedRef.current && !selectedIncident) {
+    // Skip if user provided initial center/zoom from URL params
+    if (validItems.length > 0 && !hasInitialZoomedRef.current && !selectedIncident && !initialCenter && !initialZoom) {
       // Add a small delay to ensure markers are rendered first
       setTimeout(() => {
         if (mapInstanceRef.current) {
