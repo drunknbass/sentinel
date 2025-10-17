@@ -160,9 +160,10 @@ export default function IncidentListView({
                       style={{
                         borderColor: getPriorityColor(item.priority),
                         color: getPriorityColor(item.priority),
+                        boxShadow: `0 0 4px ${getPriorityColor(item.priority)}40`
                       }}
                     >
-                      [{getPriorityLabel(item.priority)}]
+                      [P-{item.priority} {getPriorityLabel(item.priority)}]
                     </span>
                     {item.call_category && (
                       <span className="text-xs text-amber-500/70 uppercase tracking-wide">{item.call_category}</span>

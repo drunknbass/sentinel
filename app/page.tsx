@@ -61,7 +61,7 @@ export default function Page() {
   const [loadingProgress, setLoadingProgress] = useState<{stage: string; current?: number; total?: number} | null>(null)
   const [showFilterSheet, setShowFilterSheet] = useState(false)  // Mobile filter sheet state
   const [hasInitialLoad, setHasInitialLoad] = useState(false)  // Track if we've loaded data at least once
-  const [mobileSheetType, setMobileSheetType] = useState<'filters' | 'incidents' | null>(null)  // Track which mobile sheet is open
+  const [mobileSheetType, setMobileSheetType] = useState<'filters' | 'incidents' | 'critical' | null>(null)  // Track which mobile sheet is open
   const [sheetDragOffset, setSheetDragOffset] = useState(0)  // Track drag position for bottom sheet
 
   // Data state
@@ -611,6 +611,29 @@ export default function Page() {
             RIVERSIDE SHERIFF MOBILE DATA TERMINAL
           </div>
           <div className="flex items-center gap-3">
+            {/* Mobile filters button */}
+            <button
+              onClick={() => {
+                setMobileSheetType(mobileSheetType === 'filters' ? null : 'filters')
+                setShowBottomSheet(false)
+                setSelectedIncident(null)
+              }}
+              className={`md:hidden flex items-center gap-2 text-xs font-mono border-2 border-amber-500 px-3 py-1 transition-all ${
+                mobileSheetType === 'filters'
+                  ? 'bg-amber-500 text-black border-amber-500'
+                  : 'text-amber-500 hover:bg-amber-500 hover:text-black'
+              }`}
+            >
+              <Filter className="w-3 h-3" />
+              <span>FILTERS</span>
+              {activeFilterCount > 0 && (
+                <span className={`ml-1 px-1.5 py-0.5 text-[10px] font-bold border ${
+                  mobileSheetType === 'filters' ? 'bg-black text-amber-500 border-black' : 'bg-amber-500 text-black border-amber-500'
+                }`}>
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
             <button
               onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
               disabled={loading && !isRefreshing}
@@ -663,28 +686,6 @@ export default function Page() {
           <div className="flex gap-2">
             <button
               onClick={() => {
-                setMobileSheetType(mobileSheetType === 'filters' ? null : 'filters')
-                setShowBottomSheet(false)
-                setSelectedIncident(null)
-              }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 border-2 font-mono text-xs font-bold tracking-wider transition-all ${
-                mobileSheetType === 'filters'
-                  ? 'bg-amber-500 text-black border-amber-500'
-                  : 'bg-black text-amber-500 border-amber-500 hover:bg-amber-500/10'
-              }`}
-            >
-              <Filter className="w-4 h-4" />
-              <span>FILTERS</span>
-              {activeFilterCount > 0 && (
-                <span className={`ml-1 px-1.5 py-0.5 text-[10px] font-bold border ${
-                  mobileSheetType === 'filters' ? 'bg-black text-amber-500 border-black' : 'bg-amber-500 text-black border-amber-500'
-                }`}>
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => {
                 setMobileSheetType(mobileSheetType === 'incidents' ? null : 'incidents')
                 setShowBottomSheet(false)
                 setSelectedIncident(null)
@@ -700,6 +701,32 @@ export default function Page() {
                 mobileSheetType === 'incidents' ? 'bg-black text-amber-500 border-black' : 'bg-amber-500 text-black border-amber-500'
               }`}>
                 {filteredItems.length}
+              </span>
+            </button>
+            <button
+              onClick={() => {
+                setMobileSheetType(mobileSheetType === 'critical' ? null : 'critical')
+                setShowBottomSheet(false)
+                setSelectedIncident(null)
+              }}
+              disabled={criticalIncidents.length === 0}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 border-2 font-mono text-xs font-bold tracking-wider transition-all ${
+                criticalIncidents.length === 0
+                  ? 'opacity-30 cursor-not-allowed bg-black text-amber-500 border-amber-500'
+                  : mobileSheetType === 'critical'
+                    ? 'bg-red-600 text-black border-red-600'
+                    : 'bg-black text-red-600 border-red-600 hover:bg-red-600/10'
+              }`}
+            >
+              <span>CRITICAL</span>
+              <span className={`px-1.5 py-0.5 text-[10px] font-bold border ${
+                criticalIncidents.length === 0
+                  ? 'bg-amber-500 text-black border-amber-500'
+                  : mobileSheetType === 'critical'
+                    ? 'bg-black text-red-600 border-black'
+                    : 'bg-red-600 text-black border-red-600'
+              }`}>
+                {criticalIncidents.length}
               </span>
             </button>
           </div>
@@ -1197,6 +1224,22 @@ export default function Page() {
               {mobileSheetType === 'incidents' && (
                 <IncidentListView
                   items={filteredItems}
+                  onClose={() => setMobileSheetType(null)}
+                  onSelectIncident={(incident) => {
+                    setSelectedIncident(incident)
+                    setMobileSheetType(null)
+                    setShowBottomSheet(true)
+                  }}
+                  getPriorityLabel={getPriorityLabel}
+                  getPriorityColor={getPriorityColor}
+                  searchQuery={searchQuery}
+                  onSearchQueryChange={setSearchQuery}
+                />
+              )}
+
+              {mobileSheetType === 'critical' && (
+                <IncidentListView
+                  items={criticalIncidents}
                   onClose={() => setMobileSheetType(null)}
                   onSelectIncident={(incident) => {
                     setSelectedIncident(incident)
