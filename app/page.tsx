@@ -1017,17 +1017,24 @@ export default function Page() {
       {/* Top navigation bar - Amber MDT style - Hide when loading */}
       {!(loading && !isRefreshing) && (
         <div className="absolute top-0 left-0 right-0 z-[100] bg-black border-b-2 border-amber-500 safe-top">
-        <div className="flex items-center justify-between px-4 py-2">
-          <div className="text-xs font-mono text-amber-500">
+        {/* Decorative header bar — hide on mobile to prevent overflow */}
+        <div className="hidden md:flex items-center justify-between px-4 py-2">
+          <div className="text-xs font-mono text-amber-500 truncate w-full">
             ╔═══════════════════════════════════════════════════════════════════════════════╗
           </div>
         </div>
-        <div className="flex items-center justify-between px-6 py-2 bg-black">
-          <div className="text-xs font-mono font-bold text-amber-500">RSO-MDT v2.1</div>
-          <div className="text-sm font-mono font-bold text-amber-500 tracking-wider hidden md:block">
+        <div className="flex items-center justify-between px-3 sm:px-6 py-2 bg-black flex-wrap gap-2">
+          {/* Brand */}
+          <div className="text-xs font-mono font-bold text-amber-500 min-w-0">
+            <span className="md:hidden">RSO‑MDT</span>
+            <span className="hidden md:inline">RSO‑MDT v2.1</span>
+          </div>
+          {/* Title (desktop only) */}
+          <div className="text-sm font-mono font-bold text-amber-500 tracking-wider hidden md:block min-w-0 truncate">
             RIVERSIDE SHERIFF MOBILE DATA TERMINAL
           </div>
-          <div className="flex items-center gap-2">
+          {/* Controls */}
+          <div className="flex items-center gap-2 min-w-0">
             {/* Location status badge */}
             <button
               onClick={() => {
@@ -1037,7 +1044,7 @@ export default function Page() {
                   setShowLocationPrompt(true)
                 }
               }}
-              className={`flex items-center gap-2 text-xs font-mono border-2 px-3 py-1 transition-all ${
+              className={`flex items-center gap-1 sm:gap-2 text-[11px] sm:text-xs font-mono border-2 px-2 sm:px-3 py-1 transition-all ${
                 locationPermission === 'granted'
                   ? 'border-cyan-500 text-cyan-500 cursor-default'
                   : locationPermission === 'denied'
@@ -1054,7 +1061,7 @@ export default function Page() {
             <button
               onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
               disabled={loading && !isRefreshing}
-              className={`flex items-center gap-2 text-xs font-mono border-2 border-amber-500 px-3 py-1 transition-all ${
+              className={`flex items-center gap-1 sm:gap-2 text-[11px] sm:text-xs font-mono border-2 border-amber-500 px-2 sm:px-3 py-1 transition-all ${
                 (loading && !isRefreshing)
                   ? 'text-amber-500 cursor-not-allowed'
                   : autoRefreshEnabled
