@@ -58,6 +58,7 @@ export default function Page() {
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null)
   const [locationPermission, setLocationPermission] = useState<'pending' | 'granted' | 'denied'>('pending')
   const [userLocation, setUserLocation] = useState<string | undefined>(undefined)
+  const [showDisclaimer, setShowDisclaimer] = useState<boolean>(true)
   const [showLocationPrompt, setShowLocationPrompt] = useState(false)
   const [locationRequestTrigger, setLocationRequestTrigger] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -137,6 +138,11 @@ export default function Page() {
    */
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Disclaimer gate – show once per browser unless dismissed
+      try {
+        const accepted = window.localStorage.getItem('disclaimerAccepted') === '1'
+        if (accepted) setShowDisclaimer(false)
+      } catch {}
       const params = new URLSearchParams(window.location.search)
       if (params.get('view') === 'map') {
         setShowLanding(false)
@@ -412,6 +418,13 @@ export default function Page() {
   const handleLocationRequestReady = (requestFn: () => void) => {
     console.log('[PAGE] Received location request function from map')
     locationRequestFnRef.current = requestFn
+  }
+
+  // Accept disclaimer and immediately request geolocation via user gesture
+  const handleAcceptDisclaimer = () => {
+    try { if (typeof window !== 'undefined') window.localStorage.setItem('disclaimerAccepted', '1') } catch {}
+    setShowDisclaimer(false)
+    try { handleRequestLocation() } catch {}
   }
 
   // Receive hardware location from map and store it for API
@@ -826,6 +839,36 @@ export default function Page() {
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black no-overscroll">
+      {/* Unofficial use disclaimer – dismiss to continue and request location */}
+      {showDisclaimer && (
+        <div className="absolute inset-0 z-[200] flex items-center justify-center p-4 bg-black/90">
+          <div className="max-w-lg w-full bg-black border-4 border-amber-500">
+            <div className="border-2 border-amber-500/50 p-5 md:p-6 space-y-4 font-mono">
+              <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ IMPORTANT NOTICE ╗</div>
+              <div className="text-sm text-amber-400 leading-relaxed">
+                This application is unofficial. It is not affiliated with, endorsed by, or associated with the Riverside County Sheriff's Office or the Riverside Police Department. Data shown is aggregated from publicly available sources for informational purposes only and may be incomplete or delayed. Do not use this app for emergency response. For emergencies, call 911.
+              </div>
+              <div className="text-[11px] text-amber-500/60">
+                By continuing you acknowledge this notice.
+              </div>
+              <div className="pt-2 flex gap-3">
+                <button
+                  onClick={handleAcceptDisclaimer}
+                  className="flex-1 bg-amber-500 text-black font-bold py-2.5 border-2 border-amber-500 hover:bg-amber-400 tracking-wider"
+                >
+                  [ENTER] ACKNOWLEDGE & CONTINUE
+                </button>
+                <button
+                  onClick={() => setShowDisclaimer(false)}
+                  className="px-4 border-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black font-bold tracking-wider"
+                >
+                  [ESC] DISMISS
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Legend - Bottom left corner with hover-to-expand - Hide when loading */}
       {!(loading && !isRefreshing) && (
         <div
