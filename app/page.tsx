@@ -7,7 +7,8 @@ import LandingPage from "@/components/landing-page"
 import IncidentListView from "@/components/incident-list-view"
 import TerminalLoading from "@/components/terminal-loading"
 import { fetchIncidents, type IncidentsResponse } from "@/lib/api/incidents"
-import { X, ChevronLeft, ChevronRight } from "lucide-react"
+import { X, ChevronLeft, ChevronRight, Filter } from "lucide-react"
+import { TypeAnimation } from "react-type-animation"
 
 type Incident = IncidentsResponse["items"][number]
 
@@ -57,6 +58,8 @@ export default function Page() {
   const [locationPermission, setLocationPermission] = useState<'pending' | 'granted' | 'denied'>('pending')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [loadingProgress, setLoadingProgress] = useState<{stage: string; current?: number; total?: number} | null>(null)
+  const [showFilterSheet, setShowFilterSheet] = useState(false)  // Mobile filter sheet state
+  const [hasInitialLoad, setHasInitialLoad] = useState(false)  // Track if we've loaded data at least once
 
   // Data state
   const [items, setItems] = useState<Incident[]>([])
@@ -76,6 +79,9 @@ export default function Page() {
   // nocache flag from URL
   const [nocache, setNocache] = useState(false)
 
+  // Tab visibility state
+  const [isTabVisible, setIsTabVisible] = useState(true)
+
   // Critical carousel state
   const [criticalCarouselIndex, setCriticalCarouselIndex] = useState(0)
   const [showCriticalCarousel, setShowCriticalCarousel] = useState(true)
@@ -94,6 +100,19 @@ export default function Page() {
         setNocache(true)
       }
     }
+  }, [])
+
+  /**
+   * Handle tab visibility changes to pause/resume polling
+   */
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsTabVisible(!document.hidden)
+      console.log('[PAGE] Tab visibility changed:', !document.hidden ? 'visible' : 'hidden')
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
 
   /**
@@ -188,6 +207,19 @@ export default function Page() {
   )
 
   /**
+   * Calculate number of active filters for the badge
+   */
+  const activeFilterCount = useMemo(() => {
+    let count = 0
+    if (selectedCategory) count++
+    if (minPriority < 100) count++
+    if (timeRange < 999) count++
+    if (searchTags.length > 0) count += searchTags.length
+    if (selectedRegion) count++
+    return count
+  }, [selectedCategory, minPriority, timeRange, searchTags, selectedRegion])
+
+  /**
    * Fetches incidents from API on mount and every 60 seconds
    * Applies time range filter to fetch only relevant data
    */
@@ -249,6 +281,7 @@ export default function Page() {
         if (!active) return
         setLoadingProgress({ stage: 'Rendering', current: data.items?.length, total: data.items?.length })
         setItems((data.items || []) as Incident[])
+        setHasInitialLoad(true)  // Mark that we've loaded data at least once
         console.log('[PAGE] Set items state:', data.items?.length || 0)
       } catch (err: any) {
         // Don't show error if request was aborted (filter changed)
@@ -271,12 +304,15 @@ export default function Page() {
 
     loadIncidents()
 
-    // Auto-refresh every 60 seconds if enabled
+    // Auto-refresh every 60 seconds if enabled and tab is visible
     let interval: NodeJS.Timeout | null = null
-    if (autoRefreshEnabled) {
+    if (autoRefreshEnabled && isTabVisible) {
       interval = setInterval(() => {
-        console.log('[PAGE] Auto-refreshing data (60s interval)')
-        loadIncidents()
+        // Double-check tab visibility before refreshing
+        if (document && !document.hidden) {
+          console.log('[PAGE] Auto-refreshing data (60s interval)')
+          loadIncidents()
+        }
       }, 60000)
     }
 
@@ -285,7 +321,7 @@ export default function Page() {
       abortController.abort() // Cancel in-flight request when filters change
       if (interval) clearInterval(interval)
     }
-  }, [selectedCategory, minPriority, timeRange, showLanding, autoRefreshEnabled, selectedRegion, nocache])
+  }, [selectedCategory, minPriority, timeRange, showLanding, autoRefreshEnabled, selectedRegion, nocache, isTabVisible])
 
   /**
    * Auto-advances critical carousel every 8 seconds
@@ -339,7 +375,21 @@ export default function Page() {
       <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-black/40 backdrop-blur-xl border-b border-white/5">
         <div className="text-sm font-semibold tracking-wider"></div>
         <div className="text-sm font-bold tracking-wider">RIVERSIDE INCIDENTS</div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Filter button for mobile */}
+          <button
+            onClick={() => setShowFilterSheet(true)}
+            className="md:hidden relative p-2 bg-white/10 backdrop-blur-xl rounded-lg hover:bg-white/20 transition-all"
+            aria-label="Open filters"
+          >
+            <Filter className="w-5 h-5" />
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+          {/* Signal bars */}
           <div className="w-4 h-3 flex gap-0.5">
             <div className="w-1 h-full bg-white rounded-sm" />
             <div className="w-1 h-full bg-white rounded-sm" />
@@ -426,7 +476,53 @@ export default function Page() {
                 loadingProgress.current && loadingProgress.total ? (
                   `${loadingProgress.stage} ${loadingProgress.current}/${loadingProgress.total}`
                 ) : (
-                  loadingProgress.stage
+                  loadingProgress.stage === 'Geocoding' ? (
+                    <div className="inline-block overflow-hidden">
+                      <span
+                        className="inline-block"
+                        style={{
+                          background: 'linear-gradient(90deg, #ffffff 0%, #ff0000 50%, #ffffff 100%)',
+                          backgroundClip: 'text',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          backgroundSize: '200% 100%',
+                          animation: 'gradient-shift 2s ease infinite'
+                        }}
+                      >
+                        <TypeAnimation
+                          sequence={[
+                            'G',
+                            150,
+                            'Ge',
+                            150,
+                            'Geo',
+                            150,
+                            'Geoc',
+                            150,
+                            'Geoco',
+                            150,
+                            'Geocod',
+                            150,
+                            'Geocodi',
+                            150,
+                            'Geocodin',
+                            150,
+                            'Geocoding',
+                            1000,
+                            'Geocoding.',
+                            200,
+                            'Geocoding..',
+                            200,
+                            'Geocoding...',
+                            500,
+                          ]}
+                          repeat={Infinity}
+                          cursor={false}
+                          speed={50}
+                        />
+                      </span>
+                    </div>
+                  ) : loadingProgress.stage
                 )
               ) : (
                 loading ? 'LOADING' : 'UPDATING'
@@ -437,20 +533,22 @@ export default function Page() {
           </span>
         </button>
 
-        {/* Filter panel */}
-        <FilterPanel
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          minPriority={minPriority}
-          onPriorityChange={setMinPriority}
-          timeRange={timeRange}
-          onTimeRangeChange={setTimeRange}
-          searchTags={searchTags}
-          onSearchTagsChange={setSearchTags}
-          availableTags={availableTags}
-          selectedRegion={selectedRegion}
-          onRegionChange={setSelectedRegion}
-        />
+        {/* Filter panel - hidden on mobile, aligned to badge */}
+        <div className="hidden md:block">
+          <FilterPanel
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            minPriority={minPriority}
+            onPriorityChange={setMinPriority}
+            timeRange={timeRange}
+            onTimeRangeChange={setTimeRange}
+            searchTags={searchTags}
+            onSearchTagsChange={setSearchTags}
+            availableTags={availableTags}
+            selectedRegion={selectedRegion}
+            onRegionChange={setSelectedRegion}
+          />
+        </div>
       </div>
 
       {/* Terminal loading overlay - only show on initial load, not refreshes */}
@@ -567,9 +665,14 @@ export default function Page() {
             </p>
             <button
               onClick={() => setShowListView(true)}
-              className="w-full max-w-md mx-auto bg-white/95 backdrop-blur-2xl text-black font-bold text-lg py-4 rounded-full hover:bg-white transition-all shadow-2xl"
+              disabled={loading && !hasInitialLoad}
+              className={`w-full max-w-md mx-auto backdrop-blur-2xl font-bold text-lg py-4 rounded-full transition-all shadow-2xl ${
+                loading && !hasInitialLoad
+                  ? 'bg-white/50 text-black/50 cursor-not-allowed'
+                  : 'bg-white/95 text-black hover:bg-white cursor-pointer'
+              }`}
             >
-              Continue
+              {loading && !hasInitialLoad ? 'Loading...' : 'Continue'}
             </button>
           </div>
         </div>
@@ -714,6 +817,64 @@ export default function Page() {
                 <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Incident ID</div>
                 <div className="font-mono text-sm text-gray-400">{selectedIncident.incident_id}</div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Filter Sheet */}
+      {showFilterSheet && (
+        <div className="md:hidden absolute inset-0 z-50 flex items-end animate-slide-up">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            style={{ WebkitBackdropFilter: "blur(8px)" }}
+            onClick={() => setShowFilterSheet(false)}
+          />
+
+          <div
+            className="relative w-full max-h-[80vh] bg-black/60 backdrop-blur-3xl border-t border-white/20 rounded-t-3xl shadow-2xl overflow-hidden"
+            style={{
+              backdropFilter: "blur(40px) saturate(180%)",
+              WebkitBackdropFilter: "blur(40px) saturate(180%)",
+              boxShadow: "0 -8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
+            }}
+          >
+            <div className="flex justify-center py-3">
+              <div className="w-12 h-1.5 bg-gray-600 rounded-full" />
+            </div>
+
+            <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(80vh-2rem)]">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold">FILTERS</h3>
+                <button
+                  onClick={() => setShowFilterSheet(false)}
+                  className="flex items-center justify-center w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all"
+                  aria-label="Close filters"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <FilterPanel
+                selectedCategory={selectedCategory}
+                onCategoryChange={setSelectedCategory}
+                minPriority={minPriority}
+                onPriorityChange={setMinPriority}
+                timeRange={timeRange}
+                onTimeRangeChange={setTimeRange}
+                searchTags={searchTags}
+                onSearchTagsChange={setSearchTags}
+                availableTags={availableTags}
+                selectedRegion={selectedRegion}
+                onRegionChange={setSelectedRegion}
+              />
+
+              <button
+                onClick={() => setShowFilterSheet(false)}
+                className="w-full bg-white/95 backdrop-blur-xl text-black font-bold text-base py-3 rounded-full hover:bg-white transition-all shadow-xl mt-6"
+              >
+                Apply Filters ({filteredItems.length} results)
+              </button>
             </div>
           </div>
         </div>
