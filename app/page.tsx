@@ -350,13 +350,13 @@ export default function Page() {
       if (hasInitialLoad) {
         setIsRefreshing(true)
       }
-      setLoadingProgress({ stage: 'Fetching' })
+      setLoadingProgress({ stage: 'FETCHING' })
 
       try {
         // Show geocoding stage after 1 second (gives time for API fetch to complete)
         const geocodeTimer = setTimeout(() => {
           if (active) {
-            setLoadingProgress({ stage: 'Geocoding' })
+            setLoadingProgress({ stage: 'GEOCODING' })
           }
         }, 1000)
 
@@ -379,7 +379,7 @@ export default function Page() {
         })
 
         if (!active) return
-        setLoadingProgress({ stage: 'Rendering', current: data.items?.length, total: data.items?.length })
+        setLoadingProgress({ stage: 'RENDERING', current: data.items?.length, total: data.items?.length })
         setItems((data.items || []) as Incident[])
         setHasInitialLoad(true)  // Mark that we've loaded data at least once
         console.log('[PAGE] Set items state:', data.items?.length || 0)
@@ -644,32 +644,32 @@ export default function Page() {
             <button
               onClick={() => setShowListView(true)}
               disabled={loading || isRefreshing}
-              className={`px-6 py-3 text-xs font-mono font-bold transition-all text-amber-500 tracking-wider ${
+              className={`group px-6 py-3 text-xs font-mono font-bold transition-all text-amber-500 tracking-wider ${
                 (loading || isRefreshing)
                   ? 'opacity-50 cursor-not-allowed'
                   : 'hover:bg-amber-500 hover:text-black cursor-pointer'
               }`}
             >
-              <div className="text-[10px] text-amber-500/70 uppercase tracking-wider mb-1">ALL INCIDENTS</div>
-              <div className="text-lg font-bold">{filteredItems.length}</div>
+              <div className="text-[10px] text-amber-500/70 group-hover:text-black uppercase tracking-wider mb-1 transition-colors">ALL INCIDENTS</div>
+              <div className="text-lg font-bold group-hover:text-black transition-colors">{filteredItems.length}</div>
             </button>
 
             {/* Right column: Critical alerts */}
             <button
               onClick={() => setShowCriticalCarousel(!showCriticalCarousel)}
               disabled={criticalIncidents.length === 0}
-              className={`px-6 py-3 text-xs font-mono font-bold transition-all tracking-wider ${
+              className={`group px-6 py-3 text-xs font-mono font-bold transition-all tracking-wider ${
                 criticalIncidents.length === 0
                   ? 'opacity-30 cursor-not-allowed text-amber-500'
                   : showCriticalCarousel
-                    ? 'bg-red-600/20 text-red-600 hover:bg-red-600/30 cursor-pointer'
-                    : 'text-amber-500 hover:bg-amber-500/10 cursor-pointer'
+                    ? 'bg-red-600/20 text-red-600 hover:bg-red-600 hover:text-black cursor-pointer'
+                    : 'text-amber-500 hover:bg-amber-500 hover:text-black cursor-pointer'
               }`}
             >
-              <div className="text-[10px] uppercase tracking-wider mb-1 opacity-70">CRITICAL</div>
-              <div className="text-lg font-bold flex items-center justify-center gap-2">
+              <div className="text-[10px] uppercase tracking-wider mb-1 opacity-70 group-hover:text-black group-hover:opacity-100 transition-all">CRITICAL</div>
+              <div className="text-lg font-bold flex items-center justify-center gap-2 group-hover:text-black transition-colors">
                 {criticalIncidents.length > 0 && (
-                  <span className={`w-2 h-2 rounded-full ${showCriticalCarousel ? 'bg-red-600 animate-pulse' : 'bg-amber-500'}`} />
+                  <span className={`w-2 h-2 rounded-full ${showCriticalCarousel ? 'bg-red-600 animate-pulse group-hover:bg-black' : 'bg-amber-500 group-hover:bg-black'}`} />
                 )}
                 {criticalIncidents.length}
               </div>
@@ -693,8 +693,6 @@ export default function Page() {
           availableTags={availableTags}
           isExpanded={filterPanelExpanded}
           onExpandedChange={setFilterPanelExpanded}
-          searchQuery={searchQuery}
-          onSearchQueryChange={setSearchQuery}
         />
       </div>
 
@@ -1014,8 +1012,6 @@ export default function Page() {
                 availableTags={availableTags}
                 isExpanded={true}
                 onExpandedChange={() => {}}
-                searchQuery={searchQuery}
-                onSearchQueryChange={setSearchQuery}
               />
 
               <button

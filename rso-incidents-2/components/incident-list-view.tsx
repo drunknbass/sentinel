@@ -62,7 +62,7 @@ export default function IncidentListView({
             <h2 className="text-2xl font-bold font-mono text-amber-500 tracking-wider">[ALL INCIDENTS]</h2>
             <button
               onClick={onClose}
-              className="flex items-center justify-center w-10 h-10 border-2 border-amber-500 hover:bg-amber-500 hover:text-black transition-all text-amber-500 font-mono font-bold"
+              className="flex items-center justify-center w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black transition-all text-amber-500 font-mono font-bold"
               aria-label="Close"
             >
               X

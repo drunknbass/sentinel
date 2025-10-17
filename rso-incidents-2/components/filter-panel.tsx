@@ -65,11 +65,11 @@ export default function FilterPanel({
   ].reduce((a, b) => a + b, 0)
 
   return (
-    <div className="absolute top-32 left-6 z-40 w-80 max-w-[calc(100vw-3rem)]">
-      {!isExpanded && (
+    <div className="w-80 max-w-[calc(100vw-3rem)]">
+      <div className="bg-black border-2 border-amber-500 font-mono transition-all duration-300 overflow-hidden">
         <button
-          onClick={() => onExpandedChange(true)}
-          className="w-full bg-black border-2 border-amber-500 px-5 py-4 text-left hover:bg-amber-500/10 transition-all font-mono"
+          onClick={() => onExpandedChange(!isExpanded)}
+          className="w-full px-5 py-3 text-left hover:bg-amber-500/10 transition-all"
         >
           <div className="flex items-center justify-between">
             <div>
@@ -80,10 +80,8 @@ export default function FilterPanel({
             </div>
           </div>
         </button>
-      )}
 
-      {isExpanded && (
-        <div className="bg-black border-4 border-amber-500 overflow-hidden animate-slide-up font-mono">
+        <div className={`transition-all duration-300 origin-top ${isExpanded ? 'max-h-[70vh] opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="flex items-center justify-between px-5 py-4 border-b-2 border-amber-500 bg-black">
             <h3 className="font-bold text-lg text-amber-500 tracking-wider">╔═ FILTER PANEL ═╗</h3>
             <button
@@ -258,7 +256,7 @@ export default function FilterPanel({
             )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
