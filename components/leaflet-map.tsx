@@ -107,15 +107,14 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           onUserLocation?.(userLat, userLon)
         } catch {}
 
-        const isInRiversideArea = userLat >= 33.4 && userLat <= 34.2 && userLon >= -117.8 && userLon <= -116.8
-
-        if (isInRiversideArea && mapInstanceRef.current) {
+        if (mapInstanceRef.current) {
           try {
             // Remove existing user marker if any
             if (userMarkerRef.current) {
               userMarkerRef.current.remove()
             }
 
+            // Always show user marker and center view on current location
             mapInstanceRef.current.setView([userLat, userLon], 13)
 
             const userIcon = L.divIcon({
