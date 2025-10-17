@@ -470,51 +470,75 @@ export default function Page() {
 
           {/* Expanded content - visible on hover */}
           <div className="space-y-3 text-xs font-mono opacity-0 max-h-0 overflow-hidden group-hover:opacity-100 group-hover:max-h-[500px] transition-all duration-300 group-hover:pt-2 group-hover:mt-2 group-hover:border-t group-hover:border-amber-500">
-            {/* Priority levels */}
+            {/* Category colors */}
             <div>
-              <div className="text-amber-500/70 mb-2 text-[10px] tracking-wider">PRIORITY LEVELS:</div>
+              <div className="text-amber-500/70 mb-2 text-[10px] tracking-wider">INCIDENT CATEGORIES:</div>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-3 h-3 bg-[#8b0000] border border-[#8b0000]"
-                    style={{ boxShadow: "0 0 4px #8b0000" }}
+                    className="w-3 h-3 border"
+                    style={{
+                      backgroundColor: CATEGORY_COLORS.violent,
+                      borderColor: CATEGORY_COLORS.violent,
+                      boxShadow: `0 0 4px ${CATEGORY_COLORS.violent}`
+                    }}
                   />
-                  <span className="text-[#8b0000]">VIOLENT</span>
+                  <span style={{ color: CATEGORY_COLORS.violent }}>VIOLENT</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-3 h-3 bg-[#ff0000] border border-[#ff0000]"
-                    style={{ boxShadow: "0 0 4px #ff0000" }}
+                    className="w-3 h-3 border"
+                    style={{
+                      backgroundColor: CATEGORY_COLORS.weapons,
+                      borderColor: CATEGORY_COLORS.weapons,
+                      boxShadow: `0 0 4px ${CATEGORY_COLORS.weapons}`
+                    }}
                   />
-                  <span className="text-[#ff0000]">WEAPONS</span>
+                  <span style={{ color: CATEGORY_COLORS.weapons }}>WEAPONS</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-3 h-3 bg-[#ff4500] border border-[#ff4500]"
-                    style={{ boxShadow: "0 0 4px #ff4500" }}
+                    className="w-3 h-3 border"
+                    style={{
+                      backgroundColor: CATEGORY_COLORS.property,
+                      borderColor: CATEGORY_COLORS.property,
+                      boxShadow: `0 0 4px ${CATEGORY_COLORS.property}`
+                    }}
                   />
-                  <span className="text-[#ff4500]">PROPERTY</span>
+                  <span style={{ color: CATEGORY_COLORS.property }}>PROPERTY</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-3 h-3 bg-[#ff8c00] border border-[#ff8c00]"
-                    style={{ boxShadow: "0 0 4px #ff8c00" }}
+                    className="w-3 h-3 border"
+                    style={{
+                      backgroundColor: CATEGORY_COLORS.traffic,
+                      borderColor: CATEGORY_COLORS.traffic,
+                      boxShadow: `0 0 4px ${CATEGORY_COLORS.traffic}`
+                    }}
                   />
-                  <span className="text-[#ff8c00]">TRAFFIC</span>
+                  <span style={{ color: CATEGORY_COLORS.traffic }}>TRAFFIC</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-3 h-3 bg-[#ffa500] border border-[#ffa500]"
-                    style={{ boxShadow: "0 0 4px #ffa500" }}
+                    className="w-3 h-3 border"
+                    style={{
+                      backgroundColor: CATEGORY_COLORS.disturbance,
+                      borderColor: CATEGORY_COLORS.disturbance,
+                      boxShadow: `0 0 4px ${CATEGORY_COLORS.disturbance}`
+                    }}
                   />
-                  <span className="text-[#ffa500]">DISTURBANCE</span>
+                  <span style={{ color: CATEGORY_COLORS.disturbance }}>DISTURBANCE</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-3 h-3 bg-[#ffb000] border border-[#ffb000]"
-                    style={{ boxShadow: "0 0 4px #ffb000" }}
+                    className="w-3 h-3 border"
+                    style={{
+                      backgroundColor: CATEGORY_COLORS.drug,
+                      borderColor: CATEGORY_COLORS.drug,
+                      boxShadow: `0 0 4px ${CATEGORY_COLORS.drug}`
+                    }}
                   />
-                  <span className="text-[#ffb000]">DRUG</span>
+                  <span style={{ color: CATEGORY_COLORS.drug }}>DRUG</span>
                 </div>
               </div>
             </div>
@@ -835,15 +859,17 @@ export default function Page() {
               </div>
 
               <div>
-                <div
-                  className="inline-block px-3 py-1 border-2 text-xs font-bold mb-3 tracking-wider"
-                  style={{
-                    borderColor: getPriorityColor(selectedIncident.priority),
-                    color: getPriorityColor(selectedIncident.priority),
-                  }}
-                >
-                  [{getPriorityLabel(selectedIncident.priority)}]
-                </div>
+                {selectedIncident.call_category && (
+                  <div
+                    className="inline-block px-3 py-1 border-2 text-xs font-bold mb-3 tracking-wider uppercase"
+                    style={{
+                      borderColor: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
+                      color: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
+                    }}
+                  >
+                    [{selectedIncident.call_category}]
+                  </div>
+                )}
                 <h2 className="text-xl font-bold mb-2 text-amber-500 tracking-wide">
                   &gt; {selectedIncident.call_type}
                 </h2>
@@ -918,15 +944,17 @@ export default function Page() {
               </div>
 
               <div>
-                <div
-                  className="inline-block px-3 py-1 border-2 text-xs font-bold mb-3 tracking-wider"
-                  style={{
-                    borderColor: getPriorityColor(selectedIncident.priority),
-                    color: getPriorityColor(selectedIncident.priority),
-                  }}
-                >
-                  [{getPriorityLabel(selectedIncident.priority)}]
-                </div>
+                {selectedIncident.call_category && (
+                  <div
+                    className="inline-block px-3 py-1 border-2 text-xs font-bold mb-3 tracking-wider uppercase"
+                    style={{
+                      borderColor: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
+                      color: CATEGORY_COLORS[selectedIncident.call_category] || "#ffb000",
+                    }}
+                  >
+                    [{selectedIncident.call_category}]
+                  </div>
+                )}
                 <h2 className="text-xl font-bold mb-2 text-amber-500 tracking-wide">
                   &gt; {selectedIncident.call_type}
                 </h2>
