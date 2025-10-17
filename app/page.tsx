@@ -131,6 +131,17 @@ export default function Page() {
     return () => document.removeEventListener('pointerdown', onPointerDown, { capture: true } as any)
   }, [legendOpen])
 
+  // Prevent iOS rubber-band bounce when dragging on the fixed header
+  useEffect(() => {
+    const el = navRef.current
+    if (!el) return
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault()
+    }
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    return () => el.removeEventListener('touchmove', onTouchMove as any)
+  }, [])
+
   // Body scroll/interaction lock when any mobile panel is open
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -1057,7 +1068,11 @@ export default function Page() {
 
       {/* Top navigation bar - Amber MDT style - Hide when loading */}
       {!(loading && !isRefreshing) && (
-        <div ref={navRef} className="fixed top-0 left-0 right-0 z-[100] bg-black border-b-2 border-amber-500 safe-top">
+        <div
+          ref={navRef}
+          className="fixed top-0 left-0 right-0 z-[100] bg-black border-b-2 border-amber-500 safe-top"
+          style={{ touchAction: 'none', WebkitOverflowScrolling: 'auto' }}
+        >
         {/* Decorative header bar — desktop only */}
         {!isMobile && (
           <div className="flex items-center justify-between px-4 py-2">
