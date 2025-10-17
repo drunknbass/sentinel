@@ -222,7 +222,7 @@ export const REGION_CENTROIDS: Record<string, { lat: number; lon: number }> = {
  * Geocode using Apple Maps API
  * Excellent at handling block addresses and partial addresses with user location context
  */
-async function geocodeWithAppleMaps(address: string, area: string | null, station?: string): Promise<GeocodeResult> {
+async function geocodeWithAppleMaps(address: string, area: string | null, station?: string, userLocationOverride?: string): Promise<GeocodeResult> {
   const token = await generateAppleMapsToken();
   if (!token) {
     console.log('[GEOCODE] Apple Maps token generation failed, falling back');
@@ -243,14 +243,27 @@ async function geocodeWithAppleMaps(address: string, area: string | null, statio
   const q = `${useAddress}${area ? `, ${area}` : ''}`;
 
   // Priority for user location:
-  // 1. Use regional centroid if station is provided
-  // 2. Use area-specific coordinates if area matches
-  // 3. Fall back to county center
+  // 1. Explicit userLocation from hardware (if provided)
+  // 2. Regional centroid if station is provided
+  // 3. Area-specific coordinates if area matches
+  // 4. Fall back to county center
   let userLocation = RIVERSIDE_COUNTY_CENTER;
   let centroidUsed = 'county_center';
 
+  // If the client provided a hardware location, prefer it
+  if (userLocationOverride) {
+    const [latStr, lonStr] = userLocationOverride.split(',');
+    const ulat = parseFloat(latStr);
+    const ulon = parseFloat(lonStr);
+    if (!Number.isNaN(ulat) && !Number.isNaN(ulon)) {
+      userLocation = { lat: ulat, lon: ulon };
+      centroidUsed = 'user';
+      console.log('[GEOCODE] Using user-provided hardware location:', userLocation);
+    }
+  }
+
   // First check if we have a station/region - this provides the best context
-  if (station) {
+  if (station && centroidUsed !== 'user') {
     const stationLower = station.toLowerCase().trim();
     if (REGION_CENTROIDS[stationLower]) {
       userLocation = REGION_CENTROIDS[stationLower];
@@ -260,7 +273,7 @@ async function geocodeWithAppleMaps(address: string, area: string | null, statio
   }
 
   // If we have an area, check for more specific coordinates
-  if (area) {
+  if (area && centroidUsed !== 'user') {
     const areaUpper = area.toUpperCase().trim();
     if (AREA_COORDINATES[areaUpper]) {
       userLocation = AREA_COORDINATES[areaUpper];
@@ -494,7 +507,14 @@ async function geocodeWithCensus(address: string, area: string | null, allowAppr
  * 4. US Census Bureau (fallback - good for exact addresses)
  * 5. OpenStreetMap Nominatim (final fallback)
  */
-export async function geocodeOne(address: string | null, area: string | null, nocache: boolean = false, station?: string, forceGeocode?: 'apple' | 'census' | 'nominatim'): Promise<GeocodeResult> {
+export async function geocodeOne(
+  address: string | null,
+  area: string | null,
+  nocache: boolean = false,
+  station?: string,
+  userLocationOverride?: string,
+  forceGeocode?: 'apple' | 'census' | 'nominatim'
+): Promise<GeocodeResult> {
   if (!address) return { lat: null, lon: null };
 
   const key = `geo:${address}|${area || ''}`;
@@ -527,7 +547,7 @@ export async function geocodeOne(address: string | null, area: string | null, no
   }
 
   // Tier 3, 4 & 5: Geocode from APIs (slow)
-  console.log('[GEOCODE] Cache miss, geocoding:', key, station ? `(station: ${station})` : '', forceGeocode ? `(force: ${forceGeocode})` : '');
+  console.log('[GEOCODE] Cache miss, geocoding:', key, station ? `(station: ${station})` : '', userLocationOverride ? `(userLocation: ${userLocationOverride})` : '', forceGeocode ? `(force: ${forceGeocode})` : '');
 
   let value: GeocodeResult = { lat: null, lon: null };
 
@@ -536,7 +556,7 @@ export async function geocodeOne(address: string | null, area: string | null, no
     console.log(`[GEOCODE] Forcing ${forceGeocode} geocoding service`);
     switch (forceGeocode) {
       case 'apple':
-        value = await geocodeWithAppleMaps(address, area, station);
+        value = await geocodeWithAppleMaps(address, area, station, userLocationOverride);
         break;
       case 'census':
         value = await geocodeWithCensus(address, area);
@@ -548,7 +568,7 @@ export async function geocodeOne(address: string | null, area: string | null, no
   } else {
     // Normal fallback chain
     // Try Apple Maps first (best for block addresses with user location context)
-    value = await geocodeWithAppleMaps(address, area, station);
+    value = await geocodeWithAppleMaps(address, area, station, userLocationOverride);
 
     // Fallback to Census if Apple Maps fails
     if (value.lat === null && value.lon === null) {

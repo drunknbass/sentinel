@@ -10,6 +10,7 @@ type LeafletMapProps = {
   onMarkerClick: (item: Incident) => void
   selectedIncident: Incident | null
   onLocationPermission?: (granted: boolean) => void
+  onUserLocation?: (lat: number, lon: number) => void
   isRefreshing?: boolean
   sidePanelOpen?: boolean
   panelWidth?: number
@@ -53,7 +54,7 @@ const getApproximateLevel = (item: Incident): "exact" | "small" | "medium" | "la
   return "exact"
 }
 
-export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet, initialCenter, initialZoom, onMapMove, requestLocationTrigger, onLocationRequestReady }: LeafletMapProps) {
+export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, onUserLocation, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet, initialCenter, initialZoom, onMapMove, requestLocationTrigger, onLocationRequestReady }: LeafletMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -100,6 +101,11 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
         const userLat = position.coords.latitude
         const userLon = position.coords.longitude
+
+        // Bubble location up so API requests can use hardware location context
+        try {
+          onUserLocation?.(userLat, userLon)
+        } catch {}
 
         const isInRiversideArea = userLat >= 33.4 && userLat <= 34.2 && userLon >= -117.8 && userLon <= -116.8
 
@@ -265,7 +271,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       console.log('[MAP] Exposing location request function to parent')
       onLocationRequestReady(requestUserLocation)
     }
-  }, [onLocationRequestReady, mapInstanceRef.current])
+  }, [onLocationRequestReady])
 
   useEffect(() => {
     if (typeof window === "undefined" || !mapRef.current) return
@@ -370,6 +376,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
         mapInstanceRef.current = map
 
+        // Expose location request immediately once map exists (ensures user-gesture path works)
+        try { onLocationRequestReady?.(requestUserLocation) } catch {}
+
         // Add event listeners for map position changes
         if (onMapMove) {
           map.on('moveend', () => {
@@ -379,11 +388,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           })
         }
 
-        // Wait for map to be fully loaded before requesting location automatically
-        map.whenReady(() => {
-          console.log('[MAP] Map ready, requesting location automatically')
-          requestUserLocation()
-        })
+        // Do not auto-request location. Request only on explicit user action (via GPS button)
       }
     }
 

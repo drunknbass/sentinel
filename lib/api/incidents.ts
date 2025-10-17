@@ -12,6 +12,7 @@ export type IncidentFilters = {
   geocode?: boolean;
   limit?: number;
   station?: string;
+  userLocation?: string; // "lat,lon" to improve Apple geocode context
   nocache?: boolean;
 };
 
@@ -62,6 +63,7 @@ const buildQuery = (filters: IncidentFilters) => {
   if (filters.geocode) params.set('geocode', '1');
   if (filters.bbox?.length === 4) params.set('bbox', filters.bbox.join(','));
   if (filters.station) params.set('station', filters.station);
+  if (filters.userLocation) params.set('userLocation', filters.userLocation);
   if (filters.nocache) params.set('nocache', '1');
 
   return params.toString();

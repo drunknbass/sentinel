@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(Number(url.searchParams.get('limit') || 10000), 10000); // Increase default limit
   const withGeocode = ['1', 'true', 'yes'].includes((url.searchParams.get('geocode') || '').toLowerCase());
   const station = url.searchParams.get('station');
+  const userLocation = url.searchParams.get('userLocation');
   const maxGeocode = Number(url.searchParams.get('maxGeocode') || process.env.MAX_GEOCODE_PER_REQUEST || 100);
   const geocodeConcurrency = Number(url.searchParams.get('geocodeConcurrency') || process.env.GEOCODE_CONCURRENCY || 3);
   const nocache = ['1', 'true', 'yes'].includes((url.searchParams.get('nocache') || '').toLowerCase());
@@ -47,13 +48,15 @@ export async function GET(req: NextRequest) {
       bbox: bbox ? `${bbox.minLon},${bbox.minLat},${bbox.maxLon},${bbox.maxLat}` : null,
       limit,
       withGeocode,
-      station
+      station,
+      userLocation
     });
-    console.log('[API] Fetching incidents, geocode:', withGeocode, 'since:', since, 'station:', station, 'nocache:', nocache, 'forceGeocode:', forceGeocode);
+    console.log('[API] Fetching incidents, geocode:', withGeocode, 'since:', since, 'station:', station, 'userLocation:', userLocation, 'nocache:', nocache, 'forceGeocode:', forceGeocode);
     const all = await scrapeIncidents({
       geocode: withGeocode,
       since: since || undefined,
       station: station || undefined,
+      userLocation: userLocation || undefined,
       maxGeocode,
       geocodeConcurrency,
       nocache,

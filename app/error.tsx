@@ -42,12 +42,7 @@ export default function Error({
               </code>
             </div>
 
-            <div className="bg-black/50 border border-amber-500/30 p-3 mb-6">
-              <p className="text-[10px] text-amber-500/50 italic">
-                * This is not a real police incident - just a fun way to display errors!
-                Your actual error has been logged for our dev team.
-              </p>
-            </div>
+            {/* Removed long disclaimer block to avoid mobile clipping */}
 
             <div className="space-y-3">
               <button

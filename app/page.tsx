@@ -57,6 +57,7 @@ export default function Page() {
   const [showBottomSheet, setShowBottomSheet] = useState(false)
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null)
   const [locationPermission, setLocationPermission] = useState<'pending' | 'granted' | 'denied'>('pending')
+  const [userLocation, setUserLocation] = useState<string | undefined>(undefined)
   const [showLocationPrompt, setShowLocationPrompt] = useState(false)
   const [locationRequestTrigger, setLocationRequestTrigger] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -384,6 +385,13 @@ export default function Page() {
     locationRequestFnRef.current = requestFn
   }
 
+  // Receive hardware location from map and store it for API
+  const handleUserLocation = (lat: number, lon: number) => {
+    const loc = `${lat},${lon}`
+    console.log('[PAGE] Hardware user location:', loc)
+    setUserLocation(loc)
+  }
+
   /**
    * Request location permission when GPS button is clicked
    * Calls the location function directly to maintain iOS user gesture context
@@ -617,7 +625,8 @@ export default function Page() {
           minPriority,
           since,
           geocode: true, // Enable geocoding to show markers on map
-          nocache
+          nocache,
+          userLocation
         }, {
           signal: abortController.signal
         })
@@ -678,7 +687,7 @@ export default function Page() {
       abortController.abort() // Cancel in-flight request when filters change
       if (interval) clearInterval(interval)
     }
-  }, [selectedCategory, minPriority, timeRange, showLanding, autoRefreshEnabled, nocache, isTabVisible])
+  }, [selectedCategory, minPriority, timeRange, showLanding, autoRefreshEnabled, nocache, isTabVisible, userLocation])
 
   /**
    * Auto-advances critical carousel every 8 seconds
@@ -848,6 +857,8 @@ export default function Page() {
             {/* Location status badge */}
             <button
               onClick={() => {
+                // Trigger native permission prompt immediately via user gesture
+                handleRequestLocation()
                 if (locationPermission !== 'granted') {
                   setShowLocationPrompt(true)
                 }
@@ -999,6 +1010,7 @@ export default function Page() {
           }}
           selectedIncident={selectedIncident}
           onLocationPermission={handleLocationPermission}
+          onUserLocation={handleUserLocation}
           onLocationRequestReady={handleLocationRequestReady}
           isRefreshing={isRefreshing}
           sidePanelOpen={!showBottomSheet && (showListView || !!selectedIncident)}

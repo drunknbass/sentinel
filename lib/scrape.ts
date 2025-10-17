@@ -114,6 +114,7 @@ export async function scrapeIncidents({
   since,
   onProgress,
   station,
+  userLocation,
   maxGeocode = Number(process.env.MAX_GEOCODE_PER_REQUEST || 100),
   geocodeConcurrency = Number(process.env.GEOCODE_CONCURRENCY || 3),
   nocache = false,
@@ -123,6 +124,7 @@ export async function scrapeIncidents({
   since?: string;
   onProgress?: ProgressCallback;
   station?: string;
+  userLocation?: string;
   maxGeocode?: number;
   geocodeConcurrency?: number;
   nocache?: boolean;
@@ -186,7 +188,7 @@ export async function scrapeIncidents({
       await mapLimit(candidates, Math.max(1, geocodeConcurrency), async ({ idx, it }) => {
         // Pass station info if available for better regional geocoding
         const station = (it as any).station;
-        const result = await geocodeOne(it.address_raw!, it.area, nocache, station, forceGeocode);
+        const result = await geocodeOne(it.address_raw!, it.area, nocache, station, userLocation, forceGeocode);
         items[idx].lat = result.lat;
         items[idx].lon = result.lon;
         (items[idx] as any).geocode_attempted = true;
@@ -306,7 +308,7 @@ export async function scrapeIncidents({
       await mapLimit(candidates, Math.max(1, geocodeConcurrency), async ({ idx, it }) => {
         // Pass station info if available for better regional geocoding
         const station = (it as any).station;
-        const result = await geocodeOne(it.address_raw!, it.area, nocache, station, forceGeocode);
+        const result = await geocodeOne(it.address_raw!, it.area, nocache, station, userLocation, forceGeocode);
         items[idx].lat = result.lat;
         items[idx].lon = result.lon;
         (items[idx] as any).geocode_attempted = true;
