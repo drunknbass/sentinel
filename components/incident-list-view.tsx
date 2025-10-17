@@ -21,27 +21,11 @@ export default function IncidentListView({
   getPriorityLabel,
   getPriorityColor,
 }: IncidentListViewProps) {
-  const [sortBy, setSortBy] = useState<"time" | "priority">("time")
-  const [filterPriority, setFilterPriority] = useState<string>("all")
-  const [filterCategory, setFilterCategory] = useState<string>("all")
   const [hideWithoutLocation, setHideWithoutLocation] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 
-  const categories = useMemo(() => {
-    const cats = new Set(items.map((item) => item.call_category).filter(Boolean))
-    return Array.from(cats).sort()
-  }, [items])
-
   const sortedAndFilteredItems = useMemo(() => {
     let filtered = [...items]
-
-    if (filterPriority !== "all") {
-      filtered = filtered.filter((item) => getPriorityLabel(item.priority) === filterPriority)
-    }
-
-    if (filterCategory !== "all") {
-      filtered = filtered.filter((item) => item.call_category === filterCategory)
-    }
 
     if (hideWithoutLocation) {
       filtered = filtered.filter((item) => item.lat && item.lon)
@@ -80,16 +64,8 @@ export default function IncidentListView({
       }
     }
 
-    filtered.sort((a, b) => {
-      if (sortBy === "time") {
-        return new Date(b.received_at).getTime() - new Date(a.received_at).getTime()
-      } else {
-        return a.priority - b.priority
-      }
-    })
-
     return filtered
-  }, [items, sortBy, filterPriority, filterCategory, hideWithoutLocation, searchQuery, getPriorityLabel])
+  }, [items, hideWithoutLocation, searchQuery, getPriorityLabel])
 
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-end animate-fade-in pointer-events-none">
@@ -119,15 +95,15 @@ export default function IncidentListView({
             </button>
           </div>
 
-          <div className="space-y-4">
-            {/* Search input with regex support */}
+          <div className="space-y-3">
+            {/* Search input */}
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search (supports regex)..."
+                placeholder="Search"
                 className="w-full pl-11 pr-10 py-2.5 bg-black/60 backdrop-blur-xl border border-white/20 rounded-xl text-sm font-semibold text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 transition-all"
                 style={{
                   backdropFilter: "blur(24px) saturate(180%)",
@@ -145,105 +121,7 @@ export default function IncidentListView({
               )}
             </div>
 
-            {/* Sort toggle */}
-            <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wide mb-2 block">Sort By</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setSortBy("time")}
-                  className={`py-2 rounded-xl text-sm font-semibold transition-all ${
-                    sortBy === "time" ? "bg-white text-black" : "bg-white/5 hover:bg-white/10"
-                  }`}
-                >
-                  Time
-                </button>
-                <button
-                  onClick={() => setSortBy("priority")}
-                  className={`py-2 rounded-xl text-sm font-semibold transition-all ${
-                    sortBy === "priority" ? "bg-white text-black" : "bg-white/5 hover:bg-white/10"
-                  }`}
-                >
-                  Priority
-                </button>
-              </div>
-            </div>
-
-            {/* Priority filter toggles */}
-            <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wide mb-2 block">Priority</label>
-              <div className="grid grid-cols-3 gap-2">
-                <button
-                  onClick={() => setFilterPriority("all")}
-                  className={`py-2 rounded-xl text-xs font-semibold transition-all ${
-                    filterPriority === "all" ? "bg-white text-black" : "bg-white/5 hover:bg-white/10"
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setFilterPriority("CRITICAL")}
-                  className={`py-2 rounded-xl text-xs font-semibold transition-all ${
-                    filterPriority === "CRITICAL" ? "bg-red-500 text-white" : "bg-white/5 hover:bg-white/10"
-                  }`}
-                >
-                  Critical
-                </button>
-                <button
-                  onClick={() => setFilterPriority("HIGH")}
-                  className={`py-2 rounded-xl text-xs font-semibold transition-all ${
-                    filterPriority === "HIGH" ? "bg-orange-500 text-white" : "bg-white/5 hover:bg-white/10"
-                  }`}
-                >
-                  High
-                </button>
-                <button
-                  onClick={() => setFilterPriority("MEDIUM")}
-                  className={`py-2 rounded-xl text-xs font-semibold transition-all ${
-                    filterPriority === "MEDIUM" ? "bg-yellow-500 text-black" : "bg-white/5 hover:bg-white/10"
-                  }`}
-                >
-                  Medium
-                </button>
-                <button
-                  onClick={() => setFilterPriority("LOW")}
-                  className={`py-2 rounded-xl text-xs font-semibold transition-all ${
-                    filterPriority === "LOW" ? "bg-gray-500 text-white" : "bg-white/5 hover:bg-white/10"
-                  }`}
-                >
-                  Low
-                </button>
-              </div>
-            </div>
-
-            {/* Category filter toggles */}
-            {categories.length > 0 && (
-              <div>
-                <label className="text-xs text-gray-400 uppercase tracking-wide mb-2 block">Category</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setFilterCategory("all")}
-                    className={`py-2 rounded-xl text-xs font-semibold transition-all ${
-                      filterCategory === "all" ? "bg-white text-black" : "bg-white/5 hover:bg-white/10"
-                    }`}
-                  >
-                    All
-                  </button>
-                  {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setFilterCategory(cat)}
-                      className={`py-2 rounded-xl text-xs font-semibold transition-all truncate ${
-                        filterCategory === cat ? "bg-white text-black" : "bg-white/5 hover:bg-white/10"
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Checkbox to hide incidents without location */}
+            {/* Toggle to hide incidents without location */}
             <button
               onClick={() => setHideWithoutLocation(!hideWithoutLocation)}
               className="w-full px-4 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-sm font-semibold text-white transition-all flex items-center gap-2"
