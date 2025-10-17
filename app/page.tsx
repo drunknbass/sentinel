@@ -679,7 +679,18 @@ export default function Page() {
                   {getPriorityLabel(selectedIncident.priority)} PRIORITY
                 </div>
                 <h2 className="text-2xl font-bold leading-tight mb-2">{selectedIncident.call_type}</h2>
-                <p className="text-gray-400">{selectedIncident.address_raw || "No address available"}</p>
+                <button
+                  onClick={() => {
+                    // Re-trigger the zoom by clearing and re-setting the incident
+                    const incident = selectedIncident
+                    setSelectedIncident(null)
+                    setTimeout(() => setSelectedIncident(incident), 50)
+                  }}
+                  className="text-left text-gray-400 hover:text-white transition-colors group"
+                  title="Click to refocus on map"
+                >
+                  <span className="group-hover:underline">{selectedIncident.address_raw || "No address available"}</span>
+                </button>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700">
@@ -746,7 +757,18 @@ export default function Page() {
                   {getPriorityLabel(selectedIncident.priority)} PRIORITY
                 </div>
                 <h2 className="text-2xl font-bold leading-tight mb-2">{selectedIncident.call_type}</h2>
-                <p className="text-gray-400">{selectedIncident.address_raw || "No address available"}</p>
+                <button
+                  onClick={() => {
+                    // Re-trigger the zoom by clearing and re-setting the incident
+                    const incident = selectedIncident
+                    setSelectedIncident(null)
+                    setTimeout(() => setSelectedIncident(incident), 50)
+                  }}
+                  className="text-left text-gray-400 hover:text-white transition-colors group"
+                  title="Click to refocus on map"
+                >
+                  <span className="group-hover:underline">{selectedIncident.address_raw || "No address available"}</span>
+                </button>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700">
