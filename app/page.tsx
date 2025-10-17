@@ -119,6 +119,7 @@ export default function Page() {
   const locationRequestFnRef = useRef<(() => void) | null>(null)
   const autoPromptFiredRef = useRef(false)
   const locationWatchIdRef = useRef<number | null>(null)
+  const mapLocationRequestedRef = useRef(false)
 
   /**
    * Helper functions for mobile filter tag management
@@ -272,6 +273,19 @@ export default function Page() {
         try { navigator.geolocation.clearWatch(locationWatchIdRef.current) } catch {}
         console.log('[PAGE] Cleared location watch id=', locationWatchIdRef.current)
         locationWatchIdRef.current = null
+      }
+    }
+  }, [locationPermission])
+
+  // If permission becomes granted after map is mounted, ask map to place user marker
+  useEffect(() => {
+    if (locationPermission === 'granted' && locationRequestFnRef.current && !mapLocationRequestedRef.current) {
+      try {
+        mapLocationRequestedRef.current = true
+        locationRequestFnRef.current()
+      } catch (e) {
+        console.warn('[PAGE] Failed to call map requestUserLocation on permission change', e)
+        mapLocationRequestedRef.current = false
       }
     }
   }, [locationPermission])
@@ -471,6 +485,15 @@ export default function Page() {
   const handleLocationRequestReady = (requestFn: () => void) => {
     console.log('[PAGE] Received location request function from map')
     locationRequestFnRef.current = requestFn
+    if (locationPermission === 'granted' && !mapLocationRequestedRef.current) {
+      try {
+        mapLocationRequestedRef.current = true
+        requestFn()
+      } catch (e) {
+        console.warn('[PAGE] Failed to call map requestUserLocation on ready', e)
+        mapLocationRequestedRef.current = false
+      }
+    }
   }
 
   // Accept disclaimer and immediately request geolocation via user gesture
