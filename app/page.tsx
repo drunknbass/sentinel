@@ -118,6 +118,7 @@ export default function Page() {
   // Store reference to location request function from map component
   const locationRequestFnRef = useRef<(() => void) | null>(null)
   const autoPromptFiredRef = useRef(false)
+  const locationWatchIdRef = useRef<number | null>(null)
 
   /**
    * Helper functions for mobile filter tag management
@@ -236,6 +237,44 @@ export default function Page() {
   }, [locationPermission])
 
   // (Removed global pointerdown hook; rely on explicit triggers + first-interaction fallback above)
+
+  // Start a persistent watchPosition once permission is granted
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!('geolocation' in navigator)) return
+    if (locationPermission !== 'granted') {
+      // Tear down any existing watch if permission is not granted
+      if (locationWatchIdRef.current != null) {
+        try { navigator.geolocation.clearWatch(locationWatchIdRef.current) } catch {}
+        locationWatchIdRef.current = null
+      }
+      return
+    }
+
+    if (locationWatchIdRef.current == null) {
+      const id = navigator.geolocation.watchPosition(
+        (pos) => {
+          const loc = `${pos.coords.latitude},${pos.coords.longitude}`
+          setUserLocation(loc)
+          try { window.localStorage.setItem('gps:userLocation', loc); window.localStorage.setItem('gps:ts', String(Date.now())) } catch {}
+        },
+        (err) => {
+          console.warn('[PAGE] watchPosition error', err)
+        },
+        { enableHighAccuracy: true, maximumAge: 0 }
+      ) as unknown as number
+      locationWatchIdRef.current = id
+      console.log('[PAGE] Started location watch id=', id)
+    }
+
+    return () => {
+      if (locationWatchIdRef.current != null) {
+        try { navigator.geolocation.clearWatch(locationWatchIdRef.current) } catch {}
+        console.log('[PAGE] Cleared location watch id=', locationWatchIdRef.current)
+        locationWatchIdRef.current = null
+      }
+    }
+  }, [locationPermission])
 
   /**
    * Sync search query and hideWithoutLocation to URL params
