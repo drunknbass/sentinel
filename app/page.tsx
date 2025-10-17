@@ -521,10 +521,39 @@ export default function Page() {
             </button>
             <button
               onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
-              className="flex items-center gap-2 text-xs font-mono text-amber-500 border-2 border-amber-500 px-3 py-1 hover:bg-amber-500 hover:text-black transition-all"
+              disabled={loading || isRefreshing}
+              className={`flex items-center gap-2 text-xs font-mono border-2 border-amber-500 px-3 py-1 transition-all ${
+                (loading || isRefreshing)
+                  ? 'text-amber-500 cursor-not-allowed'
+                  : autoRefreshEnabled
+                    ? 'text-amber-500 hover:bg-amber-500 hover:text-black'
+                    : 'text-amber-500/50 hover:bg-amber-500 hover:text-black'
+              }`}
             >
-              <span className={autoRefreshEnabled ? "animate-blink" : "opacity-50"}>█</span>
-              <span className={autoRefreshEnabled ? "" : "opacity-50"}>{autoRefreshEnabled ? "ONLINE" : "OFFLINE"}</span>
+              {loading || isRefreshing ? (
+                <>
+                  <svg className="w-3 h-3 animate-spin text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>
+                    {loadingProgress ? (
+                      loadingProgress.current && loadingProgress.total ? (
+                        `${loadingProgress.stage} ${loadingProgress.current}/${loadingProgress.total}`
+                      ) : (
+                        loadingProgress.stage
+                      )
+                    ) : (
+                      loading ? 'LOADING' : 'UPDATING'
+                    )}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className={autoRefreshEnabled ? "animate-blink" : ""}>█</span>
+                  <span>{autoRefreshEnabled ? "ONLINE" : "OFFLINE"}</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -568,82 +597,49 @@ export default function Page() {
           </div>
         )}
 
-        {/* Incident count button */}
-        <button
-          onClick={() => setShowListView(true)}
-          disabled={loading || isRefreshing}
-          className={`bg-black border-2 border-amber-500 px-6 py-3 text-xs font-mono font-bold transition-all text-amber-500 tracking-wider ${
-            (loading || isRefreshing)
-              ? 'opacity-50 cursor-not-allowed'
-              : 'hover:bg-amber-500 hover:text-black cursor-pointer'
-          }`}
-        >
-          [{selectedCategory ? selectedCategory.toUpperCase() : "ALL"}] INCIDENTS: {filteredItems.length}
-        </button>
+        {/* Incident count and critical alerts - 2 column button */}
+        <div className="bg-black border-2 border-amber-500 overflow-hidden">
+          <div className="grid grid-cols-2 divide-x-2 divide-amber-500">
+            {/* Left column: All incidents */}
+            <button
+              onClick={() => setShowListView(true)}
+              disabled={loading || isRefreshing}
+              className={`px-6 py-3 text-xs font-mono font-bold transition-all text-amber-500 tracking-wider ${
+                (loading || isRefreshing)
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-amber-500 hover:text-black cursor-pointer'
+              }`}
+            >
+              <div className="text-[10px] text-amber-500/70 uppercase tracking-wider mb-1">ALL INCIDENTS</div>
+              <div className="text-lg font-bold">{filteredItems.length}</div>
+            </button>
+
+            {/* Right column: Critical alerts */}
+            <button
+              onClick={() => setShowCriticalCarousel(!showCriticalCarousel)}
+              disabled={criticalIncidents.length === 0}
+              className={`px-6 py-3 text-xs font-mono font-bold transition-all tracking-wider ${
+                criticalIncidents.length === 0
+                  ? 'opacity-30 cursor-not-allowed text-amber-500'
+                  : showCriticalCarousel
+                    ? 'bg-red-600/20 text-red-600 hover:bg-red-600/30 cursor-pointer'
+                    : 'text-amber-500 hover:bg-amber-500/10 cursor-pointer'
+              }`}
+            >
+              <div className="text-[10px] uppercase tracking-wider mb-1 opacity-70">CRITICAL</div>
+              <div className="text-lg font-bold flex items-center justify-center gap-2">
+                {criticalIncidents.length > 0 && (
+                  <span className={`w-2 h-2 rounded-full ${showCriticalCarousel ? 'bg-red-600 animate-pulse' : 'bg-amber-500'}`} />
+                )}
+                {criticalIncidents.length}
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Left-side HUD stack - Terminal style */}
       <div className="absolute top-32 left-6 z-[70] flex flex-col items-start gap-3">
-        {/* LIVE indicator badge - toggle for auto-refresh */}
-        <button
-          onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
-          disabled={loading || isRefreshing}
-          className={`relative flex items-center gap-2 backdrop-blur-2xl terminal-border rounded-lg px-4 py-2 shadow-lg transition-all ${
-            (loading || isRefreshing)
-              ? 'cursor-not-allowed'
-              : 'hover:scale-105 cursor-pointer'
-          } ${
-            autoRefreshEnabled
-              ? `bg-black/80 ${isRefreshing ? 'scale-110' : ''}`
-              : 'bg-black/80'
-          }`}
-          title={autoRefreshEnabled ? 'Auto-refresh ON (click to disable)' : 'Auto-refresh OFF (click to enable)'}
-        >
-          <div className="terminal-scanlines" />
-          {isRefreshing || loading ? (
-            <svg className="w-3 h-3 animate-spin text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          ) : (
-            <div className={`w-2 h-2 rounded-full ${
-              autoRefreshEnabled ? 'bg-green-400 animate-pulse' : 'bg-gray-500'
-            }`} />
-          )}
-          <span className="text-xs font-mono tracking-wider whitespace-nowrap terminal-text text-green-400">
-            {loading || isRefreshing ? (
-              loadingProgress ? (
-                loadingProgress.current && loadingProgress.total ? (
-                  `${loadingProgress.stage} ${loadingProgress.current}/${loadingProgress.total}`
-                ) : (
-                  loadingProgress.stage
-                )
-              ) : (
-                loading ? 'LOADING' : 'UPDATING'
-              )
-            ) : (
-              autoRefreshEnabled ? 'LIVE' : 'PAUSED'
-            )}
-          </span>
-        </button>
-
-        {/* Critical alerts toggle button */}
-        {criticalIncidents.length > 0 && (
-          <button
-            onClick={() => setShowCriticalCarousel(!showCriticalCarousel)}
-            className={`relative flex items-center gap-2 backdrop-blur-2xl terminal-border rounded-lg px-4 py-2 shadow-lg transition-all hover:scale-105 cursor-pointer bg-black/80`}
-            title={showCriticalCarousel ? 'Hide critical alerts carousel' : 'Show critical alerts carousel'}
-          >
-            <div className="terminal-scanlines" />
-            <div className={`w-2 h-2 rounded-full ${
-              showCriticalCarousel ? 'bg-red-500 animate-pulse-red' : 'bg-yellow-500'
-            }`} />
-            <span className="text-xs font-mono tracking-wider whitespace-nowrap text-red-400 terminal-text">
-              {criticalIncidents.length} CRITICAL
-            </span>
-          </button>
-        )}
-
         {/* Filter panel - hidden on mobile */}
         <FilterPanel
           selectedCategory={selectedCategory}
