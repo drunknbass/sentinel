@@ -182,7 +182,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
                           <div style="
                             position: absolute;
                             inset: 0;
-                            background: #a855f7;
+                            background: #22d3ee;
                             opacity: 0.2;
                             animation: pulse-gps 2s ease-in-out infinite;
                           "></div>
@@ -194,9 +194,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
                             left: 4px;
                             right: 4px;
                             height: 2px;
-                            background: #a855f7;
+                            background: #22d3ee;
                             transform: translateY(-50%);
-                            box-shadow: 0 0 6px #a855f7;
+                            box-shadow: 0 0 6px #22d3ee;
                           "></div>
 
                           <!-- Crosshair vertical line -->
@@ -206,9 +206,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
                             top: 4px;
                             bottom: 4px;
                             width: 2px;
-                            background: #a855f7;
+                            background: #22d3ee;
                             transform: translateX(-50%);
-                            box-shadow: 0 0 6px #a855f7;
+                            box-shadow: 0 0 6px #22d3ee;
                           "></div>
 
                           <!-- Corner brackets (top-left) -->
@@ -218,9 +218,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
                             left: 6px;
                             width: 8px;
                             height: 8px;
-                            border-top: 2px solid #a855f7;
-                            border-left: 2px solid #a855f7;
-                            box-shadow: 0 0 4px #a855f7;
+                            border-top: 2px solid #22d3ee;
+                            border-left: 2px solid #22d3ee;
+                            box-shadow: 0 0 4px #22d3ee;
                           "></div>
 
                           <!-- Corner brackets (top-right) -->
@@ -230,9 +230,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
                             right: 6px;
                             width: 8px;
                             height: 8px;
-                            border-top: 2px solid #a855f7;
-                            border-right: 2px solid #a855f7;
-                            box-shadow: 0 0 4px #a855f7;
+                            border-top: 2px solid #22d3ee;
+                            border-right: 2px solid #22d3ee;
+                            box-shadow: 0 0 4px #22d3ee;
                           "></div>
 
                           <!-- Corner brackets (bottom-left) -->
@@ -242,9 +242,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
                             left: 6px;
                             width: 8px;
                             height: 8px;
-                            border-bottom: 2px solid #a855f7;
-                            border-left: 2px solid #a855f7;
-                            box-shadow: 0 0 4px #a855f7;
+                            border-bottom: 2px solid #22d3ee;
+                            border-left: 2px solid #22d3ee;
+                            box-shadow: 0 0 4px #22d3ee;
                           "></div>
 
                           <!-- Corner brackets (bottom-right) -->
@@ -254,9 +254,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
                             right: 6px;
                             width: 8px;
                             height: 8px;
-                            border-bottom: 2px solid #a855f7;
-                            border-right: 2px solid #a855f7;
-                            box-shadow: 0 0 4px #a855f7;
+                            border-bottom: 2px solid #22d3ee;
+                            border-right: 2px solid #22d3ee;
+                            box-shadow: 0 0 4px #22d3ee;
                           "></div>
 
                           <!-- Center pulsing dot -->
@@ -267,10 +267,10 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
                             transform: translate(-50%, -50%);
                             width: 6px;
                             height: 6px;
-                            background: #a855f7;
+                            background: #22d3ee;
                             border-radius: 50%;
                             animation: pulse-center 1.5s ease-in-out infinite;
-                            box-shadow: 0 0 8px #a855f7;
+                            box-shadow: 0 0 8px #22d3ee;
                           "></div>
                         </div>
                       `,

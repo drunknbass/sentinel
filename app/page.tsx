@@ -669,11 +669,11 @@ export default function Page() {
       {criticalIncidents.length > 0 && showCriticalCarousel && !showBottomSheet && (
         <div className="absolute bottom-0 left-0 right-0 z-30 p-4 md:p-6 bg-gradient-to-t from-black via-black/95 to-transparent animate-slide-up">
           <div className="max-w-3xl mx-auto bg-black/80 backdrop-blur-sm border-2 border-amber-500 p-2">
-            <div className="border-2 border-red-600 p-4 crt-glow-red">
+            <div className="border-2 border-red-600 p-4">
               <div className="flex items-center justify-between mb-3 pb-2 border-b-2 border-amber-500">
                 <div className="flex items-center gap-3">
-                  <span className="text-red-600 animate-blink font-bold text-xl crt-bloom-red">█</span>
-                  <span className="text-xs font-mono font-bold text-red-600 tracking-wider crt-bloom-red">
+                  <span className="text-red-600 animate-blink font-bold text-xl">█</span>
+                  <span className="text-xs font-mono font-bold text-red-600 tracking-wider">
                     *** CRITICAL ALERT ***
                   </span>
                 </div>
