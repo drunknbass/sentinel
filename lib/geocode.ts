@@ -477,7 +477,7 @@ async function geocodeWithCensus(address: string, area: string | null, allowAppr
  * 4. US Census Bureau (fallback - good for exact addresses)
  * 5. OpenStreetMap Nominatim (final fallback)
  */
-export async function geocodeOne(address: string | null, area: string | null, nocache: boolean = false, station?: string): Promise<GeocodeResult> {
+export async function geocodeOne(address: string | null, area: string | null, nocache: boolean = false, station?: string, forceGeocode?: 'apple' | 'census' | 'nominatim'): Promise<GeocodeResult> {
   if (!address) return { lat: null, lon: null };
 
   const key = `geo:${address}|${area || ''}`;
@@ -501,19 +501,38 @@ export async function geocodeOne(address: string | null, area: string | null, no
   }
 
   // Tier 3, 4 & 5: Geocode from APIs (slow)
-  console.log('[GEOCODE] Cache miss, geocoding:', key, station ? `(station: ${station})` : '');
+  console.log('[GEOCODE] Cache miss, geocoding:', key, station ? `(station: ${station})` : '', forceGeocode ? `(force: ${forceGeocode})` : '');
 
-  // Try Apple Maps first (best for block addresses with user location context)
-  let value = await geocodeWithAppleMaps(address, area, station);
+  let value: GeocodeResult = { lat: null, lon: null };
 
-  // Fallback to Census if Apple Maps fails
-  if (value.lat === null && value.lon === null) {
-    value = await geocodeWithCensus(address, area);
-  }
+  // If forceGeocode is set, only use that service
+  if (forceGeocode) {
+    console.log(`[GEOCODE] Forcing ${forceGeocode} geocoding service`);
+    switch (forceGeocode) {
+      case 'apple':
+        value = await geocodeWithAppleMaps(address, area, station);
+        break;
+      case 'census':
+        value = await geocodeWithCensus(address, area);
+        break;
+      case 'nominatim':
+        value = await geocodeWithNominatim(address, area);
+        break;
+    }
+  } else {
+    // Normal fallback chain
+    // Try Apple Maps first (best for block addresses with user location context)
+    value = await geocodeWithAppleMaps(address, area, station);
 
-  // Final fallback to Nominatim if both fail
-  if (value.lat === null && value.lon === null) {
-    value = await geocodeWithNominatim(address, area);
+    // Fallback to Census if Apple Maps fails
+    if (value.lat === null && value.lon === null) {
+      value = await geocodeWithCensus(address, area);
+    }
+
+    // Final fallback to Nominatim if both fail
+    if (value.lat === null && value.lon === null) {
+      value = await geocodeWithNominatim(address, area);
+    }
   }
 
   // Only cache successful geocoding results (don't cache null results) and when nocache is false

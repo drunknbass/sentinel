@@ -116,7 +116,8 @@ export async function scrapeIncidents({
   station,
   maxGeocode = Number(process.env.MAX_GEOCODE_PER_REQUEST || 100),
   geocodeConcurrency = Number(process.env.GEOCODE_CONCURRENCY || 3),
-  nocache = false
+  nocache = false,
+  forceGeocode
 }: {
   geocode?: boolean;
   since?: string;
@@ -125,6 +126,7 @@ export async function scrapeIncidents({
   maxGeocode?: number;
   geocodeConcurrency?: number;
   nocache?: boolean;
+  forceGeocode?: 'apple' | 'census' | 'nominatim';
 } = {}): Promise<Item[]> {
   // Include 'since' and 'station' in cache key for time-aware caching
   const cacheKey = `incidents:geocode=${geocode}:since=${since || 'all'}:station=${station || 'all'}`;
@@ -184,7 +186,7 @@ export async function scrapeIncidents({
       await mapLimit(candidates, Math.max(1, geocodeConcurrency), async ({ idx, it }) => {
         // Pass station info if available for better regional geocoding
         const station = (it as any).station;
-        const result = await geocodeOne(it.address_raw!, it.area, nocache, station);
+        const result = await geocodeOne(it.address_raw!, it.area, nocache, station, forceGeocode);
         items[idx].lat = result.lat;
         items[idx].lon = result.lon;
         (items[idx] as any).geocode_attempted = true;
@@ -304,7 +306,7 @@ export async function scrapeIncidents({
       await mapLimit(candidates, Math.max(1, geocodeConcurrency), async ({ idx, it }) => {
         // Pass station info if available for better regional geocoding
         const station = (it as any).station;
-        const result = await geocodeOne(it.address_raw!, it.area, nocache, station);
+        const result = await geocodeOne(it.address_raw!, it.area, nocache, station, forceGeocode);
         items[idx].lat = result.lat;
         items[idx].lon = result.lon;
         (items[idx] as any).geocode_attempted = true;
