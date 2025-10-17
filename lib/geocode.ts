@@ -234,8 +234,13 @@ async function geocodeWithAppleMaps(address: string, area: string | null, statio
     };
   }
 
+  // Try to parse block addresses for better geocoding
+  const parsedAddress = parseBlockAddress(address);
+  const useAddress = parsedAddress || address;
+  const isRedactedBlock = parsedAddress && address.includes('000');
+
   // Construct the query - just address and area, no extra county/state
-  const q = `${address}${area ? `, ${area}` : ''}`;
+  const q = `${useAddress}${area ? `, ${area}` : ''}`;
 
   // Priority for user location:
   // 1. Use regional centroid if station is provided
@@ -297,11 +302,12 @@ async function geocodeWithAppleMaps(address: string, area: string | null, statio
       const lon = result.coordinate?.longitude;
 
       if (lat && lon) {
-        console.log('[GEOCODE] Apple Maps success:', address, '→', { lat, lon }, `using ${centroidUsed}`);
+        console.log('[GEOCODE] Apple Maps success:', address, '→', { lat, lon }, `using ${centroidUsed}`, isRedactedBlock ? '(redacted block)' : '');
+        console.log('[GEOCODE] Success URL:', url.toString());
         return {
           lat,
           lon,
-          approximate: false,
+          approximate: isRedactedBlock || parsedAddress !== null,
           strategy: 'apple_maps',
           centroid_used: centroidUsed,
           query: q,
@@ -310,7 +316,8 @@ async function geocodeWithAppleMaps(address: string, area: string | null, statio
       }
     }
 
-    console.log('[GEOCODE] Apple Maps returned no results for:', q, 'with userLocation:', userLocationStr);
+    console.log('[GEOCODE] Apple Maps returned no results');
+    console.log('[GEOCODE] Failed URL:', url.toString());
     return {
       lat: null,
       lon: null,
@@ -387,8 +394,18 @@ function parseBlockAddress(address: string): string | null {
   // Match patterns like "2600 *** BLOCK AMANDA AV" or "100 BLOCK MAIN ST"
   const blockMatch = address.match(/(\d+)\s+(?:\*+\s+)?BLOCK\s+(.+)/i);
   if (blockMatch) {
-    const blockNumber = blockMatch[1];
+    let blockNumber = blockMatch[1];
     const streetName = blockMatch[2].trim();
+
+    // Handle redacted addresses like "000 *** BLOCK"
+    // These are privacy-protected addresses where the real block number is hidden
+    if (blockNumber === '000' || blockNumber === '00') {
+      // Use a reasonable mid-range block number for geocoding
+      // Most residential blocks are in the 1000-5000 range
+      blockNumber = '2500';
+      console.log('[GEOCODE] Detected redacted block address, using approximate:', `${blockNumber} ${streetName}`);
+    }
+
     // Return approximate address with block number for better geocoding
     return `${blockNumber} ${streetName}`;
   }
@@ -532,6 +549,23 @@ export async function geocodeOne(address: string | null, area: string | null, no
     // Final fallback to Nominatim if both fail
     if (value.lat === null && value.lon === null) {
       value = await geocodeWithNominatim(address, area);
+    }
+  }
+
+  // If all geocoding failed but we have an area, use area centroid as last resort
+  if (value.lat === null && value.lon === null && area) {
+    const areaUpper = area.toUpperCase().trim();
+    if (AREA_COORDINATES[areaUpper]) {
+      console.log(`[GEOCODE] All services failed, using area centroid for ${area}`);
+      value = {
+        lat: AREA_COORDINATES[areaUpper].lat,
+        lon: AREA_COORDINATES[areaUpper].lon,
+        approximate: true,
+        strategy: 'apple_maps' as const, // Mark as apple_maps since it's our primary
+        centroid_used: `area_fallback:${area}`,
+        error: 'Used area centroid as fallback',
+        query: address
+      };
     }
   }
 
