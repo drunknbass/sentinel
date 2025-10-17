@@ -1,7 +1,5 @@
 "use client"
-
-import { MapPin, Search, Zap } from "lucide-react"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 /**
  * LandingPage Component
@@ -17,6 +15,18 @@ import { useEffect, useRef } from "react"
  */
 export default function LandingPage({ onEnter }: { onEnter: () => void }) {
   const mapRef = useRef<HTMLDivElement>(null)
+  const [mapboxToken, setMapboxToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch("/api/mapbox-token")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.token) {
+          setMapboxToken(data.token)
+        }
+      })
+      .catch((err) => console.error("Failed to fetch Mapbox token:", err))
+  }, [])
 
   useEffect(() => {
     if (typeof window === "undefined" || !mapRef.current) return
@@ -60,7 +70,6 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
       })
 
       // Add dark tile layer from Mapbox or fallback to CartoDB
-      const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
       if (mapboxToken) {
         L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`, {
           tileSize: 512,
@@ -75,106 +84,120 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
     }
 
     loadLeaflet()
-  }, [])
+  }, [mapboxToken])
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-[#0a0e14]">
-      {/* Background map - non-interactive, centered on Riverside */}
+    <div className="relative h-screen w-full overflow-y-auto overflow-x-hidden bg-black">
+      {/* Background map */}
       <div
         ref={mapRef}
-        className="absolute inset-0 z-0"
+        className="fixed inset-0 z-0"
         style={{
           transform: "scale(1.1)",
         }}
       />
 
-      {/* Dark overlay for better text contrast */}
-      <div className="absolute inset-0 bg-black/70 z-[1]" />
+      <div className="fixed inset-0 bg-black/70 z-[1]" />
 
-      {/* Subtle gradient lighting effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-orange-500/10 z-[2]" />
-
-      {/* Main content */}
-      <div className="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center">
-        <div className="mt-39 mb-8 inline-flex items-center gap-2 bg-red-500/20 backdrop-blur-2xl border border-red-500/30 rounded-full px-6 py-3 shadow-lg">
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse-slow" />
-          <span className="text-sm tracking-wider">LIVE INCIDENTS</span>
+      <div className="sticky top-0 left-0 right-0 z-10 bg-black border-b-2 border-amber-500 p-4">
+        <div className="text-center font-mono text-amber-500 text-[10px] md:text-xs leading-tight">
+          <div className="hidden md:block">
+            ╔═══════════════════════════════════════════════════════════════════════════════╗
+          </div>
+          <div className="md:hidden">╔═══════════════════════════════════╗</div>
+          <div className="hidden md:block">║ RIVERSIDE SHERIFF OFFICE - MOBILE DATA TERMINAL ║</div>
+          <div className="md:hidden">║ RSO - MDT SYSTEM ║</div>
+          <div className="hidden md:block">║ INCIDENT TRACKING SYSTEM ║</div>
+          <div className="md:hidden">║ INCIDENT TRACKER ║</div>
+          <div className="hidden md:block">
+            ╚═══════════════════════════════════════════════════════════════════════════════╝
+          </div>
+          <div className="md:hidden">╚═══════════════════════════════════╝</div>
         </div>
-
-        {/* Hero heading */}
-        <h1 className="text-5xl md:text-7xl leading-tight mb-6 max-w-4xl">
-          Stay informed about incidents in{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">
-            Riverside County
-          </span>
-        </h1>
-
-        {/* Subheading */}
-        <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-2xl leading-relaxed">
-          Real-time updates from the Riverside Sheriff's Office. Track incidents, filter by category, and stay aware of
-          what's happening in your community.
-        </p>
-
-        {/* Call-to-action button */}
-        <button
-          onClick={onEnter}
-          className="group relative bg-white/95 text-black text-lg px-12 py-5 rounded-full hover:bg-white transition-all shadow-2xl hover:shadow-red-500/20 hover:scale-105"
-          style={{
-            backdropFilter: "blur(20px) saturate(180%)",
-            WebkitBackdropFilter: "blur(20px) saturate(180%)",
-          }}
-        >
-          <span className="relative z-10">View Live Incidents</span>
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-red-500 to-orange-500 opacity-0 group-hover:opacity-10 transition-opacity" />
-        </button>
-
-        {/* Feature cards - Increased bottom margin from mb-34 to mb-49 (196px) */}
-        <div className="mt-16 mb-49 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl">
-          <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg">
-            <div className="flex justify-center mb-6">
-              <MapPin className="w-8 h-8 text-red-500" />
-            </div>
-            <h3 className="text-lg mb-2">Interactive Map</h3>
-            <p className="text-sm text-gray-400">
-              View incidents on a live map with color-coded markers based on priority
-            </p>
-          </div>
-
-          <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg">
-            <div className="flex justify-center mb-6">
-              <Search className="w-8 h-8 text-orange-500" />
-            </div>
-            <h3 className="text-lg mb-2">Smart Filters</h3>
-            <p className="text-sm text-gray-400">Filter by category, priority, time range, and search with tags</p>
-          </div>
-
-          <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 shadow-lg">
-            <div className="flex justify-center mb-6">
-              <Zap className="w-8 h-8 text-yellow-500" />
-            </div>
-            <h3 className="text-lg mb-2">Real-Time Updates</h3>
-            <p className="text-sm text-gray-400">
-              Get instant updates as new incidents are reported by the Sheriff's Office
-            </p>
-          </div>
-        </div>
-
-        {/* Data source attribution */}
-        <p className="mt-12 text-sm text-gray-500">
-          Data sourced from Riverside Sheriff's Office public incident reports
-        </p>
       </div>
 
-      {/* Footer credit */}
-      <div className="fixed bottom-4 left-0 right-0 z-50 flex justify-center pointer-events-none">
-        <a
-          href="https://circlecreativegroup.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="pointer-events-auto text-xs text-gray-400 hover:text-white transition-colors px-4 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10"
+      <div className="relative z-10 flex flex-col items-center justify-start min-h-screen px-4 md:px-6 py-12 text-center font-mono">
+        <div className="mb-8 bg-black border-2 border-amber-500 px-4 md:px-6 py-3">
+          <div className="flex items-center gap-2">
+            <span className="text-amber-500 animate-blink font-bold">█</span>
+            <span className="text-xs md:text-sm font-bold text-amber-500 tracking-wider">SYSTEM ONLINE</span>
+          </div>
+        </div>
+
+        <div className="mb-8 text-amber-500 text-[10px] md:text-xs leading-relaxed max-w-3xl w-full">
+          <div className="mb-2 hidden md:block">
+            ╔════════════════════════════════════════════════════════════════════════╗
+          </div>
+          <div className="mb-2 md:hidden">╔═══════════════════════════════════╗</div>
+          <div className="px-2 md:px-4 py-2 space-y-1">
+            <div>&gt; REAL-TIME MONITORING</div>
+            <div className="hidden md:block">&gt; GEOGRAPHIC INFORMATION SYSTEM</div>
+            <div className="md:hidden">&gt; GIS MAPPING</div>
+            <div className="hidden md:block">&gt; PRIORITY-BASED ALERT CLASSIFICATION</div>
+            <div className="md:hidden">&gt; PRIORITY ALERTS</div>
+            <div className="hidden md:block">&gt; MULTI-CATEGORY FILTERING CAPABILITIES</div>
+            <div className="md:hidden">&gt; CATEGORY FILTERS</div>
+          </div>
+          <div className="mt-2 hidden md:block">
+            ╚════════════════════════════════════════════════════════════════════════╝
+          </div>
+          <div className="mt-2 md:hidden">╚═══════════════════════════════════╝</div>
+        </div>
+
+        <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold mb-6 text-amber-500 tracking-wider">
+          RSO INCIDENT TRACKER
+        </h1>
+
+        <p className="text-sm md:text-base lg:text-lg text-amber-400 mb-12 max-w-2xl leading-relaxed tracking-wide px-4">
+          AUTHORIZED ACCESS TO RIVERSIDE COUNTY SHERIFF DEPARTMENT
+          <br />
+          REAL-TIME INCIDENT DATA FEED
+        </p>
+
+        <button
+          onClick={onEnter}
+          className="bg-amber-500 text-black font-bold text-base md:text-lg px-8 md:px-12 py-3 md:py-4 hover:bg-amber-400 transition-all border-4 border-amber-600 tracking-widest"
         >
-          Built with ♥ by Circle Creative Group
-        </a>
+          [ENTER] ACCESS SYSTEM
+        </button>
+
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl w-full text-left mb-12">
+          <div className="bg-black border-2 border-amber-500 p-4">
+            <div className="text-amber-500 mb-2 font-bold tracking-wider">[1] MAP VIEW</div>
+            <p className="text-xs text-amber-400 leading-relaxed">
+              INTERACTIVE GEOGRAPHIC DISPLAY WITH REAL-TIME INCIDENT MARKERS
+            </p>
+          </div>
+
+          <div className="bg-black border-2 border-amber-500 p-4">
+            <div className="text-amber-500 mb-2 font-bold tracking-wider">[2] FILTERS</div>
+            <p className="text-xs text-amber-400 leading-relaxed">
+              ADVANCED SEARCH BY CATEGORY, PRIORITY, TIME RANGE, AND TAGS
+            </p>
+          </div>
+
+          <div className="bg-black border-2 border-amber-500 p-4">
+            <div className="text-amber-500 mb-2 font-bold tracking-wider">[3] ALERTS</div>
+            <p className="text-xs text-amber-400 leading-relaxed">
+              INSTANT CRITICAL INCIDENT NOTIFICATIONS AS REPORTED
+            </p>
+          </div>
+        </div>
+
+        <div className="text-xs text-amber-500/50 tracking-wider mb-8">
+          DATA SOURCE: RIVERSIDE SHERIFF OFFICE PUBLIC RECORDS
+        </div>
+
+        <div className="relative z-10 flex justify-center mb-8">
+          <a
+            href="https://circlecreativegroup.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-amber-500/60 hover:text-amber-500 transition-colors px-4 py-2 border-2 border-amber-500/40 font-mono tracking-wider"
+          >
+            [BUILT BY CIRCLE CREATIVE GROUP]
+          </a>
+        </div>
       </div>
     </div>
   )

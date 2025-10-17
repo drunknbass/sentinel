@@ -11,7 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <ThemeProvider defaultTheme="terminal-green">
+        <ThemeProvider defaultTheme="amber-mdt">
           {children}
         </ThemeProvider>
       </body>
