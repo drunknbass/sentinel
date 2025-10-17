@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import type { IncidentsResponse } from "@/lib/api/incidents"
-import { X, Search } from "lucide-react"
+import { X, Search, MapPin, AlertTriangle } from "lucide-react"
 
 type Incident = IncidentsResponse["items"][number]
 
@@ -207,12 +207,12 @@ export default function IncidentListView({
                   {(() => {
                     const locationInfo = getLocationAccuracy(item)
                     return (
-                      <div className={`inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase ${
+                      <div className={`inline-flex items-center gap-1 px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase ${
                         locationInfo.hasLocation
                           ? 'border-green-500/50 text-green-500/70'
                           : 'border-red-500/50 text-red-500/70'
                       }`}>
-                        [{locationInfo.hasLocation ? '📍' : '⚠'} {locationInfo.label}]
+                        [{locationInfo.hasLocation ? <MapPin className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />} {locationInfo.label}]
                       </div>
                     )
                   })()}

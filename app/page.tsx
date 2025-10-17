@@ -7,7 +7,7 @@ import LandingPage from "@/components/landing-page"
 import IncidentListView from "@/components/incident-list-view"
 import TerminalLoading from "@/components/terminal-loading"
 import { fetchIncidents, type IncidentsResponse } from "@/lib/api/incidents"
-import { X, ChevronLeft, ChevronRight, Filter } from "lucide-react"
+import { X, ChevronLeft, ChevronRight, Filter, MapPin, AlertTriangle } from "lucide-react"
 
 type Incident = IncidentsResponse["items"][number]
 
@@ -129,6 +129,25 @@ export default function Page() {
           setMapZoom(zoom)
         }
       }
+      // Read panel state from URL
+      const panelParam = params.get('panel')
+      if (panelParam === 'incidents') {
+        if (window.innerWidth < 768) {
+          setMobileSheetType('incidents')
+        } else {
+          setShowListView(true)
+        }
+      } else if (panelParam === 'critical') {
+        if (window.innerWidth < 768) {
+          setMobileSheetType('critical')
+        }
+      }
+      // Read incident ID from URL (do this after items are loaded)
+      const incidentParam = params.get('incident')
+      if (incidentParam) {
+        // We'll restore this after items are loaded in another useEffect
+        console.log('[PAGE] URL has incident ID to restore:', incidentParam)
+      }
     }
   }, [])
 
@@ -147,6 +166,113 @@ export default function Page() {
       window.history.replaceState({}, '', newUrl)
     }
   }, [searchQuery])
+
+  /**
+   * Restore selected incident from URL after items are loaded
+   */
+  useEffect(() => {
+    if (typeof window !== 'undefined' && items.length > 0) {
+      const params = new URLSearchParams(window.location.search)
+      const incidentId = params.get('incident')
+      if (incidentId && !selectedIncident) {
+        const incident = items.find(i => i.incident_id === incidentId)
+        if (incident) {
+          console.log('[PAGE] Restoring incident from URL:', incidentId)
+          setSelectedIncident(incident)
+          if (window.innerWidth < 768) {
+            setShowBottomSheet(true)
+          }
+        }
+      }
+    }
+  }, [items])
+
+  /**
+   * Sync panel and incident state to URL
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined' || showLanding) return
+
+    const currentParams = new URLSearchParams(window.location.search)
+    const newParams = new URLSearchParams(window.location.search)
+
+    // Track panel state
+    if (showListView || mobileSheetType === 'incidents') {
+      newParams.set('panel', 'incidents')
+    } else if (mobileSheetType === 'critical') {
+      newParams.set('panel', 'critical')
+    } else {
+      newParams.delete('panel')
+    }
+
+    // Track incident state
+    if (selectedIncident) {
+      newParams.set('incident', selectedIncident.incident_id)
+    } else {
+      newParams.delete('incident')
+    }
+
+    // Only update if URL actually changed
+    const currentUrl = currentParams.toString()
+    const newUrl = newParams.toString()
+    if (currentUrl !== newUrl) {
+      const fullUrl = `${window.location.pathname}${newUrl ? '?' + newUrl : ''}`
+      // Use pushState so back button works
+      window.history.pushState({}, '', fullUrl)
+      console.log('[PAGE] Updated URL:', fullUrl)
+    }
+  }, [showListView, mobileSheetType, selectedIncident, showLanding])
+
+  /**
+   * Handle browser back/forward navigation
+   */
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window === 'undefined') return
+
+      const params = new URLSearchParams(window.location.search)
+      const panelParam = params.get('panel')
+      const incidentParam = params.get('incident')
+
+      console.log('[PAGE] Popstate - panel:', panelParam, 'incident:', incidentParam)
+
+      // Restore panel state
+      if (panelParam === 'incidents') {
+        if (window.innerWidth < 768) {
+          setMobileSheetType('incidents')
+          setShowListView(false)
+        } else {
+          setShowListView(true)
+          setMobileSheetType(null)
+        }
+      } else if (panelParam === 'critical') {
+        if (window.innerWidth < 768) {
+          setMobileSheetType('critical')
+        }
+        setShowListView(false)
+      } else {
+        setShowListView(false)
+        setMobileSheetType(null)
+      }
+
+      // Restore incident state
+      if (incidentParam) {
+        const incident = items.find(i => i.incident_id === incidentParam)
+        if (incident) {
+          setSelectedIncident(incident)
+          if (window.innerWidth < 768) {
+            setShowBottomSheet(true)
+          }
+        }
+      } else {
+        setSelectedIncident(null)
+        setShowBottomSheet(false)
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [items])
 
   /**
    * Handle tab visibility changes to pause/resume polling
@@ -1269,10 +1395,10 @@ export default function Page() {
                                 [{item.call_category}]
                               </div>
                             )}
-                            <div className={`inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase ${
+                            <div className={`inline-flex items-center gap-1 px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase ${
                               locationInfo.hasLocation ? 'border-green-500/50 text-green-500/70' : 'border-red-500/50 text-red-500/70'
                             }`}>
-                              [{locationInfo.hasLocation ? '📍' : '⚠'} {locationInfo.label}]
+                              [{locationInfo.hasLocation ? <MapPin className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />} {locationInfo.label}]
                             </div>
                           </div>
                           <div>
@@ -1344,10 +1470,10 @@ export default function Page() {
                                 [{item.call_category}]
                               </div>
                             )}
-                            <div className={`inline-block px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase ${
+                            <div className={`inline-flex items-center gap-1 px-3 py-1 border-2 text-xs font-bold tracking-wider uppercase ${
                               locationInfo.hasLocation ? 'border-green-500/50 text-green-500/70' : 'border-red-500/50 text-red-500/70'
                             }`}>
-                              [{locationInfo.hasLocation ? '📍' : '⚠'} {locationInfo.label}]
+                              [{locationInfo.hasLocation ? <MapPin className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />} {locationInfo.label}]
                             </div>
                           </div>
                           <div>

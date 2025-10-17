@@ -12,7 +12,12 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "RSO MDT - Mobile Data Terminal",
   description: "Riverside Sheriff Office Mobile Data Terminal - Real-time incident tracking",
-    generator: 'v0.app'
+  generator: 'v0.app',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    viewportFit: 'cover',
+  },
 }
 
 export default function RootLayout({

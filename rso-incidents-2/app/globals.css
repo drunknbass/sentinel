@@ -96,6 +96,16 @@ body {
   color: #ffb000;
 }
 
+/* Support for iOS safe area insets (notch, home indicator, etc) */
+@supports (padding: max(0px)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+  }
+}
+
 /* Terminal-style scrollbar with amber accent */
 ::-webkit-scrollbar {
   width: 12px;
