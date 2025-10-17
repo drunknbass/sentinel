@@ -17,6 +17,7 @@ type LeafletMapProps = {
   initialCenter?: [number, number]
   initialZoom?: number
   onMapMove?: (center: [number, number], zoom: number) => void
+  requestLocationTrigger?: number  // Change this number to trigger a new location request
 }
 
 /**
@@ -51,7 +52,7 @@ const getApproximateLevel = (item: Incident): "exact" | "small" | "medium" | "la
   return "exact"
 }
 
-export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet, initialCenter, initialZoom, onMapMove }: LeafletMapProps) {
+export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet, initialCenter, initialZoom, onMapMove, requestLocationTrigger }: LeafletMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -59,6 +60,161 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
   const tileLayerRef = useRef<any>(null)
   const hasInitialZoomedRef = useRef(false)
   const savedViewRef = useRef<{ center: [number, number]; zoom: number } | null>(null)
+  const userMarkerRef = useRef<any>(null)
+
+  // Reusable function to request user location
+  const requestUserLocation = () => {
+    if (typeof window === "undefined" || !navigator.geolocation || !mapInstanceRef.current) return
+
+    const L = (window as any).L
+    if (!L) return
+
+    console.log('[MAP] Requesting user location')
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        console.log('[MAP] Location permission granted')
+        onLocationPermission?.(true)
+
+        const userLat = position.coords.latitude
+        const userLon = position.coords.longitude
+
+        const isInRiversideArea = userLat >= 33.4 && userLat <= 34.2 && userLon >= -117.8 && userLon <= -116.8
+
+        if (isInRiversideArea && mapInstanceRef.current) {
+          try {
+            // Remove existing user marker if any
+            if (userMarkerRef.current) {
+              userMarkerRef.current.remove()
+            }
+
+            mapInstanceRef.current.setView([userLat, userLon], 13)
+
+            const userIcon = L.divIcon({
+              className: "user-location-marker",
+              html: `
+                <div style="position: relative; width: 40px; height: 40px;">
+                  <!-- Outer pulsing glow ring -->
+                  <div style="
+                    position: absolute;
+                    inset: 0;
+                    background: #22d3ee;
+                    opacity: 0.2;
+                    animation: pulse-gps 2s ease-in-out infinite;
+                  "></div>
+
+                  <!-- Crosshair horizontal line -->
+                  <div style="
+                    position: absolute;
+                    top: 50%;
+                    left: 4px;
+                    right: 4px;
+                    height: 2px;
+                    background: #22d3ee;
+                    transform: translateY(-50%);
+                    box-shadow: 0 0 6px #22d3ee;
+                  "></div>
+
+                  <!-- Crosshair vertical line -->
+                  <div style="
+                    position: absolute;
+                    left: 50%;
+                    top: 4px;
+                    bottom: 4px;
+                    width: 2px;
+                    background: #22d3ee;
+                    transform: translateX(-50%);
+                    box-shadow: 0 0 6px #22d3ee;
+                  "></div>
+
+                  <!-- Corner brackets (top-left) -->
+                  <div style="
+                    position: absolute;
+                    top: 6px;
+                    left: 6px;
+                    width: 8px;
+                    height: 8px;
+                    border-top: 2px solid #22d3ee;
+                    border-left: 2px solid #22d3ee;
+                    box-shadow: 0 0 4px #22d3ee;
+                  "></div>
+
+                  <!-- Corner brackets (top-right) -->
+                  <div style="
+                    position: absolute;
+                    top: 6px;
+                    right: 6px;
+                    width: 8px;
+                    height: 8px;
+                    border-top: 2px solid #22d3ee;
+                    border-right: 2px solid #22d3ee;
+                    box-shadow: 0 0 4px #22d3ee;
+                  "></div>
+
+                  <!-- Corner brackets (bottom-left) -->
+                  <div style="
+                    position: absolute;
+                    bottom: 6px;
+                    left: 6px;
+                    width: 8px;
+                    height: 8px;
+                    border-bottom: 2px solid #22d3ee;
+                    border-left: 2px solid #22d3ee;
+                    box-shadow: 0 0 4px #22d3ee;
+                  "></div>
+
+                  <!-- Corner brackets (bottom-right) -->
+                  <div style="
+                    position: absolute;
+                    bottom: 6px;
+                    right: 6px;
+                    width: 8px;
+                    height: 8px;
+                    border-bottom: 2px solid #22d3ee;
+                    border-right: 2px solid #22d3ee;
+                    box-shadow: 0 0 4px #22d3ee;
+                  "></div>
+
+                  <!-- Center pulsing dot -->
+                  <div style="
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 6px;
+                    height: 6px;
+                    background: #22d3ee;
+                    border-radius: 50%;
+                    animation: pulse-center 1.5s ease-in-out infinite;
+                    box-shadow: 0 0 8px #22d3ee;
+                  "></div>
+                </div>
+              `,
+              iconSize: [40, 40],
+              iconAnchor: [20, 20],
+            })
+
+            userMarkerRef.current = L.marker([userLat, userLon], { icon: userIcon }).addTo(mapInstanceRef.current)
+          } catch (e) {
+            console.error('[MAP] Error setting user location:', e)
+          }
+        }
+      },
+      (error) => {
+        console.log('[MAP] Location permission denied:', error.message)
+        onLocationPermission?.(false)
+      },
+      { timeout: 10000, maximumAge: 0, enableHighAccuracy: true },
+    )
+  }
+
+  // Watch for manual location request trigger
+  useEffect(() => {
+    if (requestLocationTrigger && requestLocationTrigger > 0) {
+      console.log('[MAP] Manual location request triggered:', requestLocationTrigger)
+      requestUserLocation()
+    }
+  }, [requestLocationTrigger])
 
   useEffect(() => {
     if (typeof window === "undefined" || !mapRef.current) return
@@ -172,140 +328,10 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           })
         }
 
-        // Wait for map to be fully loaded before requesting location
+        // Wait for map to be fully loaded before requesting location automatically
         map.whenReady(() => {
-          if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-              (position) => {
-                console.log('[MAP] Location permission granted')
-                onLocationPermission?.(true)
-
-                const userLat = position.coords.latitude
-                const userLon = position.coords.longitude
-
-                const isInRiversideArea = userLat >= 33.4 && userLat <= 34.2 && userLon >= -117.8 && userLon <= -116.8
-
-                if (isInRiversideArea && mapInstanceRef.current) {
-                  try {
-                    mapInstanceRef.current.setView([userLat, userLon], 13)
-
-                    const userIcon = L.divIcon({
-                      className: "user-location-marker",
-                      html: `
-                        <div style="position: relative; width: 40px; height: 40px;">
-                          <!-- Outer pulsing glow ring -->
-                          <div style="
-                            position: absolute;
-                            inset: 0;
-                            background: #22d3ee;
-                            opacity: 0.2;
-                            animation: pulse-gps 2s ease-in-out infinite;
-                          "></div>
-
-                          <!-- Crosshair horizontal line -->
-                          <div style="
-                            position: absolute;
-                            top: 50%;
-                            left: 4px;
-                            right: 4px;
-                            height: 2px;
-                            background: #22d3ee;
-                            transform: translateY(-50%);
-                            box-shadow: 0 0 6px #22d3ee;
-                          "></div>
-
-                          <!-- Crosshair vertical line -->
-                          <div style="
-                            position: absolute;
-                            left: 50%;
-                            top: 4px;
-                            bottom: 4px;
-                            width: 2px;
-                            background: #22d3ee;
-                            transform: translateX(-50%);
-                            box-shadow: 0 0 6px #22d3ee;
-                          "></div>
-
-                          <!-- Corner brackets (top-left) -->
-                          <div style="
-                            position: absolute;
-                            top: 6px;
-                            left: 6px;
-                            width: 8px;
-                            height: 8px;
-                            border-top: 2px solid #22d3ee;
-                            border-left: 2px solid #22d3ee;
-                            box-shadow: 0 0 4px #22d3ee;
-                          "></div>
-
-                          <!-- Corner brackets (top-right) -->
-                          <div style="
-                            position: absolute;
-                            top: 6px;
-                            right: 6px;
-                            width: 8px;
-                            height: 8px;
-                            border-top: 2px solid #22d3ee;
-                            border-right: 2px solid #22d3ee;
-                            box-shadow: 0 0 4px #22d3ee;
-                          "></div>
-
-                          <!-- Corner brackets (bottom-left) -->
-                          <div style="
-                            position: absolute;
-                            bottom: 6px;
-                            left: 6px;
-                            width: 8px;
-                            height: 8px;
-                            border-bottom: 2px solid #22d3ee;
-                            border-left: 2px solid #22d3ee;
-                            box-shadow: 0 0 4px #22d3ee;
-                          "></div>
-
-                          <!-- Corner brackets (bottom-right) -->
-                          <div style="
-                            position: absolute;
-                            bottom: 6px;
-                            right: 6px;
-                            width: 8px;
-                            height: 8px;
-                            border-bottom: 2px solid #22d3ee;
-                            border-right: 2px solid #22d3ee;
-                            box-shadow: 0 0 4px #22d3ee;
-                          "></div>
-
-                          <!-- Center pulsing dot -->
-                          <div style="
-                            position: absolute;
-                            top: 50%;
-                            left: 50%;
-                            transform: translate(-50%, -50%);
-                            width: 6px;
-                            height: 6px;
-                            background: #22d3ee;
-                            border-radius: 50%;
-                            animation: pulse-center 1.5s ease-in-out infinite;
-                            box-shadow: 0 0 8px #22d3ee;
-                          "></div>
-                        </div>
-                      `,
-                      iconSize: [40, 40],
-                      iconAnchor: [20, 20],
-                    })
-
-                    L.marker([userLat, userLon], { icon: userIcon }).addTo(mapInstanceRef.current)
-                  } catch (e) {
-                    console.error('[MAP] Error setting user location:', e)
-                  }
-                }
-              },
-              (error) => {
-                console.log('[MAP] Location permission denied:', error.message)
-                onLocationPermission?.(false)
-              },
-              { timeout: 5000, maximumAge: 60000 },
-            )
-          }
+          console.log('[MAP] Map ready, requesting location automatically')
+          requestUserLocation()
         })
       }
     }

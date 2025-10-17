@@ -58,6 +58,7 @@ export default function Page() {
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null)
   const [locationPermission, setLocationPermission] = useState<'pending' | 'granted' | 'denied'>('pending')
   const [showLocationPrompt, setShowLocationPrompt] = useState(false)
+  const [locationRequestTrigger, setLocationRequestTrigger] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [loadingProgress, setLoadingProgress] = useState<{stage: string; current?: number; total?: number} | null>(null)
   const [showFilterSheet, setShowFilterSheet] = useState(false)  // Mobile filter sheet state
@@ -379,22 +380,10 @@ export default function Page() {
 
     console.log('[PAGE] Manually requesting location permission')
     setLocationPermission('pending')
+    setShowLocationPrompt(false)
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        console.log('[PAGE] Location permission granted via button')
-        setLocationPermission('granted')
-        setShowLocationPrompt(false)
-        // Trigger a page reload to restart the map with location
-        window.location.reload()
-      },
-      (error) => {
-        console.log('[PAGE] Location permission denied via button:', error.message)
-        setLocationPermission('denied')
-        setShowLocationPrompt(false)
-      },
-      { timeout: 10000, maximumAge: 0, enableHighAccuracy: true }
-    )
+    // Trigger the map to request location by incrementing the trigger
+    setLocationRequestTrigger(prev => prev + 1)
   }
 
   /**
@@ -997,6 +986,7 @@ export default function Page() {
           initialCenter={mapCenter}
           initialZoom={mapZoom}
           onMapMove={handleMapMove}
+          requestLocationTrigger={locationRequestTrigger}
         />
       </div>
 
