@@ -188,7 +188,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
           DATA SOURCE: RIVERSIDE SHERIFF OFFICE PUBLIC RECORDS
         </div>
 
-        <div className="relative z-10 flex justify-center mb-8">
+        <div className="relative z-10 hidden md:flex justify-center mb-8">
           <a
             href="https://circlecreativegroup.com"
             target="_blank"

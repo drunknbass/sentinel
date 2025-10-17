@@ -2033,8 +2033,8 @@ export default function Page() {
         </div>
       )}
 
-      {/* Footer credit */}
-      <div className="absolute left-0 right-0 safe-bottom-footer z-20 flex justify-center pointer-events-none">
+      {/* Footer credit – hide on mobile */}
+      <div className="hidden md:flex absolute left-0 right-0 safe-bottom-footer z-20 justify-center pointer-events-none">
         <a
           href="https://circlecreativegroup.com"
           target="_blank"
