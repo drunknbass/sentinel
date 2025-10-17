@@ -91,6 +91,7 @@ export default function Page() {
   const isMobile = useIsMobile()
   const navRef = useDomRef<HTMLDivElement | null>(null)
   const [legendOpen, setLegendOpen] = useState(false)
+  const legendRef = useDomRef<HTMLDivElement | null>(null)
 
   // Measure nav height to position mobile filters exactly under it
   useEffect(() => {
@@ -105,6 +106,21 @@ export default function Page() {
     window.addEventListener('resize', setHeight)
     return () => window.removeEventListener('resize', setHeight)
   }, [])
+
+  // Collapse legend on any outside interaction (tap/click/drag start)
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const onPointerDown = (e: PointerEvent) => {
+      if (!legendOpen) return
+      const el = legendRef.current
+      if (!el) return
+      if (!el.contains(e.target as Node)) {
+        setLegendOpen(false)
+      }
+    }
+    document.addEventListener('pointerdown', onPointerDown, { capture: true })
+    return () => document.removeEventListener('pointerdown', onPointerDown, { capture: true } as any)
+  }, [legendOpen])
 
   // Body scroll/interaction lock when any mobile panel is open
   useEffect(() => {
@@ -989,7 +1005,7 @@ export default function Page() {
       )}
       {/* Legend - fixed bottom-left; hover expands on desktop, tap toggles on mobile */}
       {!(loading && !isRefreshing) && (
-        <div className="fixed left-4 bottom-4 safe-bottom z-[60] md:z-40 pointer-events-auto">
+        <div ref={legendRef} className="fixed left-4 bottom-4 safe-bottom z-[60] md:z-40 pointer-events-auto">
           <div
             className={`bg-black border border-amber-500 ${isMobile ? (legendOpen ? 'max-w-sm' : 'max-w-[88px]') : 'max-w-sm'} transition-all duration-200`}
             onMouseEnter={() => !isMobile && setLegendOpen(true)}
