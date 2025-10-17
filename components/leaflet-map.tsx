@@ -18,6 +18,7 @@ type LeafletMapProps = {
   initialZoom?: number
   onMapMove?: (center: [number, number], zoom: number) => void
   requestLocationTrigger?: number  // Change this number to trigger a new location request
+  onLocationRequestReady?: (requestFn: () => void) => void  // Callback to expose location request function
 }
 
 /**
@@ -52,7 +53,7 @@ const getApproximateLevel = (item: Incident): "exact" | "small" | "medium" | "la
   return "exact"
 }
 
-export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet, initialCenter, initialZoom, onMapMove, requestLocationTrigger }: LeafletMapProps) {
+export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet, initialCenter, initialZoom, onMapMove, requestLocationTrigger, onLocationRequestReady }: LeafletMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -257,6 +258,14 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       requestUserLocation()
     }
   }, [requestLocationTrigger])
+
+  // Expose location request function to parent (for user-initiated requests on iOS)
+  useEffect(() => {
+    if (onLocationRequestReady && mapInstanceRef.current) {
+      console.log('[MAP] Exposing location request function to parent')
+      onLocationRequestReady(requestUserLocation)
+    }
+  }, [onLocationRequestReady, mapInstanceRef.current])
 
   useEffect(() => {
     if (typeof window === "undefined" || !mapRef.current) return
