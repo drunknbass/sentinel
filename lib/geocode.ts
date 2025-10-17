@@ -24,7 +24,7 @@ const RIVERSIDE_COUNTY_CENTER = {
 
 // Area-specific coordinates for better geocoding accuracy
 // These help Apple Maps provide better results for vague addresses
-// Total: 110 locations (28 incorporated cities + 82 unincorporated/special areas)
+// Total: 109 locations (28 incorporated cities + 81 unincorporated/special areas)
 export const AREA_COORDINATES: Record<string, { lat: number; lon: number }> = {
   // === INCORPORATED CITIES ===
 
@@ -86,7 +86,6 @@ export const AREA_COORDINATES: Record<string, { lat: number; lon: number }> = {
   // Central unincorporated
   'MARCH ARB': { lat: 33.8878, lon: -117.2589 },
   'MARCH AIR RESERVE BASE': { lat: 33.8878, lon: -117.2589 },
-  'WOODCREST': { lat: 33.8839, lon: -117.3572 },
   'HIGHGROVE': { lat: 33.9847, lon: -117.3306 },
   'GRAND TERRACE': { lat: 34.0339, lon: -117.3136 },
   'NUEVO': { lat: 33.8011, lon: -117.1458 },
