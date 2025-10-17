@@ -639,7 +639,8 @@ export default function Page() {
               boxShadow: "-8px 0 32px 0 rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
             }}
           >
-            <div className="p-6 space-y-4">
+            {/* Add top padding to avoid navbar overlap */}
+            <div className="pt-20 p-6 space-y-4">
               <button
                 onClick={() => setSelectedIncident(null)}
                 className="flex items-center justify-center w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all mb-4"

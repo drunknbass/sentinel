@@ -316,18 +316,23 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         console.log('[MAP] Saved user view:', savedViewRef.current)
       }
 
-      // Calculate padding to center pin in visible area (accounting for side panel on desktop)
-      const sidePanelWidth = 384 // 96 * 4 = 384px (w-96)
-      const paddingOptions = sidePanelOpen ? {
-        paddingTopLeft: [0, 0],
-        paddingBottomRight: [sidePanelWidth, 0]
-      } : {}
-
       // Zoom in close to the selected incident (level 18 for detailed view)
-      mapInstanceRef.current.flyTo([selectedIncident.lat, selectedIncident.lon], 18, {
+      mapInstanceRef.current.setView([selectedIncident.lat, selectedIncident.lon], 18, {
+        animate: true,
         duration: 0.5,
-        ...paddingOptions
       })
+
+      // If side panel is open, pan the map to center the pin in the visible area
+      if (sidePanelOpen) {
+        // Panel is 384px wide, so we need to shift the map left by half that amount (192px)
+        // to center the pin in the remaining visible area
+        setTimeout(() => {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.panBy([192, 0], { animate: true, duration: 0.3 })
+          }
+        }, 300) // Wait for initial zoom animation to mostly complete
+      }
+
       console.log('[MAP] Zoomed to incident:', selectedIncident.incident_id, sidePanelOpen ? 'with panel offset' : '')
     }
     // When deselecting, restore previous view
