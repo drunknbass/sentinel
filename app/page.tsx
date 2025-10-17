@@ -587,13 +587,11 @@ export default function Page() {
                   // Set selected incident first to trigger map zoom
                   setSelectedIncident(criticalIncidents[criticalCarouselIndex])
 
-                  // Wait for map zoom animation to complete (500ms), then show detail view
-                  setTimeout(() => {
-                    setShowCriticalCarousel(false)
-                    if (window.innerWidth < 768) {
-                      setShowBottomSheet(true)
-                    }
-                  }, 600)
+                  // Dismiss carousel and show mobile sheet if needed
+                  setShowCriticalCarousel(false)
+                  if (window.innerWidth < 768) {
+                    setShowBottomSheet(true)
+                  }
                 }}
                 className="w-full bg-white/95 backdrop-blur-xl text-red-600 font-bold text-lg py-4 rounded-full hover:bg-white transition-all shadow-xl mt-4"
               >
@@ -629,68 +627,60 @@ export default function Page() {
         </div>
       )}
 
-      {/* Incident detail modal for desktop */}
+      {/* Incident detail side panel for desktop */}
       {selectedIncident && !showBottomSheet && (
-        <div className="hidden md:block absolute inset-0 z-50 pointer-events-none">
-          <div className="absolute inset-0 flex items-center justify-center p-6 pointer-events-auto">
-            <div
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
-              style={{ WebkitBackdropFilter: "blur(8px)" }}
-              onClick={() => setSelectedIncident(null)}
-            />
-
-            <div
-              className="relative bg-black/60 backdrop-blur-3xl border border-white/20 rounded-2xl p-6 max-w-lg w-full shadow-2xl animate-modal-in"
-              style={{
-                backdropFilter: "blur(40px) saturate(180%)",
-                WebkitBackdropFilter: "blur(40px) saturate(180%)",
-                boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
-              }}
-            >
+        <div className="hidden md:block absolute top-0 bottom-0 right-0 z-40 w-96 pointer-events-none">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-3xl border-l border-white/20 shadow-2xl pointer-events-auto animate-slide-in-right overflow-y-auto"
+            style={{
+              backdropFilter: "blur(40px) saturate(180%)",
+              WebkitBackdropFilter: "blur(40px) saturate(180%)",
+              boxShadow: "-8px 0 32px 0 rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
+            }}
+          >
+            <div className="p-6 space-y-4">
               <button
                 onClick={() => setSelectedIncident(null)}
-                className="absolute top-4 right-4 flex items-center justify-center w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all"
+                className="flex items-center justify-center w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all mb-4"
               >
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="space-y-4">
+              <div>
+                <div
+                  className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-3"
+                  style={{
+                    backgroundColor: getPriorityColor(selectedIncident.priority) + "30",
+                    color: getPriorityColor(selectedIncident.priority),
+                  }}
+                >
+                  {getPriorityLabel(selectedIncident.priority)} PRIORITY
+                </div>
+                <h2 className="text-2xl font-bold leading-tight mb-2">{selectedIncident.call_type}</h2>
+                <p className="text-gray-400">{selectedIncident.address_raw || "No address available"}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700">
                 <div>
-                  <div
-                    className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-3"
-                    style={{
-                      backgroundColor: getPriorityColor(selectedIncident.priority) + "30",
-                      color: getPriorityColor(selectedIncident.priority),
-                    }}
-                  >
-                    {getPriorityLabel(selectedIncident.priority)} PRIORITY
-                  </div>
-                  <h2 className="text-2xl font-bold leading-tight mb-2">{selectedIncident.call_type}</h2>
-                  <p className="text-gray-400">{selectedIncident.address_raw || "No address available"}</p>
+                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Area</div>
+                  <div className="font-semibold">{selectedIncident.area || "Unknown"}</div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700">
-                  <div>
-                    <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Area</div>
-                    <div className="font-semibold">{selectedIncident.area || "Unknown"}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Time</div>
-                    <div className="font-semibold">{new Date(selectedIncident.received_at).toLocaleTimeString()}</div>
-                  </div>
+                <div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Time</div>
+                  <div className="font-semibold">{new Date(selectedIncident.received_at).toLocaleTimeString()}</div>
                 </div>
+              </div>
 
-                {selectedIncident.disposition && (
-                  <div className="pt-4 border-t border-gray-700">
-                    <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Status</div>
-                    <div className="font-semibold">{selectedIncident.disposition}</div>
-                  </div>
-                )}
-
+              {selectedIncident.disposition && (
                 <div className="pt-4 border-t border-gray-700">
-                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Incident ID</div>
-                  <div className="font-mono text-sm text-gray-400">{selectedIncident.incident_id}</div>
+                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Status</div>
+                  <div className="font-semibold">{selectedIncident.disposition}</div>
                 </div>
+              )}
+
+              <div className="pt-4 border-t border-gray-700">
+                <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Incident ID</div>
+                <div className="font-mono text-sm text-gray-400">{selectedIncident.incident_id}</div>
               </div>
             </div>
           </div>
@@ -699,18 +689,9 @@ export default function Page() {
 
       {/* Incident detail sheet for mobile */}
       {selectedIncident && showBottomSheet && (
-        <div className="md:hidden absolute inset-0 z-50 flex items-end animate-slide-up">
+        <div className="md:hidden absolute bottom-0 left-0 right-0 z-40 animate-slide-up">
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            style={{ WebkitBackdropFilter: "blur(8px)" }}
-            onClick={() => {
-              setShowBottomSheet(false)
-              setSelectedIncident(null)
-            }}
-          />
-
-          <div
-            className="relative w-full max-h-[80vh] bg-black/60 backdrop-blur-3xl border-t border-white/20 rounded-t-3xl shadow-2xl overflow-hidden"
+            className="relative w-full h-[45vh] bg-black/60 backdrop-blur-3xl border-t border-white/20 rounded-t-3xl shadow-2xl overflow-hidden"
             style={{
               backdropFilter: "blur(40px) saturate(180%)",
               WebkitBackdropFilter: "blur(40px) saturate(180%)",
@@ -721,7 +702,7 @@ export default function Page() {
               <div className="w-12 h-1.5 bg-gray-600 rounded-full" />
             </div>
 
-            <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(80vh-2rem)]">
+            <div className="p-6 space-y-4 overflow-y-auto h-[calc(45vh-2rem)]">
               <button
                 onClick={() => {
                   setShowBottomSheet(false)

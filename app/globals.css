@@ -249,6 +249,17 @@ body {
   }
 }
 
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 .animate-slide-up {
   animation: slideUp 0.3s ease-out;
 }
@@ -288,6 +299,10 @@ body {
 
 .animate-modal-in {
   animation: modalIn 0.3s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out;
 }
 
 /* Gradient shift animation for geocoding text */
