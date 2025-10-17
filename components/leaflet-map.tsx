@@ -421,7 +421,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       {process.env.NEXT_PUBLIC_MAPBOX_TOKEN && (
         <button
           onClick={() => setUseMapbox(!useMapbox)}
-          className="absolute bottom-20 right-6 z-50 bg-black/60 backdrop-blur-2xl border border-white/20 rounded-full px-4 py-2 text-xs font-bold tracking-wide hover:bg-black/80 transition-all shadow-lg"
+          className="absolute bottom-20 right-6 z-50 bg-black/60 backdrop-blur-2xl border border-white/20 rounded-full px-4 py-2 text-xs tracking-wide hover:bg-black/80 transition-all shadow-lg"
           style={{
             backdropFilter: "blur(20px) saturate(180%)",
             WebkitBackdropFilter: "blur(20px) saturate(180%)",

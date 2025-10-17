@@ -375,7 +375,7 @@ export default function Page() {
           <div className="text-xs font-mono tracking-wider text-green-400 terminal-text">MDT-3A12</div>
         </div>
         <div className="relative">
-          <div className="text-sm font-mono font-bold tracking-widest text-green-400 terminal-text">RIVERSIDE INCIDENTS</div>
+          <div className="text-sm font-mono tracking-widest text-green-400 terminal-text">RIVERSIDE INCIDENTS</div>
         </div>
         {/* Filter button for mobile */}
         <button
@@ -385,7 +385,7 @@ export default function Page() {
         >
           <Filter className="w-5 h-5 text-green-400" />
           {activeFilterCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">
               {activeFilterCount}
             </span>
           )}
@@ -421,7 +421,7 @@ export default function Page() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               <line x1="15" y1="9" x2="9" y2="15" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
             </svg>
-            <span className="text-xs font-mono font-bold tracking-wider text-yellow-400">LOCATION DISABLED</span>
+            <span className="text-xs font-mono tracking-wider text-yellow-400">LOCATION DISABLED</span>
           </div>
         )}
 
@@ -429,7 +429,7 @@ export default function Page() {
         <button
           onClick={() => setShowListView(true)}
           disabled={loading || isRefreshing}
-          className={`relative bg-black/80 backdrop-blur-2xl terminal-border rounded-lg px-6 py-3 text-sm font-mono font-bold tracking-wide transition-all shadow-2xl ${
+          className={`relative bg-black/80 backdrop-blur-2xl terminal-border rounded-lg px-6 py-3 text-sm font-mono tracking-wide transition-all shadow-2xl ${
             (loading || isRefreshing)
               ? 'opacity-50 cursor-not-allowed'
               : 'hover:bg-green-500/10 cursor-pointer'
@@ -470,7 +470,7 @@ export default function Page() {
               autoRefreshEnabled ? 'bg-green-400 animate-pulse' : 'bg-gray-500'
             }`} />
           )}
-          <span className="text-xs font-mono font-bold tracking-wider whitespace-nowrap terminal-text text-green-400">
+          <span className="text-xs font-mono tracking-wider whitespace-nowrap terminal-text text-green-400">
             {loading || isRefreshing ? (
               loadingProgress ? (
                 loadingProgress.current && loadingProgress.total ? (
@@ -498,7 +498,7 @@ export default function Page() {
             <div className={`w-2 h-2 rounded-full ${
               showCriticalCarousel ? 'bg-red-500 animate-pulse-red' : 'bg-yellow-500'
             }`} />
-            <span className="text-xs font-mono font-bold tracking-wider whitespace-nowrap text-red-400 terminal-text">
+            <span className="text-xs font-mono tracking-wider whitespace-nowrap text-red-400 terminal-text">
               {criticalIncidents.length} CRITICAL
             </span>
           </button>
@@ -536,7 +536,7 @@ export default function Page() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse-red" />
-                <span className="text-sm font-bold tracking-wider text-red-500">CRITICAL ALERT</span>
+                <span className="text-sm tracking-wider text-red-500">CRITICAL ALERT</span>
               </div>
               <button
                 onClick={() => setShowCriticalCarousel(false)}
@@ -549,7 +549,7 @@ export default function Page() {
 
             <div className="space-y-3">
               <div key={criticalCarouselIndex}>
-                <h2 className="text-2xl md:text-3xl font-bold animate-carousel-wipe">
+                <h2 className="text-2xl md:text-3xl animate-carousel-wipe">
                   {criticalIncidents[criticalCarouselIndex].call_type}
                 </h2>
                 <p className="text-white/90 animate-carousel-wipe-delay-1">
@@ -608,7 +608,7 @@ export default function Page() {
                     setShowBottomSheet(true)
                   }
                 }}
-                className="w-full bg-white/95 backdrop-blur-xl text-red-600 font-bold text-lg py-4 rounded-full hover:bg-white transition-all shadow-xl mt-4"
+                className="w-full bg-white/95 backdrop-blur-xl text-red-600 text-lg py-4 rounded-full hover:bg-white transition-all shadow-xl mt-4"
               >
                 View Details
               </button>
@@ -621,7 +621,7 @@ export default function Page() {
       {!showBottomSheet && criticalIncidents.length === 0 && filteredItems.length === 0 && (
         <div className="absolute bottom-0 left-0 right-0 z-30 p-8 bg-gradient-to-t from-black/40 via-black/20 to-transparent animate-slide-up pointer-events-none">
           <div className="max-w-2xl mx-auto text-center space-y-6 pointer-events-auto">
-            <h1 className="text-3xl md:text-5xl font-bold leading-tight">
+            <h1 className="text-3xl md:text-5xl leading-tight">
               No active incidents happening near you right now
             </h1>
             <p className="text-lg text-gray-400">
@@ -630,7 +630,7 @@ export default function Page() {
             <button
               onClick={() => setShowListView(true)}
               disabled={loading && !hasInitialLoad}
-              className={`w-full max-w-md mx-auto backdrop-blur-2xl font-bold text-lg py-4 rounded-full transition-all shadow-2xl ${
+              className={`w-full max-w-md mx-auto backdrop-blur-2xl text-lg py-4 rounded-full transition-all shadow-2xl ${
                 loading && !hasInitialLoad
                   ? 'bg-white/50 text-black/50 cursor-not-allowed'
                   : 'bg-white/95 text-black hover:bg-white cursor-pointer'
@@ -663,7 +663,7 @@ export default function Page() {
 
               <div>
                 <div
-                  className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-3"
+                  className="inline-block px-3 py-1 rounded-full text-xs mb-3"
                   style={{
                     backgroundColor: getPriorityColor(selectedIncident.priority) + "30",
                     color: getPriorityColor(selectedIncident.priority),
@@ -671,7 +671,7 @@ export default function Page() {
                 >
                   {getPriorityLabel(selectedIncident.priority)} PRIORITY
                 </div>
-                <h2 className="text-2xl font-bold leading-tight mb-2">{selectedIncident.call_type}</h2>
+                <h2 className="text-2xl leading-tight mb-2">{selectedIncident.call_type}</h2>
                 <button
                   onClick={() => {
                     // Re-trigger the zoom by clearing and re-setting the incident
@@ -741,7 +741,7 @@ export default function Page() {
 
               <div>
                 <div
-                  className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-3"
+                  className="inline-block px-3 py-1 rounded-full text-xs mb-3"
                   style={{
                     backgroundColor: getPriorityColor(selectedIncident.priority) + "30",
                     color: getPriorityColor(selectedIncident.priority),
@@ -749,7 +749,7 @@ export default function Page() {
                 >
                   {getPriorityLabel(selectedIncident.priority)} PRIORITY
                 </div>
-                <h2 className="text-2xl font-bold leading-tight mb-2">{selectedIncident.call_type}</h2>
+                <h2 className="text-2xl leading-tight mb-2">{selectedIncident.call_type}</h2>
                 <div className="text-left text-gray-400">
                   {selectedIncident.address_raw || "No address available"}
                 </div>
@@ -805,7 +805,7 @@ export default function Page() {
 
             <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(80vh-2rem)]">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold">FILTERS</h3>
+                <h3 className="text-lg">FILTERS</h3>
                 <button
                   onClick={() => setShowFilterSheet(false)}
                   className="flex items-center justify-center w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all"
@@ -828,7 +828,7 @@ export default function Page() {
 
               <button
                 onClick={() => setShowFilterSheet(false)}
-                className="w-full bg-white/95 backdrop-blur-xl text-black font-bold text-base py-3 rounded-full hover:bg-white transition-all shadow-xl mt-6"
+                className="w-full bg-white/95 backdrop-blur-xl text-black text-base py-3 rounded-full hover:bg-white transition-all shadow-xl mt-6"
               >
                 Apply Filters ({filteredItems.length} results)
               </button>

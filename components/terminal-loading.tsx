@@ -186,8 +186,8 @@ export default function TerminalLoading() {
     if (line.includes('RIVERSIDE COUNTY') || line.includes('===============')) return 'text-green-300';
 
     // Alerts and warnings
-    if (line.includes('**STOLEN**') || line.includes('**ACTIVE WARRANT**') || line.includes('**PROBATION VIOLATION')) return 'text-red-500 font-bold animate-pulse';
-    if (line.includes('CAUTION:')) return 'text-yellow-400 font-bold';
+    if (line.includes('**STOLEN**') || line.includes('**ACTIVE WARRANT**') || line.includes('**PROBATION VIOLATION')) return 'text-red-500 animate-pulse';
+    if (line.includes('CAUTION:')) return 'text-yellow-400';
 
     // Status messages
     if (line.includes('STATUS:') || line.includes('Status:')) return 'text-blue-400';

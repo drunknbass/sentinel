@@ -73,7 +73,7 @@ export default function IncidentListView({
         <div className="terminal-scanlines" />
         <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-xl border-b terminal-border p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-mono font-bold text-green-400 terminal-text">All Incidents</h2>
+            <h2 className="text-2xl font-mono text-green-400 terminal-text">All Incidents</h2>
             <button
               onClick={onClose}
               className="flex items-center justify-center w-10 h-10 bg-black/60 terminal-border hover:bg-green-500/20 rounded transition-all"
@@ -92,7 +92,7 @@ export default function IncidentListView({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search"
-                className="w-full pl-11 pr-10 py-2.5 bg-black/60 backdrop-blur-xl terminal-border rounded text-sm font-mono font-semibold text-green-400 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all"
+                className="w-full pl-11 pr-10 py-2.5 bg-black/60 backdrop-blur-xl terminal-border rounded text-sm font-mono text-green-400 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all"
               />
               {searchQuery && (
                 <button
@@ -108,7 +108,7 @@ export default function IncidentListView({
             {/* Toggle to hide incidents without location */}
             <button
               onClick={() => setHideWithoutLocation(!hideWithoutLocation)}
-              className="w-full px-4 py-2.5 bg-black/60 terminal-border hover:bg-green-500/10 rounded text-sm font-mono font-semibold text-green-400 transition-all flex items-center gap-2"
+              className="w-full px-4 py-2.5 bg-black/60 terminal-border hover:bg-green-500/10 rounded text-sm font-mono text-green-400 transition-all flex items-center gap-2"
             >
               <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
                 hideWithoutLocation
@@ -143,7 +143,7 @@ export default function IncidentListView({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
                     <span
-                      className="inline-block px-2 py-1 rounded text-xs font-mono font-bold"
+                      className="inline-block px-2 py-1 rounded text-xs font-mono"
                       style={{
                         backgroundColor: getPriorityColor(item.priority) + "30",
                         color: getPriorityColor(item.priority),
@@ -155,7 +155,7 @@ export default function IncidentListView({
                       <span className="text-xs text-green-400 font-mono uppercase tracking-wide">{item.call_category}</span>
                     )}
                   </div>
-                  <h3 className="font-mono font-bold text-lg mb-1 text-green-400 group-hover:text-green-300 transition-colors">{item.call_type}</h3>
+                  <h3 className="font-mono text-lg mb-1 text-green-400 group-hover:text-green-300 transition-colors">{item.call_type}</h3>
                   <p className="text-sm font-mono text-gray-400 truncate">{item.address_raw || "No address"}</p>
                 </div>
                 <div className="text-right text-sm font-mono text-green-400 whitespace-nowrap">

@@ -55,7 +55,7 @@ export default function FilterPanel({
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xs text-green-400 font-mono uppercase tracking-wider mb-1 terminal-text">Filters</div>
-              <div className="font-mono font-bold text-green-400">{activeFiltersCount > 0 ? `${activeFiltersCount} active` : "No filters"}</div>
+              <div className="font-mono text-green-400">{activeFiltersCount > 0 ? `${activeFiltersCount} active` : "No filters"}</div>
             </div>
           </div>
         </button>
@@ -67,7 +67,7 @@ export default function FilterPanel({
           <div className="terminal-scanlines" />
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b terminal-border">
-            <h3 className="font-mono font-bold text-lg text-green-400 terminal-text">Filters</h3>
+            <h3 className="font-mono text-lg text-green-400 terminal-text">Filters</h3>
             <button onClick={() => setIsExpanded(false)} className="text-green-400 hover:text-green-300 transition-colors">
               <X className="w-5 h-5" />
             </button>
@@ -94,7 +94,7 @@ export default function FilterPanel({
                     <button
                       key={range.hours}
                       onClick={() => onTimeRangeChange(range.hours)}
-                      className={`py-2.5 rounded text-xs font-mono font-bold transition-all ${
+                      className={`py-2.5 rounded text-xs font-mono transition-all ${
                         timeRange === range.hours
                           ? "bg-green-500 text-black terminal-border"
                           : "bg-black/50 text-green-400 terminal-border hover:bg-green-500/20"
@@ -113,7 +113,7 @@ export default function FilterPanel({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => onRegionChange("")}
-                  className={`py-2.5 rounded text-sm font-mono font-semibold transition-all ${
+                  className={`py-2.5 rounded text-sm font-mono transition-all ${
                     selectedRegion === "" ? "bg-green-500 text-black terminal-border" : "bg-black/50 text-green-400 terminal-border hover:bg-green-500/20"
                   }`}
                 >
@@ -129,7 +129,7 @@ export default function FilterPanel({
                   <button
                     key={key}
                     onClick={() => onRegionChange(key)}
-                    className={`py-2.5 rounded text-sm font-mono font-semibold transition-all ${
+                    className={`py-2.5 rounded text-sm font-mono transition-all ${
                       selectedRegion === key ? "bg-green-500 text-black terminal-border" : "bg-black/50 text-green-400 terminal-border hover:bg-green-500/20"
                     }`}
                   >
@@ -145,7 +145,7 @@ export default function FilterPanel({
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => onCategoryChange("")}
-                  className={`py-2.5 rounded text-sm font-mono font-semibold transition-all ${
+                  className={`py-2.5 rounded text-sm font-mono transition-all ${
                     selectedCategory === "" ? "bg-green-500 text-black terminal-border" : "bg-black/50 text-green-400 terminal-border hover:bg-green-500/20"
                   }`}
                 >
@@ -162,7 +162,7 @@ export default function FilterPanel({
                   <button
                     key={key}
                     onClick={() => onCategoryChange(key)}
-                    className={`py-2.5 rounded text-sm font-mono font-semibold transition-all ${
+                    className={`py-2.5 rounded text-sm font-mono transition-all ${
                       selectedCategory === key ? "bg-green-500 text-black terminal-border" : "bg-black/50 text-green-400 terminal-border hover:bg-green-500/20"
                     }`}
                   >
@@ -188,7 +188,7 @@ export default function FilterPanel({
                   <button
                     key={value}
                     onClick={() => onPriorityChange(value)}
-                    className={`py-2.5 rounded text-xs font-mono font-semibold transition-all ${
+                    className={`py-2.5 rounded text-xs font-mono transition-all ${
                       minPriority === value ? "bg-green-500 text-black terminal-border" : "bg-black/50 text-green-400 terminal-border hover:bg-green-500/20"
                     }`}
                   >
@@ -207,7 +207,7 @@ export default function FilterPanel({
                   onTimeRangeChange(2)
                   onRegionChange("")
                 }}
-                className="w-full py-2.5 bg-red-500/20 terminal-border rounded text-sm font-mono font-semibold hover:bg-red-500/30 transition-colors text-red-400"
+                className="w-full py-2.5 bg-red-500/20 terminal-border rounded text-sm font-mono hover:bg-red-500/30 transition-colors text-red-400"
               >
                 Clear All Filters
               </button>

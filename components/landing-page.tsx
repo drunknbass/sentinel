@@ -98,11 +98,11 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
       <div className="relative z-10 flex flex-col items-center justify-center h-full px-6 text-center">
         <div className="mt-39 mb-8 inline-flex items-center gap-2 bg-red-500/20 backdrop-blur-2xl border border-red-500/30 rounded-full px-6 py-3 shadow-lg">
           <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse-slow" />
-          <span className="text-sm font-bold tracking-wider">LIVE INCIDENTS</span>
+          <span className="text-sm tracking-wider">LIVE INCIDENTS</span>
         </div>
 
         {/* Hero heading */}
-        <h1 className="text-5xl md:text-7xl font-bold leading-tight mb-6 max-w-4xl">
+        <h1 className="text-5xl md:text-7xl leading-tight mb-6 max-w-4xl">
           Stay informed about incidents in{" "}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">
             Riverside County
@@ -118,7 +118,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
         {/* Call-to-action button */}
         <button
           onClick={onEnter}
-          className="group relative bg-white/95 text-black font-bold text-lg px-12 py-5 rounded-full hover:bg-white transition-all shadow-2xl hover:shadow-red-500/20 hover:scale-105"
+          className="group relative bg-white/95 text-black text-lg px-12 py-5 rounded-full hover:bg-white transition-all shadow-2xl hover:shadow-red-500/20 hover:scale-105"
           style={{
             backdropFilter: "blur(20px) saturate(180%)",
             WebkitBackdropFilter: "blur(20px) saturate(180%)",
@@ -134,7 +134,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
             <div className="flex justify-center mb-6">
               <MapPin className="w-8 h-8 text-red-500" />
             </div>
-            <h3 className="font-bold text-lg mb-2">Interactive Map</h3>
+            <h3 className="text-lg mb-2">Interactive Map</h3>
             <p className="text-sm text-gray-400">
               View incidents on a live map with color-coded markers based on priority
             </p>
@@ -144,7 +144,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
             <div className="flex justify-center mb-6">
               <Search className="w-8 h-8 text-orange-500" />
             </div>
-            <h3 className="font-bold text-lg mb-2">Smart Filters</h3>
+            <h3 className="text-lg mb-2">Smart Filters</h3>
             <p className="text-sm text-gray-400">Filter by category, priority, time range, and search with tags</p>
           </div>
 
@@ -152,7 +152,7 @@ export default function LandingPage({ onEnter }: { onEnter: () => void }) {
             <div className="flex justify-center mb-6">
               <Zap className="w-8 h-8 text-yellow-500" />
             </div>
-            <h3 className="font-bold text-lg mb-2">Real-Time Updates</h3>
+            <h3 className="text-lg mb-2">Real-Time Updates</h3>
             <p className="text-sm text-gray-400">
               Get instant updates as new incidents are reported by the Sheriff's Office
             </p>
