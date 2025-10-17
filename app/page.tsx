@@ -11,6 +11,8 @@ import IncidentListView from "@/components/incident-list-view"
 import TerminalLoading from "@/components/terminal-loading"
 import { fetchIncidents, type IncidentsResponse } from "@/lib/api/incidents"
 import { X, ChevronLeft, ChevronRight, Filter, MapPin, AlertTriangle, Navigation } from "lucide-react"
+import MobileSheet from "@/components/ui/mobile-sheet"
+import { setGpsRequester, markGpsPrompted } from "@/lib/gps-bridge"
 
 type Incident = IncidentsResponse["items"][number]
 
@@ -600,6 +602,7 @@ export default function Page() {
       // Guarantee a prompt even if the map isn't mounted yet
       navigator.geolocation.getCurrentPosition(
         (pos) => {
+          try { markGpsPrompted() } catch {}
           setLocationPermission('granted')
           const lat = pos.coords.latitude
           const lon = pos.coords.longitude
@@ -615,6 +618,11 @@ export default function Page() {
       )
     }
   }
+
+  // Expose GPS requester globally for first-tap monkey patch on mobile
+  useEffect(() => {
+    setGpsRequester(handleRequestLocation)
+  }, [])
 
   /**
    * Callback when map moves or zooms - syncs to URL params

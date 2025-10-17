@@ -37,11 +37,10 @@
     "app",
     "components",
     "lib",
+    "declarations",
     "next-env.d.ts",
     "tests",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "components/ui/**/*"
-  ]
+  "exclude": []
 }
