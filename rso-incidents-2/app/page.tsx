@@ -402,18 +402,28 @@ export default function Page() {
             >
               <span>FILTERS</span>
             </button>
-            <button
-              onClick={() => setMapStyle(mapStyle === "crt" ? "normal" : "crt")}
-              className="flex items-center gap-2 text-xs md:text-xs font-mono text-amber-500 border-2 border-amber-500 px-3 py-1.5 md:px-3 md:py-1 hover:bg-amber-500 hover:text-black transition-all"
-            >
-              <span>{mapStyle === "crt" ? "CRT" : "SAT"}</span>
-            </button>
+
+            {/* Critical alert badge - toggles carousel */}
+            {criticalIncidents.length > 0 && (
+              <button
+                onClick={() => setShowCriticalCarousel(!showCriticalCarousel)}
+                className="flex items-center gap-2 text-xs font-mono font-bold border-2 border-red-600 px-3 py-1.5 md:px-3 md:py-1 transition-all text-red-600 crt-bloom-red hover:bg-red-600 hover:text-black"
+              >
+                <span className="animate-blink">█</span>
+                <span className="hidden md:inline">CRITICAL: {criticalIncidents.length}</span>
+                <span className="md:hidden">CRIT</span>
+              </button>
+            )}
+
+            {/* Online/Loading badge */}
             <button
               onClick={() => setIsOnline(!isOnline)}
-              className="flex items-center gap-2 text-xs md:text-xs font-mono text-amber-500 border-2 border-amber-500 px-3 py-1.5 md:px-3 md:py-1 hover:bg-amber-500 hover:text-black transition-all"
+              className="flex items-center gap-2 text-xs font-mono font-bold border-2 border-amber-500 px-3 py-1.5 md:px-3 md:py-1 transition-all text-amber-500 hover:bg-amber-500 hover:text-black"
             >
-              <span className={isOnline ? "animate-blink" : "opacity-50"}>█</span>
-              <span className={isOnline ? "" : "opacity-50"}>{isOnline ? "ONLINE" : "OFFLINE"}</span>
+              <span className={loading ? "animate-blink" : isOnline ? "animate-blink" : "opacity-50"}>█</span>
+              <span className={isOnline ? "" : "opacity-50"}>
+                {loading ? "LOADING..." : isOnline ? "ONLINE" : "OFFLINE"}
+              </span>
             </button>
           </div>
         </div>
@@ -453,22 +463,7 @@ export default function Page() {
         onExpandedChange={setFilterPanelExpanded}
       />
 
-      {/* Desktop HUD badges - left side aligned with filter panel */}
-      <div className="hidden md:flex absolute top-32 left-6 z-40 gap-3">
-        {/* Live status badge */}
-        <div className="bg-black border-2 border-amber-500 px-4 py-3 text-xs font-mono font-bold text-amber-500 tracking-wider">
-          <span className={isOnline ? "animate-blink" : "opacity-50"}>█</span> {isOnline ? "LIVE" : "OFFLINE"}
-        </div>
-
-        {/* Critical incidents badge */}
-        {criticalIncidents.length > 0 && (
-          <div className="bg-black border-2 border-red-600 px-4 py-3 text-xs font-mono font-bold text-red-600 tracking-wider crt-bloom-red">
-            <span className="animate-blink">█</span> CRITICAL: {criticalIncidents.length}
-          </div>
-        )}
-      </div>
-
-      {/* All incidents button - right side */}
+      {/* All incidents button - top right */}
       <button
         onClick={() => setShowListView(true)}
         className="hidden md:block absolute top-32 right-6 z-40 bg-black border-2 border-amber-500 px-6 py-3 text-xs font-mono font-bold hover:bg-amber-500 hover:text-black transition-all text-amber-500 tracking-wider"
