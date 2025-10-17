@@ -14,6 +14,45 @@ export async function generateAppleMapsToken(): Promise<string | null> {
     return cachedAccessToken.token;
   }
 
+  // TEST: Try using pre-generated token first
+  const testToken = process.env.APPLE_MAPKIT_TEST_TOKEN || 'eyJraWQiOiJKUDNDQjQzRFUyIiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJTS1c5N1I2MzRNIiwiaWF0IjoxNzYwNjQ4NzM1LCJleHAiOjE3NjEyODkxOTl9.IZIezMgJRGG5Eevt4qrlqP-iOUet7w_cSTgRB3P8iJrYmsvjuL1npJ7dx2No-wzU9-sms6Gw4uPvmmXf6G-Yow';
+
+  if (testToken && testToken !== 'SKIP') {
+    console.log('[APPLE_MAPS] Trying pre-generated test token...');
+    try {
+      // Try to exchange the test token directly
+      const tokenUrl = 'https://maps-api.apple.com/v1/token';
+      const response = await fetch(tokenUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${testToken}`,
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const accessToken = data.accessToken;
+        const expiresInSeconds = data.expiresInSeconds || 1800;
+
+        if (accessToken) {
+          console.log('[APPLE_MAPS] Test token worked! Got access token');
+          // Cache the access token
+          cachedAccessToken = {
+            token: accessToken,
+            expires: Date.now() + (expiresInSeconds * 1000) - 60000
+          };
+          return accessToken;
+        }
+      } else {
+        const error = await response.text();
+        console.error('[APPLE_MAPS] Test token failed:', response.status, error);
+      }
+    } catch (err) {
+      console.error('[APPLE_MAPS] Test token error:', err);
+    }
+  }
+
+  // Fall back to generating token
   const teamId = process.env.APPLE_MAPKIT_TEAM_ID;
   const keyId = process.env.APPLE_MAPKIT_KEY_ID;
   let privateKey = process.env.APPLE_MAPKIT_PRIVATE_KEY;
