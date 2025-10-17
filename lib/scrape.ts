@@ -106,7 +106,7 @@ export async function scrapeIncidents({
   since,
   onProgress,
   station,
-  maxGeocode = Number(process.env.MAX_GEOCODE_PER_REQUEST || 40),
+  maxGeocode = Number(process.env.MAX_GEOCODE_PER_REQUEST || 100),
   geocodeConcurrency = Number(process.env.GEOCODE_CONCURRENCY || 3)
 }: {
   geocode?: boolean;
@@ -151,7 +151,17 @@ export async function scrapeIncidents({
     if (geocode) {
       const candidates = items
         .map((it, idx) => ({ idx, it }))
-        .filter(({ it }) => !!it.address_raw && !/undefined/i.test(it.address_raw!))
+        .filter(({ it }) => {
+          // Filter out invalid addresses that can't be geocoded
+          if (!it.address_raw) return false;
+          const addr = it.address_raw.toLowerCase();
+          if (addr.includes('undefined')) return false;
+          if (addr === 'address withheld') return false;
+          if (addr === 'confidential') return false;
+          if (addr === 'unknown') return false;
+          if (addr.length < 5) return false; // Too short to be a valid address
+          return true;
+        })
         .slice(0, Math.max(0, maxGeocode));
 
       console.log('[SCRAPER] Geocoding candidates:', candidates.length, 'limit:', maxGeocode, 'concurrency:', geocodeConcurrency);
@@ -229,7 +239,17 @@ export async function scrapeIncidents({
     if (geocode && items.length) {
       const candidates = items
         .map((it, idx) => ({ idx, it }))
-        .filter(({ it }) => !!it.address_raw && !/undefined/i.test(it.address_raw!))
+        .filter(({ it }) => {
+          // Filter out invalid addresses that can't be geocoded
+          if (!it.address_raw) return false;
+          const addr = it.address_raw.toLowerCase();
+          if (addr.includes('undefined')) return false;
+          if (addr === 'address withheld') return false;
+          if (addr === 'confidential') return false;
+          if (addr === 'unknown') return false;
+          if (addr.length < 5) return false; // Too short to be a valid address
+          return true;
+        })
         .slice(0, Math.max(0, maxGeocode));
 
       let completed = 0;
