@@ -411,7 +411,8 @@ export default function Page() {
           selectedIncident={selectedIncident}
           onLocationPermission={handleLocationPermission}
           isRefreshing={isRefreshing}
-          sidePanelOpen={!!selectedIncident && !showBottomSheet}
+          sidePanelOpen={!showBottomSheet && (showListView || !!selectedIncident)}
+          panelWidth={showListView ? 500 : 320}
         />
       </div>
 
@@ -820,7 +821,10 @@ export default function Page() {
           onClose={() => setShowListView(false)}
           onSelectIncident={(incident) => {
             setSelectedIncident(incident)
-            setShowBottomSheet(true)
+            // Only show bottom sheet on mobile, keep list open on desktop
+            if (window.innerWidth < 768) {
+              setShowBottomSheet(true)
+            }
           }}
           getPriorityLabel={getPriorityLabel}
           getPriorityColor={getPriorityColor}

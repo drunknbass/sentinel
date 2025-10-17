@@ -12,6 +12,7 @@ type LeafletMapProps = {
   onLocationPermission?: (granted: boolean) => void
   isRefreshing?: boolean
   sidePanelOpen?: boolean
+  panelWidth?: number
 }
 
 const getPriorityColor = (priority: number) => {
@@ -21,7 +22,7 @@ const getPriorityColor = (priority: number) => {
   return "#6b7280"
 }
 
-export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing, sidePanelOpen }: LeafletMapProps) {
+export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing, sidePanelOpen, panelWidth = 320 }: LeafletMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -321,12 +322,13 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         duration: 1.5, // Slower animation so user can follow the movement
       })
 
-      // If side panel is open, pan the map slightly to avoid overlap with popup
+      // If side panel is open, pan the map slightly to avoid overlap with panel
       if (sidePanelOpen) {
-        // Popup is 320px wide (w-80), shift map left by 160px to keep pin visible
+        // Shift map left by half the panel width to keep pin visible in left 2/3rds
+        const panOffset = panelWidth / 2
         setTimeout(() => {
           if (mapInstanceRef.current) {
-            mapInstanceRef.current.panBy([160, 0], { animate: true, duration: 0.8 })
+            mapInstanceRef.current.panBy([panOffset, 0], { animate: true, duration: 0.8 })
           }
         }, 1500) // Wait for flyTo animation to complete
       }
@@ -341,7 +343,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       })
       savedViewRef.current = null
     }
-  }, [selectedIncident, sidePanelOpen])
+  }, [selectedIncident, sidePanelOpen, panelWidth])
 
   return (
     <>

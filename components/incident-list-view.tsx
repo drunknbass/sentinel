@@ -118,18 +118,9 @@ export default function IncidentListView({
   ]
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-end animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-start justify-end animate-fade-in pointer-events-none">
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-md"
-        style={{
-          backdropFilter: "blur(16px) saturate(180%)",
-          WebkitBackdropFilter: "blur(16px) saturate(180%)",
-        }}
-        onClick={onClose}
-      />
-
-      <div
-        className="relative h-full w-full md:w-[500px] md:h-auto md:max-h-[calc(100vh-120px)] md:top-20 md:right-6 md:rounded-3xl bg-black/60 backdrop-blur-3xl border-l md:border border-white/20 shadow-2xl flex flex-col overflow-hidden animate-slide-in-right"
+        className="relative h-full w-full md:w-[500px] md:h-auto md:max-h-[calc(100vh-160px)] md:mt-20 md:mb-6 md:mr-6 md:rounded-3xl bg-black/60 backdrop-blur-3xl border-l md:border border-white/20 shadow-2xl flex flex-col overflow-hidden animate-slide-in-right pointer-events-auto"
         style={{
           backdropFilter: "blur(40px) saturate(180%)",
           WebkitBackdropFilter: "blur(40px) saturate(180%)",
