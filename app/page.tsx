@@ -713,7 +713,7 @@ export default function Page() {
                 </div>
                 <button
                   onClick={() => setShowCriticalCarousel(false)}
-                  className="flex items-center justify-center w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
+                  className="w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
                   aria-label="Dismiss"
                 >
                   X
@@ -821,7 +821,7 @@ export default function Page() {
 
       {/* Incident detail popup panel for desktop - Amber MDT style */}
       {selectedIncident && !showBottomSheet && (
-        <div className="hidden md:block absolute top-20 right-6 z-40 w-96 pointer-events-none">
+        <div className="hidden md:block absolute top-32 right-6 z-40 w-96 pointer-events-none">
           <div className="relative bg-black border-4 border-amber-500 pointer-events-auto animate-modal-in overflow-hidden">
             <div className="border-2 border-amber-500/50 p-6 space-y-4 font-mono">
               <div className="flex items-center justify-between border-b-2 border-amber-500 pb-3 mb-4">
