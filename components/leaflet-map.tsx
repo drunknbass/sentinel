@@ -293,7 +293,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
                       iconAnchor: [20, 20],
                     })
 
-                    L.marker([userLat, userLon], { icon: userIcon }).addTo(mapInstanceRef.current).bindPopup("Your Location")
+                    L.marker([userLat, userLon], { icon: userIcon }).addTo(mapInstanceRef.current)
                   } catch (e) {
                     console.error('[MAP] Error setting user location:', e)
                   }

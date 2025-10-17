@@ -572,3 +572,30 @@ body {
 .theme-amber-mdt ::-webkit-scrollbar-thumb:hover {
   background: #ffc933;
 }
+
+/* Safe area utility classes for iOS edge-to-edge support */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-bottom-with-offset {
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
+}
+
+.safe-bottom-footer {
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-top-with-offset {
+  top: calc(140px + env(safe-area-inset-top));
+}
+
+/* Prevent scroll bounce on iOS and other mobile browsers */
+.no-overscroll {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
