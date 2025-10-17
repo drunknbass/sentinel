@@ -42,5 +42,7 @@
     "tests",
     ".next/types/**/*.ts"
   ],
-  "exclude": []
+  "exclude": [
+    "components/ui/**/*"
+  ]
 }

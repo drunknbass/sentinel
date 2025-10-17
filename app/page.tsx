@@ -11,7 +11,7 @@ import IncidentListView from "@/components/incident-list-view"
 import TerminalLoading from "@/components/terminal-loading"
 import { fetchIncidents, type IncidentsResponse } from "@/lib/api/incidents"
 import { X, ChevronLeft, ChevronRight, Filter, MapPin, AlertTriangle, Navigation } from "lucide-react"
-import MobileSheet from "@/components/ui/mobile-sheet"
+import MobileSheet from "@/components/mobile-sheet"
 import { setGpsRequester, markGpsPrompted } from "@/lib/gps-bridge"
 
 type Incident = IncidentsResponse["items"][number]
@@ -359,6 +359,13 @@ export default function Page() {
       }
     }
   }, [locationPermission, locationEnabled])
+
+  // Reset one-shot map request flag when GPS is turned off so turning it back on can place the pin again
+  useEffect(() => {
+    if (!locationEnabled) {
+      mapLocationRequestedRef.current = false
+    }
+  }, [locationEnabled])
 
   /**
    * Sync search query and hideWithoutLocation to URL params
@@ -1108,6 +1115,21 @@ export default function Page() {
                   if (typeof window !== 'undefined' && 'geolocation' in navigator) {
                     if (locationPermission === 'granted') {
                       setLocationEnabled(true)
+                      // Ensure the map drops the pin again on re-enable
+                      try { mapLocationRequestedRef.current = false } catch {}
+                      if (locationRequestFnRef.current) {
+                        try { locationRequestFnRef.current() } catch {}
+                      } else {
+                        // Fallback: force a one-shot position to refresh state
+                        navigator.geolocation.getCurrentPosition(
+                          (pos) => {
+                            const loc = `${pos.coords.latitude},${pos.coords.longitude}`
+                            setUserLocation(loc)
+                          },
+                          () => {},
+                          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                        )
+                      }
                     } else {
                       setLocationPermission('pending')
                       navigator.geolocation.getCurrentPosition(
