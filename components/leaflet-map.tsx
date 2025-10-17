@@ -377,6 +377,14 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
             bottom: 24px !important;
             right: 38px !important;
           }
+
+          /* Mobile: nudge zoom buttons to the right */
+          @media (max-width: 767px) {
+            .leaflet-bottom.leaflet-right {
+              right: 16px !important;
+            }
+          }
+
           .leaflet-control-zoom {
             border: 2px solid #ffb000 !important;
             border-radius: 0 !important;
