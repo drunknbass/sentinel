@@ -325,6 +325,11 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           doubleClickZoom: false,
           touchZoom: false,
           dragging: true,
+          preferCanvas: true,
+          inertia: false,
+          fadeAnimation: true,
+          zoomAnimation: false,
+          markerZoomAnimation: false,
         })
 
         const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
@@ -337,8 +342,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               tileSize: 512,
               zoomOffset: -1,
               maxZoom: 19,
-              updateWhenZooming: false, // Prevent tile loading during zoom animation
-              keepBuffer: 4, // Keep more tiles loaded for smoother panning
+              updateWhenIdle: true,
+              updateWhenZooming: false,
+              keepBuffer: 8,
             },
           ).addTo(map)
         } else {
@@ -347,8 +353,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: "abcd",
             maxZoom: 20,
-            updateWhenZooming: false, // Prevent tile loading during zoom animation
-            keepBuffer: 4, // Keep more tiles loaded for smoother panning
+            updateWhenIdle: true,
+            updateWhenZooming: false,
+            keepBuffer: 8,
           }).addTo(map)
         }
 
@@ -588,8 +595,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
     // Fly to the calculated center point with smooth animation
     mapInstanceRef.current.flyTo(targetCenter, zoom, {
-      duration: 1.5,
-      easeLinearity: 0.25,
+      duration: 0.9,
+      easeLinearity: 0.3,
+      animate: true
     })
 
     console.log('[MAP] Flying to incident in safe area:', {
