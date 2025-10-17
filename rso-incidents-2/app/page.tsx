@@ -244,7 +244,7 @@ export default function Page() {
       >
         <div className="border border-amber-500/50 p-1.5">
           {/* Collapsed state - always visible - much smaller now */}
-          <div className="text-[9px] font-mono font-bold text-amber-500 tracking-wider">[LEGEND]</div>
+          <div className="text-[10px] md:text-[9px] font-mono font-bold text-amber-500 tracking-wider">[LEGEND]</div>
 
           {/* Expanded content - visible on hover */}
           <div className="space-y-3 text-xs font-mono opacity-0 max-h-0 overflow-hidden group-hover:opacity-100 group-hover:max-h-[500px] transition-all duration-300 group-hover:pt-2 group-hover:mt-2 group-hover:border-t group-hover:border-amber-500">
@@ -344,19 +344,19 @@ export default function Page() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setFilterPanelExpanded(!filterPanelExpanded)}
-              className="md:hidden flex items-center gap-2 text-xs font-mono text-amber-500 border-2 border-amber-500 px-3 py-1 hover:bg-amber-500 hover:text-black transition-all"
+              className="md:hidden flex items-center gap-2 text-sm font-mono text-amber-500 border-2 border-amber-500 px-4 py-2 hover:bg-amber-500 hover:text-black transition-all"
             >
               <span>FILTERS</span>
             </button>
             <button
               onClick={() => setMapStyle(mapStyle === "crt" ? "normal" : "crt")}
-              className="flex items-center gap-2 text-xs font-mono text-amber-500 border-2 border-amber-500 px-3 py-1 hover:bg-amber-500 hover:text-black transition-all"
+              className="flex items-center gap-2 text-xs md:text-xs font-mono text-amber-500 border-2 border-amber-500 px-3 py-1.5 md:px-3 md:py-1 hover:bg-amber-500 hover:text-black transition-all"
             >
               <span>{mapStyle === "crt" ? "CRT" : "SAT"}</span>
             </button>
             <button
               onClick={() => setIsOnline(!isOnline)}
-              className="flex items-center gap-2 text-xs font-mono text-amber-500 border-2 border-amber-500 px-3 py-1 hover:bg-amber-500 hover:text-black transition-all"
+              className="flex items-center gap-2 text-xs md:text-xs font-mono text-amber-500 border-2 border-amber-500 px-3 py-1.5 md:px-3 md:py-1 hover:bg-amber-500 hover:text-black transition-all"
             >
               <span className={isOnline ? "animate-blink" : "opacity-50"}>█</span>
               <span className={isOnline ? "" : "opacity-50"}>{isOnline ? "ONLINE" : "OFFLINE"}</span>
@@ -407,7 +407,7 @@ export default function Page() {
       </button>
 
       {criticalIncidents.length > 0 && showCriticalCarousel && !showBottomSheet && (
-        <div className="absolute bottom-0 left-0 right-0 z-30 p-4 md:p-6 bg-gradient-to-t from-black via-black/95 to-transparent animate-slide-up">
+        <div className="absolute bottom-0 left-0 right-0 z-30 p-4 md:p-6 bg-gradient-to-t from-black via-black/95 to-transparent animate-slide-up md:animate-spring-zoom">
           <div className="max-w-3xl mx-auto bg-black/80 backdrop-blur-sm border-2 border-amber-500 p-2">
             <div className="border-2 border-red-600 p-4 crt-glow-red">
               <div className="flex items-center justify-between mb-3 pb-2 border-b-2 border-amber-500">

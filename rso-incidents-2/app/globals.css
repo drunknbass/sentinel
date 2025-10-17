@@ -201,8 +201,33 @@ body {
   }
 }
 
+/* Spring zoom animation for carousel */
+@keyframes springZoomIn {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.04);
+  }
+  70% {
+    transform: scale(0.98);
+  }
+  85% {
+    transform: scale(1.01);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .animate-slide-up {
   animation: slideUp 0.3s ease-out;
+}
+
+.animate-spring-zoom {
+  animation: springZoomIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .animate-fade-in {
