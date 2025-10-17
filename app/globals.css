@@ -174,7 +174,7 @@ body {
   overflow: hidden;
   background: #000000;
   color: oklch(0.985 0 0);
-  font-family: 'Space Grotesk', monospace;
+  font-family: 'BBH Sans Bogle', 'Space Grotesk', monospace;
 }
 
 /* Custom scrollbar styling for Citizen aesthetic */

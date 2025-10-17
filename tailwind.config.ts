@@ -8,7 +8,12 @@ const config: Config = {
     './lib/**/*.{ts,tsx}'
   ],
   theme: {
-    extend: {}
+    extend: {
+      fontFamily: {
+        sans: ['BBH Sans Bogle', 'Space Grotesk', 'ui-sans-serif', 'system-ui'],
+        mono: ['BBH Sans Bogle', 'Space Grotesk', 'ui-monospace', 'monospace'],
+      }
+    }
   },
   plugins: []
 };
