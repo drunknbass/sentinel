@@ -1910,17 +1910,7 @@ export default function Page() {
               )}
 
               {mobileSheetType === 'incidents' && (
-                <div className="p-6 space-y-3 font-mono">
-                  <div className="flex items-center justify-between border-b-2 border-amber-500 pb-3 mb-4">
-                    <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ ALL INCIDENTS ({filteredItems.length}) ╗</div>
-                    <button
-                      onClick={() => setMobileSheetType(null)}
-                      className="w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
-                    >
-                      X
-                    </button>
-                  </div>
-
+                <div className="space-y-3 font-mono">
                   {filteredItems.map((item) => {
                     const locationInfo = (() => {
                       const hasLocation = !!(item.lat && item.lon)
@@ -1989,17 +1979,7 @@ export default function Page() {
               )}
 
               {mobileSheetType === 'critical' && (
-                <div className="p-6 space-y-3 font-mono">
-                  <div className="flex items-center justify-between border-b-2 border-red-600 pb-3 mb-4">
-                    <div className="text-xs text-red-600/70 uppercase tracking-wider">╔ CRITICAL INCIDENTS ({criticalIncidents.length}) ╗</div>
-                    <button
-                      onClick={() => setMobileSheetType(null)}
-                      className="w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
-                    >
-                      X
-                    </button>
-                  </div>
-
+                <div className="space-y-3 font-mono">
                   {criticalIncidents.map((item) => {
                     const locationInfo = (() => {
                       const hasLocation = !!(item.lat && item.lon)

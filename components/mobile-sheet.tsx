@@ -59,9 +59,7 @@ export default function MobileSheet({ open, onClose, title, children }: MobileSh
           }}
           className="font-mono text-amber-500"
         >
-          <div className="px-6 pb-6">
-            {children}
-          </div>
+          {children}
         </Sheet.Content>
       </Sheet.Container>
 
