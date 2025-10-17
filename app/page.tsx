@@ -58,6 +58,8 @@ export default function Page() {
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null)
   const [locationPermission, setLocationPermission] = useState<'pending' | 'granted' | 'denied'>('pending')
   const [userLocation, setUserLocation] = useState<string | undefined>(undefined)
+  const [showTouchOverlay, setShowTouchOverlay] = useState(true)
+  const lastTouchRef = useRef<number>(0)
   const [showLocationPrompt, setShowLocationPrompt] = useState(false)
   const [locationRequestTrigger, setLocationRequestTrigger] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -231,6 +233,21 @@ export default function Page() {
       window.removeEventListener('pointerdown', onFirstInteract)
       window.removeEventListener('keydown', onFirstInteract)
     }
+  }, [locationPermission])
+
+  // Global touch/click hook: call geolocation on every first interaction burst
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handler = () => {
+      const now = Date.now()
+      if (now - lastTouchRef.current < 800) return // throttle
+      lastTouchRef.current = now
+      if (locationPermission !== 'granted') {
+        try { handleRequestLocation() } catch {}
+      }
+    }
+    window.addEventListener('pointerdown', handler, { capture: true })
+    return () => window.removeEventListener('pointerdown', handler, { capture: true } as any)
   }, [locationPermission])
 
   /**
@@ -842,6 +859,17 @@ export default function Page() {
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black no-overscroll">
+      {locationPermission !== 'granted' && (
+        <button
+          aria-label="Enable GPS"
+          onClick={() => { try { handleRequestLocation() } catch {} }}
+          onTouchStart={() => { try { handleRequestLocation() } catch {} }}
+          className="fixed inset-0 z-[200] bg-transparent"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
+        >
+          <span className="sr-only">Enable GPS</span>
+        </button>
+      )}
       {/* Legend - Bottom left corner with hover-to-expand - Hide when loading */}
       {!(loading && !isRefreshing) && (
         <div
