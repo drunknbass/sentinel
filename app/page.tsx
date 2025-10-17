@@ -90,6 +90,7 @@ export default function Page() {
   const [locationEnabled, setLocationEnabled] = useState(false)
   const isMobile = useIsMobile()
   const navRef = useDomRef<HTMLDivElement | null>(null)
+  const [legendOpen, setLegendOpen] = useState(false)
 
   // Measure nav height to position mobile filters exactly under it
   useEffect(() => {
@@ -986,61 +987,45 @@ export default function Page() {
           </div>
         </div>
       )}
-      {/* Legend - Bottom left corner with hover-to-expand - Hide when loading */}
+      {/* Legend - fixed bottom-left; hover expands on desktop, tap toggles on mobile */}
       {!(loading && !isRefreshing) && (
-        <div
-          className="absolute left-6 safe-bottom-legend z-[25] md:z-40 bg-black border border-amber-500 max-w-xs group hover:max-w-sm transition-all duration-300 pointer-events-auto"
-          onMouseEnter={() => setFilterPanelExpanded(false)}
-        >
-        <div className="border border-amber-500/50 p-1.5">
-          {/* Collapsed state - always visible - much smaller now */}
-          <div className="text-[9px] font-mono font-bold text-amber-500 tracking-wider">[LEGEND]</div>
-
-          {/* Expanded content - visible on hover */}
-          <div className="space-y-3 text-xs font-mono opacity-0 max-h-0 overflow-hidden group-hover:opacity-100 group-hover:max-h-[500px] transition-all duration-300 group-hover:pt-2 group-hover:mt-2 group-hover:border-t group-hover:border-amber-500">
-            {/* Priority levels */}
-            <div>
-              <div className="text-amber-500/70 mb-2 text-[10px] tracking-wider">PRIORITY LEVELS:</div>
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 border" style={{ backgroundColor: "#ef4444", borderColor: "#ef4444", boxShadow: "0 0 4px #ef4444" }} />
-                  <span style={{ color: "#ef4444" }} className="text-[9px]">CRITICAL (1-20)</span>
+        <div className="fixed left-4 bottom-4 safe-bottom z-[60] md:z-40 pointer-events-auto">
+          <div
+            className={`bg-black border border-amber-500 ${isMobile ? (legendOpen ? 'max-w-sm' : 'max-w-[88px]') : 'max-w-sm'} transition-all duration-200`}
+            onMouseEnter={() => !isMobile && setLegendOpen(true)}
+            onMouseLeave={() => !isMobile && setLegendOpen(false)}
+          >
+            <button
+              onClick={() => isMobile && setLegendOpen((v) => !v)}
+              className="w-full text-left border border-amber-500/50 p-1.5"
+            >
+              <div className="text-[9px] font-mono font-bold text-amber-500 tracking-wider">[LEGEND]</div>
+            </button>
+            {(legendOpen || !isMobile) && (
+              <div className="space-y-3 text-xs font-mono p-2 border-t border-amber-500">
+                <div>
+                  <div className="text-amber-500/70 mb-2 text-[10px] tracking-wider">PRIORITY LEVELS:</div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2"><div className="w-3 h-3 border" style={{ backgroundColor: "#ef4444", borderColor: "#ef4444", boxShadow: "0 0 4px #ef4444" }} /><span style={{ color: "#ef4444" }} className="text-[9px]">CRITICAL (1-20)</span></div>
+                    <div className="flex items-center gap-2"><div className="w-3 h-3 border" style={{ backgroundColor: "#f97316", borderColor: "#f97316", boxShadow: "0 0 4px #f97316" }} /><span style={{ color: "#f97316" }} className="text-[9px]">HIGH (21-40)</span></div>
+                    <div className="flex items-center gap-2"><div className="w-3 h-3 border" style={{ backgroundColor: "#eab308", borderColor: "#eab308", boxShadow: "0 0 4px #eab308" }} /><span style={{ color: "#eab308" }} className="text-[9px]">MEDIUM (41-60)</span></div>
+                    <div className="flex items-center gap-2"><div className="w-3 h-3 border" style={{ backgroundColor: "#84cc16", borderColor: "#84cc16", boxShadow: "0 0 4px #84cc16" }} /><span style={{ color: "#84cc16" }} className="text-[9px]">LOW (61-80)</span></div>
+                    <div className="flex items-center gap-2"><div className="w-3 h-3 border" style={{ backgroundColor: "#06b6d4", borderColor: "#06b6d4", boxShadow: "0 0 4px #06b6d4" }} /><span style={{ color: "#06b6d4" }} className="text-[9px]">ROUTINE (81-100)</span></div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 border" style={{ backgroundColor: "#f97316", borderColor: "#f97316", boxShadow: "0 0 4px #f97316" }} />
-                  <span style={{ color: "#f97316" }} className="text-[9px]">HIGH (21-40)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 border" style={{ backgroundColor: "#eab308", borderColor: "#eab308", boxShadow: "0 0 4px #eab308" }} />
-                  <span style={{ color: "#eab308" }} className="text-[9px]">MEDIUM (41-60)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 border" style={{ backgroundColor: "#84cc16", borderColor: "#84cc16", boxShadow: "0 0 4px #84cc16" }} />
-                  <span style={{ color: "#84cc16" }} className="text-[9px]">LOW (61-80)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 border" style={{ backgroundColor: "#06b6d4", borderColor: "#06b6d4", boxShadow: "0 0 4px #06b6d4" }} />
-                  <span style={{ color: "#06b6d4" }} className="text-[9px]">ROUTINE (81-100)</span>
+                <div className="pt-2 border-t border-amber-500">
+                  <div className="text-amber-500/70 mb-2 text-[10px] tracking-wider">ADDRESS ACCURACY:</div>
+                  <div className="space-y-1">
+                    <div className="text-[9px] text-amber-500/90">• Block Level (Redacted) - Most accurate</div>
+                    <div className="text-[9px] text-amber-500/80">• Block Level - Moderately accurate</div>
+                    <div className="text-[9px] text-amber-500/70">• Intersection - Less accurate</div>
+                    <div className="text-[9px] text-amber-500/60">• Area Only - Least accurate</div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Address accuracy tiers */}
-            <div className="pt-2 border-t border-amber-500">
-              <div className="text-amber-500/70 mb-2 text-[10px] tracking-wider">ADDRESS ACCURACY:</div>
-              <div className="space-y-1">
-                <div className="text-[9px] text-amber-500/90">• Block Level (Redacted) - Most accurate</div>
-                <div className="text-[9px] text-amber-500/80">• Block Level - Moderately accurate</div>
-                <div className="text-[9px] text-amber-500/70">• Intersection - Less accurate</div>
-                <div className="text-[9px] text-amber-500/60">• Area Only - Least accurate</div>
-              </div>
-              <div className="text-[8px] text-amber-500/50 mt-2 leading-relaxed">
-                All addresses privacy-redacted by RSO
-              </div>
-            </div>
+            )}
           </div>
         </div>
-      </div>
       )}
 
       {/* Top navigation bar - Amber MDT style - Hide when loading */}

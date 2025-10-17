@@ -359,7 +359,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           }).addTo(map)
         }
 
-        // No visible zoom control (zoom is globally disabled by design)
+        // Add zoom controls (works with programmatic zoom even if touch/wheel zoom are disabled)
+        L.control.zoom({ position: "bottomright" }).addTo(map)
 
         const style = document.createElement("style")
         style.textContent = `
