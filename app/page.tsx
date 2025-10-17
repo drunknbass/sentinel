@@ -76,9 +76,21 @@ export default function Page() {
   const [searchTags, setSearchTags] = useState<string[]>([])
   const [filterPanelExpanded, setFilterPanelExpanded] = useState(false)
   const [searchQuery, setSearchQuery] = useState<string>("")
+  const [mobileFilterSearchInput, setMobileFilterSearchInput] = useState("")
 
   // Auto-refresh toggle
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
+
+  // Time range options for filters
+  const TIME_RANGES = [
+    { label: "1h", hours: 1 },
+    { label: "3h", hours: 3 },
+    { label: "6h", hours: 6 },
+    { label: "12h", hours: 12 },
+    { label: "24h", hours: 24 },
+    { label: "48h", hours: 48 },
+    { label: "All", hours: 999 },
+  ]
 
   // nocache flag from URL
   const [nocache, setNocache] = useState(false)
@@ -93,6 +105,26 @@ export default function Page() {
   // Map position state
   const [mapCenter, setMapCenter] = useState<[number, number] | undefined>(undefined)
   const [mapZoom, setMapZoom] = useState<number | undefined>(undefined)
+
+  /**
+   * Helper functions for mobile filter tag management
+   */
+  const handleAddTag = (tag: string) => {
+    if (!searchTags.includes(tag)) {
+      setSearchTags([...searchTags, tag])
+    }
+    setMobileFilterSearchInput("")
+  }
+
+  const handleRemoveTag = (tag: string) => {
+    setSearchTags(searchTags.filter((t) => t !== tag))
+  }
+
+  const filteredSuggestions = useMemo(() => {
+    return availableTags.filter(
+      (tag) => tag.toLowerCase().includes(mobileFilterSearchInput.toLowerCase()) && !searchTags.includes(tag),
+    )
+  }, [availableTags, mobileFilterSearchInput, searchTags])
 
   /**
    * Check URL params on client mount to skip landing page if returning
@@ -669,7 +701,8 @@ export default function Page() {
       {/* Legend - Bottom left corner with hover-to-expand - Hide when loading */}
       {!(loading && !isRefreshing) && (
         <div
-          className="absolute bottom-6 left-6 z-20 md:z-40 bg-black border border-amber-500 max-w-xs group hover:max-w-sm transition-all duration-300"
+          className="absolute left-6 z-20 md:z-40 bg-black border border-amber-500 max-w-xs group hover:max-w-sm transition-all duration-300"
+          style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
           onMouseEnter={() => setFilterPanelExpanded(false)}
         >
         <div className="border border-amber-500/50 p-1.5">
@@ -725,7 +758,10 @@ export default function Page() {
 
       {/* Top navigation bar - Amber MDT style - Hide when loading */}
       {!(loading && !isRefreshing) && (
-        <div className="absolute top-0 left-0 right-0 z-50 bg-black border-b-2 border-amber-500">
+        <div
+          className="absolute top-0 left-0 right-0 z-50 bg-black border-b-2 border-amber-500"
+          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        >
         <div className="flex items-center justify-between px-4 py-2">
           <div className="text-xs font-mono text-amber-500">
             ╔═══════════════════════════════════════════════════════════════════════════════╗
@@ -785,7 +821,10 @@ export default function Page() {
 
       {/* Mobile segmented control - iOS style */}
       {!(loading && !isRefreshing) && (
-        <div className="md:hidden absolute top-[92px] left-0 right-0 z-50 bg-black border-b-2 border-amber-500 px-4 py-3">
+        <div
+          className="md:hidden absolute left-0 right-0 z-50 bg-black border-b-2 border-amber-500 px-4 py-3"
+          style={{ top: 'calc(92px + env(safe-area-inset-top, 0px))' }}
+        >
           <div className="flex items-center gap-2">
             <div className="flex flex-1 gap-2">
               <button
@@ -1312,7 +1351,7 @@ export default function Page() {
 
             <div className="overflow-y-auto" style={{ maxHeight: 'calc(85vh - 3rem)' }}>
               {mobileSheetType === 'filters' && (
-                <div className="p-6 space-y-4 font-mono">
+                <div className="p-6 space-y-6 font-mono">
                   <div className="flex items-center justify-between border-b-2 border-amber-500 pb-3 mb-4">
                     <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ FILTER OPTIONS ╗</div>
                     <button
@@ -1323,26 +1362,172 @@ export default function Page() {
                     </button>
                   </div>
 
-                  <FilterPanel
-                    selectedCategory={selectedCategory}
-                    onCategoryChange={setSelectedCategory}
-                    minPriority={minPriority}
-                    onPriorityChange={setMinPriority}
-                    timeRange={timeRange}
-                    onTimeRangeChange={setTimeRange}
-                    searchTags={searchTags}
-                    onSearchTagsChange={setSearchTags}
-                    availableTags={availableTags}
-                    isExpanded={true}
-                    onExpandedChange={() => {}}
-                  />
+                  {/* Search & Tags */}
+                  <div>
+                    <label className="text-xs text-amber-500/70 uppercase tracking-wider mb-2 block">
+                      &gt; SEARCH &amp; TAGS
+                    </label>
+                    <div className="space-y-2">
+                      {searchTags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {searchTags.map((tag) => (
+                            <button
+                              key={tag}
+                              onClick={() => handleRemoveTag(tag)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600/20 border-2 border-red-600 text-sm font-bold hover:bg-red-600/30 transition-colors text-amber-500 tracking-wide"
+                            >
+                              [{tag}]
+                              <X className="w-3 h-3" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
 
-                  <button
-                    onClick={() => setMobileSheetType(null)}
-                    className="w-full bg-amber-500 text-black font-mono font-bold text-base py-3 hover:bg-amber-400 transition-all tracking-wider border-2 border-amber-500"
-                  >
-                    [ENTER] APPLY FILTERS ({filteredItems.length})
-                  </button>
+                      <input
+                        type="text"
+                        value={mobileFilterSearchInput}
+                        onChange={(e) => setMobileFilterSearchInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && mobileFilterSearchInput.trim()) {
+                            handleAddTag(mobileFilterSearchInput.trim())
+                          }
+                        }}
+                        placeholder="TYPE TO SEARCH..."
+                        className="w-full bg-black border-2 border-amber-500 px-4 py-2.5 text-sm placeholder:text-amber-500/50 focus:outline-none focus:border-amber-400 transition-colors text-amber-500 tracking-wide"
+                      />
+
+                      {mobileFilterSearchInput && filteredSuggestions.length > 0 && (
+                        <div className="bg-black border-2 border-amber-500 overflow-hidden">
+                          {filteredSuggestions.slice(0, 5).map((tag) => (
+                            <button
+                              key={tag}
+                              onClick={() => handleAddTag(tag)}
+                              className="w-full px-4 py-2 text-left text-sm hover:bg-amber-500/10 transition-colors text-amber-500 border-b border-amber-500/30 last:border-b-0 tracking-wide"
+                            >
+                              &gt; {tag}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Time Range */}
+                  <div>
+                    <label className="text-xs text-amber-500/70 uppercase tracking-wider mb-3 block">&gt; TIME RANGE</label>
+                    <div className="space-y-3">
+                      <div className="relative h-2 bg-black border-2 border-amber-500 overflow-hidden">
+                        <div
+                          className="absolute top-0 left-0 h-full bg-amber-500 transition-all duration-300"
+                          style={{
+                            width: `${(TIME_RANGES.findIndex((r) => r.hours === timeRange) / (TIME_RANGES.length - 1)) * 100}%`,
+                          }}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-7 gap-1">
+                        {TIME_RANGES.map((range) => (
+                          <button
+                            key={range.hours}
+                            onClick={() => setTimeRange(range.hours)}
+                            className={`py-2 text-xs font-bold transition-all border-2 tracking-wider ${
+                              timeRange === range.hours
+                                ? "bg-amber-500 text-black border-amber-500"
+                                : "bg-black text-amber-500 border-amber-500 hover:bg-amber-500/10"
+                            }`}
+                          >
+                            {range.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Category */}
+                  <div>
+                    <label className="text-xs text-amber-500/70 uppercase tracking-wider mb-2 block">&gt; CATEGORY</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => setSelectedCategory("")}
+                        className={`py-2.5 text-sm font-bold transition-all border-2 tracking-wider ${
+                          selectedCategory === ""
+                            ? "bg-amber-500 text-black border-amber-500"
+                            : "bg-black text-amber-500 border-amber-500 hover:bg-amber-500/10"
+                        }`}
+                      >
+                        [ALL]
+                      </button>
+                      {[
+                        { key: "violent", label: "VIOLENT" },
+                        { key: "weapons", label: "WEAPONS" },
+                        { key: "property", label: "PROPERTY" },
+                        { key: "traffic", label: "TRAFFIC" },
+                        { key: "disturbance", label: "DISTURB" },
+                        { key: "drug", label: "DRUG" },
+                      ].map(({ key, label }) => (
+                        <button
+                          key={key}
+                          onClick={() => setSelectedCategory(key)}
+                          className={`py-2.5 text-sm font-bold transition-all border-2 tracking-wider ${
+                            selectedCategory === key
+                              ? "bg-amber-500 text-black border-amber-500"
+                              : "bg-black text-amber-500 border-amber-500 hover:bg-amber-500/10"
+                          }`}
+                        >
+                          [{label}]
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Min Priority */}
+                  <div>
+                    <label className="text-xs text-amber-500/70 uppercase tracking-wider mb-2 block">
+                      &gt; MIN PRIORITY:{" "}
+                      {minPriority <= 20
+                        ? "[CRITICAL]"
+                        : minPriority <= 40
+                          ? "[HIGH]"
+                          : minPriority <= 60
+                            ? "[MEDIUM]"
+                            : "[ALL]"}
+                    </label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { value: 20, label: "CRIT" },
+                        { value: 40, label: "HIGH" },
+                        { value: 60, label: "MED" },
+                        { value: 100, label: "ALL" },
+                      ].map(({ value, label }) => (
+                        <button
+                          key={value}
+                          onClick={() => setMinPriority(value)}
+                          className={`py-2.5 text-xs font-bold transition-all border-2 tracking-wider ${
+                            minPriority === value
+                              ? "bg-amber-500 text-black border-amber-500"
+                              : "bg-black text-amber-500 border-amber-500 hover:bg-amber-500/10"
+                          }`}
+                        >
+                          [{label}]
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Clear All Filters */}
+                  {activeFilterCount > 0 && (
+                    <button
+                      onClick={() => {
+                        setSelectedCategory("")
+                        setMinPriority(100)
+                        setTimeRange(999)
+                        setSearchTags([])
+                      }}
+                      className="w-full py-2.5 bg-red-600/20 border-2 border-red-600 text-sm font-bold hover:bg-red-600/30 transition-colors text-amber-500 tracking-wider"
+                    >
+                      [X] CLEAR ALL FILTERS
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -1518,7 +1703,10 @@ export default function Page() {
       )}
 
       {/* Footer credit */}
-      <div className="absolute bottom-4 left-0 right-0 z-20 flex justify-center pointer-events-none">
+      <div
+        className="absolute left-0 right-0 z-20 flex justify-center pointer-events-none"
+        style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
+      >
         <a
           href="https://circlecreativegroup.com"
           target="_blank"
