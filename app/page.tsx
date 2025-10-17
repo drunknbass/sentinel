@@ -109,6 +109,13 @@ export default function Page() {
     return () => window.removeEventListener('resize', setHeight)
   }, [])
 
+  // Sync global panel state to legacy mobileSheetType (until panels are fully refactored)
+  useEffect(() => {
+    if (isMobile) {
+      setMobileSheetType(panel.current)
+    }
+  }, [isMobile, panel.current])
+
   // Collapse legend on any outside interaction (tap/click/drag start)
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -254,6 +261,7 @@ export default function Page() {
       } else if (panelParam === 'critical') {
         if (window.innerWidth < 768) {
           setMobileSheetType('critical')
+          try { panel.open('critical') } catch {}
         }
       }
       // Read incident ID from URL (do this after items are loaded)
@@ -449,6 +457,7 @@ export default function Page() {
       } else if (panelParam === 'critical') {
         if (window.innerWidth < 768) {
           setMobileSheetType('critical')
+          try { panel.open('critical') } catch {}
         }
         setShowListView(false)
       } else {

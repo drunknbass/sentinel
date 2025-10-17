@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from 'react'
 import { useIsMobile } from '@/hooks/use-mobile'
 
-export type PanelType = 'filters' | 'incidents' | 'critical' | 'bottomSheet' | null
+export type PanelType = 'filters' | 'incidents' | 'critical' | null
 
 type PanelContextValue = {
   current: PanelType
@@ -48,4 +48,3 @@ export function usePanel() {
   if (!ctx) throw new Error('usePanel must be used within PanelProvider')
   return ctx
 }
-
