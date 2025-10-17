@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useRef } from "react"
 import dynamic from "next/dynamic"
 import { useRef as useDomRef } from 'react'
 import { useIsMobile } from "@/hooks/use-mobile"
+import { usePanel } from "@/lib/ui/panel-provider"
 import FilterPanel from "@/components/filter-panel"
 import LandingPage from "@/components/landing-page"
 import IncidentListView from "@/components/incident-list-view"
@@ -89,6 +90,7 @@ export default function Page() {
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
   const [locationEnabled, setLocationEnabled] = useState(false)
   const isMobile = useIsMobile()
+  const panel = usePanel()
   const navRef = useDomRef<HTMLDivElement | null>(null)
   const [legendOpen, setLegendOpen] = useState(false)
   const legendRef = useDomRef<HTMLDivElement | null>(null)
@@ -1154,6 +1156,29 @@ export default function Page() {
             <div className="text-xs font-mono text-amber-500">╚═══════════════════════════════════════════════════════════════════════════════╝</div>
           </div>
         )}
+        {/* Mobile segmented control integrated under nav */}
+        {isMobile && (
+          <div className="w-full bg-black border-t-2 border-amber-500 px-4 py-3">
+            <div className="flex items-center gap-2">
+              <div className="flex flex-1 gap-2">
+                <button onClick={() => { panel.toggle('filters'); setShowBottomSheet(false); setSelectedIncident(null); }} className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 border-2 font-mono text-xs font-bold tracking-wider transition-all ${panel.isOpen('filters') ? 'bg-amber-500 text-black border-amber-500' : 'bg-black text-amber-500 border-amber-500 hover:bg-amber-500/10'}`}>
+                  <Filter className="w-4 h-4" />
+                  <span>FILTERS</span>
+                  {activeFilterCount > 0 && (<span className={`ml-1 px-1.5 py-0.5 text-[10px] font-bold border ${panel.isOpen('filters') ? 'bg-black text-amber-500 border-black' : 'bg-amber-500 text-black border-amber-500'}`}>{activeFilterCount}</span>)}
+                </button>
+                <button onClick={() => { panel.toggle('incidents'); setShowBottomSheet(false); setSelectedIncident(null); }} className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 border-2 font-mono text-xs font-bold tracking-wider transition-all ${panel.isOpen('incidents') ? 'bg-amber-500 text-black border-amber-500' : 'bg-black text-amber-500 border-amber-500 hover:bg-amber-500/10'}`}>
+                  <span>INCIDENTS</span>
+                  <span className={`px-1.5 py-0.5 text-[10px] font-bold border ${panel.isOpen('incidents') ? 'bg-black text-amber-500 border-black' : 'bg-amber-500 text-black border-amber-500'}`}>{filteredItems.length}</span>
+                </button>
+              </div>
+              {criticalIncidents.length > 0 && (
+                <button onClick={() => { panel.toggle('critical'); setShowBottomSheet(false); setSelectedIncident(null); }} className={`flex items-center justify-center gap-1 py-2 px-3 border-2 font-mono text-xs font-bold tracking-wider transition-all ${panel.isOpen('critical') ? 'bg-red-600 text-black border-red-600' : 'bg-black text-red-600 border-red-600 hover:bg-red-600/10'}`}>
+                  <span className={`px-1.5 py-0.5 text-[10px] font-bold border animate-pulse ${panel.isOpen('critical') ? 'bg-black text-red-600 border-black' : 'bg-red-600 text-black border-red-600'}`}>{criticalIncidents.length}</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
       )}
 
@@ -1250,7 +1275,7 @@ export default function Page() {
           onLocationPermission={handleLocationPermission}
           onUserLocation={handleUserLocation}
           onLocationRequestReady={handleLocationRequestReady}
-          disableInteractions={!!(isMobile && (showBottomSheet || mobileSheetType !== null))}
+          disableInteractions={!!(isMobile && (showBottomSheet || panel.isAnyOpen))}
           locationEnabled={locationEnabled}
           isRefreshing={isRefreshing}
           sidePanelOpen={!showBottomSheet && (showListView || !!selectedIncident)}

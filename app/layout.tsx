@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from '@/lib/themes/theme-provider';
+import { PanelProvider } from '@/lib/ui/panel-provider';
 
 export const metadata: Metadata = {
   title: 'RSO PressAccess Intelligence',
@@ -20,9 +21,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="mobile-lock-select">
-        <ThemeProvider defaultTheme="amber-mdt">
-          {children}
-        </ThemeProvider>
+        <PanelProvider>
+          <ThemeProvider defaultTheme="amber-mdt">
+            {children}
+          </ThemeProvider>
+        </PanelProvider>
       </body>
     </html>
   );
