@@ -11,6 +11,7 @@ type LeafletMapProps = {
   selectedIncident: Incident | null
   onLocationPermission?: (granted: boolean) => void
   onUserLocation?: (lat: number, lon: number) => void
+  disableInteractions?: boolean
   isRefreshing?: boolean
   sidePanelOpen?: boolean
   panelWidth?: number
@@ -54,7 +55,7 @@ const getApproximateLevel = (item: Incident): "exact" | "small" | "medium" | "la
   return "exact"
 }
 
-export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, onUserLocation, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet, initialCenter, initialZoom, onMapMove, requestLocationTrigger, onLocationRequestReady }: LeafletMapProps) {
+export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, onUserLocation, disableInteractions = false, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet, initialCenter, initialZoom, onMapMove, requestLocationTrigger, onLocationRequestReady }: LeafletMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -264,6 +265,22 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
     }
   }, [requestLocationTrigger])
 
+  // Respect external UI locks (e.g., mobile panels) by disabling map dragging/interaction
+  useEffect(() => {
+    if (!mapInstanceRef.current) return
+    try {
+      if (disableInteractions) {
+        mapInstanceRef.current.dragging?.disable()
+        mapInstanceRef.current.boxZoom?.disable()
+        mapInstanceRef.current.keyboard?.disable()
+      } else {
+        mapInstanceRef.current.dragging?.enable()
+        mapInstanceRef.current.boxZoom?.enable()
+        mapInstanceRef.current.keyboard?.enable()
+      }
+    } catch {}
+  }, [disableInteractions])
+
   // Expose location request function to parent (for user-initiated requests on iOS)
   useEffect(() => {
     if (onLocationRequestReady && mapInstanceRef.current) {
@@ -304,9 +321,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           center: initialCenter || riversideCenter,
           zoom: initialZoom || defaultZoom,
           zoomControl: false,
-          scrollWheelZoom: true,
-          doubleClickZoom: true,
-          touchZoom: true,
+          scrollWheelZoom: false,
+          doubleClickZoom: false,
+          touchZoom: false,
           dragging: true,
         })
 
@@ -335,7 +352,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           }).addTo(map)
         }
 
-        L.control.zoom({ position: "bottomright" }).addTo(map)
+        // No visible zoom control (zoom is globally disabled by design)
 
         const style = document.createElement("style")
         style.textContent = `

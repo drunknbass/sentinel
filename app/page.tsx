@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef } from "react"
 import dynamic from "next/dynamic"
+import { useIsMobile } from "@/hooks/use-mobile"
 import FilterPanel from "@/components/filter-panel"
 import LandingPage from "@/components/landing-page"
 import IncidentListView from "@/components/incident-list-view"
@@ -86,6 +87,7 @@ export default function Page() {
   // Auto-refresh toggle
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
   const [locationEnabled, setLocationEnabled] = useState(false)
+  const isMobile = useIsMobile()
 
   // Time range options for filters
   const TIME_RANGES = [
@@ -1217,6 +1219,7 @@ export default function Page() {
           onLocationPermission={handleLocationPermission}
           onUserLocation={handleUserLocation}
           onLocationRequestReady={handleLocationRequestReady}
+          disableInteractions={!!(isMobile && (showBottomSheet || mobileSheetType !== null || showListView || !!selectedIncident))}
           isRefreshing={isRefreshing}
           sidePanelOpen={!showBottomSheet && (showListView || !!selectedIncident)}
           panelWidth={showListView ? 500 : 320}
