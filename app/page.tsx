@@ -61,6 +61,8 @@ export default function Page() {
   const [loadingProgress, setLoadingProgress] = useState<{stage: string; current?: number; total?: number} | null>(null)
   const [showFilterSheet, setShowFilterSheet] = useState(false)  // Mobile filter sheet state
   const [hasInitialLoad, setHasInitialLoad] = useState(false)  // Track if we've loaded data at least once
+  const [mobileSheetType, setMobileSheetType] = useState<'filters' | 'incidents' | null>(null)  // Track which mobile sheet is open
+  const [sheetDragOffset, setSheetDragOffset] = useState(0)  // Track drag position for bottom sheet
 
   // Data state
   const [items, setItems] = useState<Incident[]>([])
@@ -610,12 +612,6 @@ export default function Page() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setShowFilterSheet(true)}
-              className="md:hidden flex items-center gap-2 text-xs font-mono text-amber-500 border-2 border-amber-500 px-3 py-1 hover:bg-amber-500 hover:text-black transition-all"
-            >
-              <span>FILTERS</span>
-            </button>
-            <button
               onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
               disabled={loading && !isRefreshing}
               className={`flex items-center gap-2 text-xs font-mono border-2 border-amber-500 px-3 py-1 transition-all ${
@@ -661,6 +657,55 @@ export default function Page() {
       </div>
       )}
 
+      {/* Mobile segmented control - iOS style */}
+      {!(loading && !isRefreshing) && (
+        <div className="md:hidden absolute top-[92px] left-0 right-0 z-50 bg-black border-b-2 border-amber-500 px-4 py-3">
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setMobileSheetType(mobileSheetType === 'filters' ? null : 'filters')
+                setShowBottomSheet(false)
+                setSelectedIncident(null)
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 border-2 font-mono text-xs font-bold tracking-wider transition-all ${
+                mobileSheetType === 'filters'
+                  ? 'bg-amber-500 text-black border-amber-500'
+                  : 'bg-black text-amber-500 border-amber-500 hover:bg-amber-500/10'
+              }`}
+            >
+              <Filter className="w-4 h-4" />
+              <span>FILTERS</span>
+              {activeFilterCount > 0 && (
+                <span className={`ml-1 px-1.5 py-0.5 text-[10px] font-bold border ${
+                  mobileSheetType === 'filters' ? 'bg-black text-amber-500 border-black' : 'bg-amber-500 text-black border-amber-500'
+                }`}>
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                setMobileSheetType(mobileSheetType === 'incidents' ? null : 'incidents')
+                setShowBottomSheet(false)
+                setSelectedIncident(null)
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 border-2 font-mono text-xs font-bold tracking-wider transition-all ${
+                mobileSheetType === 'incidents'
+                  ? 'bg-amber-500 text-black border-amber-500'
+                  : 'bg-black text-amber-500 border-amber-500 hover:bg-amber-500/10'
+              }`}
+            >
+              <span>INCIDENTS</span>
+              <span className={`px-1.5 py-0.5 text-[10px] font-bold border ${
+                mobileSheetType === 'incidents' ? 'bg-black text-amber-500 border-black' : 'bg-amber-500 text-black border-amber-500'
+              }`}>
+                {filteredItems.length}
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main map view */}
       <div className="absolute inset-0 bg-black z-10">
         <LeafletMap
@@ -669,6 +714,7 @@ export default function Page() {
             setSelectedIncident(item)
             if (window.innerWidth < 768) {
               setShowBottomSheet(true)
+              setMobileSheetType(null)  // Close mobile segmented sheets
             }
           }}
           selectedIncident={selectedIncident}
@@ -683,9 +729,9 @@ export default function Page() {
         />
       </div>
 
-      {/* Right-side HUD stack - Terminal style - Hide when loading */}
+      {/* Right-side HUD stack - Terminal style - Hide when loading and on mobile */}
       {!(loading && !isRefreshing) && (
-        <div className="absolute top-32 right-6 z-30 flex flex-col items-end gap-3">
+        <div className="hidden md:flex absolute top-32 right-6 z-30 flex-col items-end gap-3">
         {/* Location disabled indicator */}
         {locationPermission === 'denied' && (
           <div className="flex items-center gap-2 bg-black/80 backdrop-blur-2xl terminal-border rounded-lg px-4 py-2 shadow-lg">
@@ -764,7 +810,7 @@ export default function Page() {
       {loading && !isRefreshing && <TerminalLoading />}
 
       {/* Critical incidents carousel - Amber MDT style */}
-      {criticalIncidents.length > 0 && showCriticalCarousel && !showBottomSheet && (
+      {criticalIncidents.length > 0 && showCriticalCarousel && !showBottomSheet && !mobileSheetType && (
         <div className="absolute bottom-0 left-0 right-0 z-30 p-4 md:p-6 bg-gradient-to-t from-black via-black/95 to-transparent animate-slide-up">
           <div className="max-w-3xl mx-auto bg-black/80 backdrop-blur-sm border-2 border-amber-500 p-2">
             <div className="border-2 border-red-600 p-4">
@@ -840,6 +886,7 @@ export default function Page() {
                   onClick={() => {
                     setShowCriticalCarousel(false)
                     setSelectedIncident(criticalIncidents[criticalCarouselIndex])
+                    setMobileSheetType(null)  // Close mobile segmented sheets
                     setTimeout(() => {
                       if (window.innerWidth < 768) {
                         setShowBottomSheet(true)
@@ -1035,82 +1082,125 @@ export default function Page() {
         </div>
       )}
 
-      {/* Mobile Filter Sheet */}
-      {showFilterSheet && (
+      {/* Mobile unified bottom sheet - Terminal style with drag support */}
+      {mobileSheetType && (
         <div className="md:hidden absolute inset-0 z-50 flex items-end animate-slide-up">
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            style={{ WebkitBackdropFilter: "blur(8px)" }}
-            onClick={() => setShowFilterSheet(false)}
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setMobileSheetType(null)}
           />
 
           <div
-            className="relative w-full max-h-[80vh] bg-black/60 backdrop-blur-3xl border-t border-white/20 rounded-t-3xl shadow-2xl overflow-hidden"
+            className="relative w-full bg-black border-t-4 border-amber-500 overflow-hidden"
             style={{
-              backdropFilter: "blur(40px) saturate(180%)",
-              WebkitBackdropFilter: "blur(40px) saturate(180%)",
-              boxShadow: "0 -8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
+              maxHeight: '85vh',
+              transform: `translateY(${sheetDragOffset}px)`,
+              transition: sheetDragOffset === 0 ? 'transform 0.3s ease-out' : 'none'
+            }}
+            onTouchStart={(e) => {
+              const touch = e.touches[0]
+              const startY = touch.clientY
+              const startOffset = sheetDragOffset
+
+              const handleTouchMove = (moveEvent: TouchEvent) => {
+                const currentTouch = moveEvent.touches[0]
+                const deltaY = currentTouch.clientY - startY
+                // Only allow dragging down
+                if (deltaY > 0) {
+                  setSheetDragOffset(deltaY)
+                }
+              }
+
+              const handleTouchEnd = (endEvent: TouchEvent) => {
+                // If dragged more than 100px, close the sheet
+                if (sheetDragOffset > 100) {
+                  setMobileSheetType(null)
+                }
+                setSheetDragOffset(0)
+                document.removeEventListener('touchmove', handleTouchMove)
+                document.removeEventListener('touchend', handleTouchEnd)
+              }
+
+              document.addEventListener('touchmove', handleTouchMove)
+              document.addEventListener('touchend', handleTouchEnd)
             }}
           >
-            <div className="flex justify-center py-3">
-              <div className="w-12 h-1.5 bg-gray-600 rounded-full" />
+            {/* Drag handle */}
+            <div className="flex justify-center py-3 border-b-2 border-amber-500 cursor-grab active:cursor-grabbing">
+              <div className="w-12 h-1 bg-amber-500" />
             </div>
 
-            <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(80vh-2rem)]">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg">FILTERS</h3>
-                <button
-                  onClick={() => setShowFilterSheet(false)}
-                  className="flex items-center justify-center w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all"
-                  aria-label="Close filters"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+            <div className="overflow-y-auto" style={{ maxHeight: 'calc(85vh - 3rem)' }}>
+              {mobileSheetType === 'filters' && (
+                <div className="p-6 space-y-4 font-mono">
+                  <div className="flex items-center justify-between border-b-2 border-amber-500 pb-3 mb-4">
+                    <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ FILTER OPTIONS ╗</div>
+                    <button
+                      onClick={() => setMobileSheetType(null)}
+                      className="w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
+                    >
+                      X
+                    </button>
+                  </div>
 
-              <FilterPanel
-                selectedCategory={selectedCategory}
-                onCategoryChange={setSelectedCategory}
-                minPriority={minPriority}
-                onPriorityChange={setMinPriority}
-                timeRange={timeRange}
-                onTimeRangeChange={setTimeRange}
-                searchTags={searchTags}
-                onSearchTagsChange={setSearchTags}
-                availableTags={availableTags}
-                isExpanded={true}
-                onExpandedChange={() => {}}
-              />
+                  <FilterPanel
+                    selectedCategory={selectedCategory}
+                    onCategoryChange={setSelectedCategory}
+                    minPriority={minPriority}
+                    onPriorityChange={setMinPriority}
+                    timeRange={timeRange}
+                    onTimeRangeChange={setTimeRange}
+                    searchTags={searchTags}
+                    onSearchTagsChange={setSearchTags}
+                    availableTags={availableTags}
+                    isExpanded={true}
+                    onExpandedChange={() => {}}
+                  />
 
-              <button
-                onClick={() => setShowFilterSheet(false)}
-                className="w-full bg-white/95 backdrop-blur-xl text-black text-base py-3 rounded-full hover:bg-white transition-all shadow-xl mt-6"
-              >
-                Apply Filters ({filteredItems.length} results)
-              </button>
+                  <button
+                    onClick={() => setMobileSheetType(null)}
+                    className="w-full bg-amber-500 text-black font-mono font-bold text-base py-3 hover:bg-amber-400 transition-all tracking-wider border-2 border-amber-500"
+                  >
+                    [ENTER] APPLY FILTERS ({filteredItems.length})
+                  </button>
+                </div>
+              )}
+
+              {mobileSheetType === 'incidents' && (
+                <IncidentListView
+                  items={filteredItems}
+                  onClose={() => setMobileSheetType(null)}
+                  onSelectIncident={(incident) => {
+                    setSelectedIncident(incident)
+                    setMobileSheetType(null)
+                    setShowBottomSheet(true)
+                  }}
+                  getPriorityLabel={getPriorityLabel}
+                  getPriorityColor={getPriorityColor}
+                  searchQuery={searchQuery}
+                  onSearchQueryChange={setSearchQuery}
+                />
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* List view for browsing incidents */}
+      {/* List view for browsing incidents - Desktop only */}
       {showListView && (
-        <IncidentListView
-          items={filteredItems}
-          onClose={() => setShowListView(false)}
-          onSelectIncident={(incident) => {
-            setSelectedIncident(incident)
-            // On mobile: close list and show bottom sheet
-            if (window.innerWidth < 768) {
-              setShowListView(false)
-              setShowBottomSheet(true)
-            }
-          }}
-          getPriorityLabel={getPriorityLabel}
-          getPriorityColor={getPriorityColor}
-          searchQuery={searchQuery}
-          onSearchQueryChange={setSearchQuery}
-        />
+        <div className="hidden md:block">
+          <IncidentListView
+            items={filteredItems}
+            onClose={() => setShowListView(false)}
+            onSelectIncident={(incident) => {
+              setSelectedIncident(incident)
+            }}
+            getPriorityLabel={getPriorityLabel}
+            getPriorityColor={getPriorityColor}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+          />
+        </div>
       )}
 
       {/* Footer credit */}
