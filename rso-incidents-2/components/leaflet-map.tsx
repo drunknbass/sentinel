@@ -22,16 +22,19 @@ type LeafletMapProps = {
   mapStyle: "crt" | "normal"
 }
 
-const getPriorityColor = (priority: number) => {
-  if (priority <= 10) return "#dc2626" // Violent - dark red
-  if (priority <= 20) return "#ef4444" // Weapons - red
-  if (priority <= 30) return "#f97316" // Property - orange
-  if (priority <= 40) return "#fb923c" // Traffic - light orange
-  if (priority <= 50) return "#fbbf24" // Disturbance - amber
-  if (priority <= 60) return "#eab308" // Drug - yellow
-  if (priority <= 70) return "#a3e635" // Medical - lime
-  if (priority <= 80) return "#84cc16" // Other - green
-  return "#6b7280" // Admin - gray
+const getCategoryColor = (category: string) => {
+  const colors: Record<string, string> = {
+    violent: "#8b0000",
+    weapons: "#ff0000",
+    property: "#ff4500",
+    traffic: "#ff8c00",
+    disturbance: "#ffa500",
+    drug: "#ffb000",
+    medical: "#d4af37",
+    other: "#9b870c",
+    admin: "#6b7280",
+  }
+  return colors[category.toLowerCase()] || "#ffb000"
 }
 
 const getApproximateLevel = (item: Item): "exact" | "small" | "medium" | "large" => {
@@ -368,7 +371,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, map
     const validItems = items.filter((item) => item.lat && item.lon)
 
     validItems.forEach((item) => {
-      const color = getPriorityColor(item.priority)
+      const color = getCategoryColor(item.call_category)
       const approxLevel = getApproximateLevel(item)
 
       let icon

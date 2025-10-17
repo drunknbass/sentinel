@@ -166,10 +166,10 @@ export default function Page() {
   )
 
   /**
-   * Fetches incidents from API on mount and every 60 seconds
+   * Fetches incidents from API on mount and every 60 seconds when online
    */
   useEffect(() => {
-    if (showLanding) return
+    if (showLanding || !isOnline) return
 
     const fetchIncidents = async () => {
       setLoading(true)
@@ -200,7 +200,7 @@ export default function Page() {
     fetchIncidents()
     const interval = setInterval(fetchIncidents, 60000)
     return () => clearInterval(interval)
-  }, [selectedCategory, minPriority, showLanding])
+  }, [selectedCategory, minPriority, showLanding, isOnline])
 
   /**
    * Auto-advances critical carousel every 8 seconds
@@ -231,6 +231,60 @@ export default function Page() {
       maxLon: Math.max(...lons),
     }
   }, [filteredItems])
+
+  /**
+   * Keyboard shortcuts handler
+   */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // ESC key - close panels
+      if (e.key === "Escape") {
+        if (showListView) {
+          setShowListView(false)
+        } else if (showBottomSheet || selectedIncident) {
+          setShowBottomSheet(false)
+          setSelectedIncident(null)
+        } else if (showCriticalCarousel && criticalIncidents.length > 0) {
+          setShowCriticalCarousel(false)
+        } else if (filterPanelExpanded) {
+          setFilterPanelExpanded(false)
+        }
+      }
+
+      // ENTER key - open CTA when carousel is visible
+      if (e.key === "Enter" && showCriticalCarousel && criticalIncidents.length > 0 && !showBottomSheet) {
+        setShowCriticalCarousel(false)
+        setSelectedIncident(criticalIncidents[criticalCarouselIndex])
+        setTimeout(() => {
+          if (window.innerWidth < 768) {
+            setShowBottomSheet(true)
+          } else {
+            setShowBottomSheet(false)
+          }
+        }, 100)
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [showListView, showBottomSheet, selectedIncident, showCriticalCarousel, criticalIncidents, criticalCarouselIndex, filterPanelExpanded])
+
+  /**
+   * Panel conflict management - close other panels when one opens
+   */
+  useEffect(() => {
+    // Close filter panel when list view or incident detail opens
+    if ((showListView || selectedIncident) && filterPanelExpanded) {
+      setFilterPanelExpanded(false)
+    }
+  }, [showListView, selectedIncident, filterPanelExpanded])
+
+  useEffect(() => {
+    // Close list view when incident detail is opened
+    if (selectedIncident && showListView) {
+      setShowListView(false)
+    }
+  }, [selectedIncident, showListView])
 
   if (showLanding) {
     return <LandingPage onEnter={handleEnterMapView} />
