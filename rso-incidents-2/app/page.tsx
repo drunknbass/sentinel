@@ -720,15 +720,17 @@ export default function Page() {
         />
       )}
 
-      <div className="absolute bottom-4 left-0 right-0 z-20 flex justify-center pointer-events-none">
-        <a
-          href="https://circlecreativegroup.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-amber-500/60 hover:text-amber-500 transition-colors pointer-events-auto border-2 border-amber-500/40 px-4 py-2 font-mono tracking-wider"
-        >
-          [BUILT BY CIRCLE CREATIVE GROUP]
-        </a>
+      <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center pointer-events-none">
+        <div className="pointer-events-auto bg-black border-2 border-amber-500 px-4 py-2">
+          <a
+            href="https://circlecreativegroup.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-amber-500 hover:text-amber-400 transition-colors font-mono tracking-wider font-bold"
+          >
+            [BUILT BY CIRCLE CREATIVE GROUP]
+          </a>
+        </div>
       </div>
     </div>
   )
