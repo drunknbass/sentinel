@@ -166,10 +166,10 @@ export default function Page() {
   )
 
   /**
-   * Fetches incidents from API on mount and every 60 seconds when online
+   * Fetches incidents from API on mount and every 60 seconds
    */
   useEffect(() => {
-    if (showLanding || !isOnline) return
+    if (showLanding) return
 
     const fetchIncidents = async () => {
       setLoading(true)
@@ -200,7 +200,7 @@ export default function Page() {
     fetchIncidents()
     const interval = setInterval(fetchIncidents, 60000)
     return () => clearInterval(interval)
-  }, [selectedCategory, minPriority, showLanding, isOnline])
+  }, [selectedCategory, minPriority, showLanding])
 
   /**
    * Auto-advances critical carousel every 8 seconds
@@ -232,60 +232,6 @@ export default function Page() {
     }
   }, [filteredItems])
 
-  /**
-   * Keyboard shortcuts handler
-   */
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // ESC key - close panels
-      if (e.key === "Escape") {
-        if (showListView) {
-          setShowListView(false)
-        } else if (showBottomSheet || selectedIncident) {
-          setShowBottomSheet(false)
-          setSelectedIncident(null)
-        } else if (showCriticalCarousel && criticalIncidents.length > 0) {
-          setShowCriticalCarousel(false)
-        } else if (filterPanelExpanded) {
-          setFilterPanelExpanded(false)
-        }
-      }
-
-      // ENTER key - open CTA when carousel is visible
-      if (e.key === "Enter" && showCriticalCarousel && criticalIncidents.length > 0 && !showBottomSheet) {
-        setShowCriticalCarousel(false)
-        setSelectedIncident(criticalIncidents[criticalCarouselIndex])
-        setTimeout(() => {
-          if (window.innerWidth < 768) {
-            setShowBottomSheet(true)
-          } else {
-            setShowBottomSheet(false)
-          }
-        }, 100)
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [showListView, showBottomSheet, selectedIncident, showCriticalCarousel, criticalIncidents, criticalCarouselIndex, filterPanelExpanded])
-
-  /**
-   * Panel conflict management - close other panels when one opens
-   */
-  useEffect(() => {
-    // Close filter panel when list view or incident detail opens
-    if ((showListView || selectedIncident) && filterPanelExpanded) {
-      setFilterPanelExpanded(false)
-    }
-  }, [showListView, selectedIncident, filterPanelExpanded])
-
-  useEffect(() => {
-    // Close list view when incident detail is opened
-    if (selectedIncident && showListView) {
-      setShowListView(false)
-    }
-  }, [selectedIncident, showListView])
-
   if (showLanding) {
     return <LandingPage onEnter={handleEnterMapView} />
   }
@@ -298,7 +244,7 @@ export default function Page() {
       >
         <div className="border border-amber-500/50 p-1.5">
           {/* Collapsed state - always visible - much smaller now */}
-          <div className="text-[10px] md:text-[9px] font-mono font-bold text-amber-500 tracking-wider">[LEGEND]</div>
+          <div className="text-[9px] font-mono font-bold text-amber-500 tracking-wider">[LEGEND]</div>
 
           {/* Expanded content - visible on hover */}
           <div className="space-y-3 text-xs font-mono opacity-0 max-h-0 overflow-hidden group-hover:opacity-100 group-hover:max-h-[500px] transition-all duration-300 group-hover:pt-2 group-hover:mt-2 group-hover:border-t group-hover:border-amber-500">
@@ -398,32 +344,22 @@ export default function Page() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setFilterPanelExpanded(!filterPanelExpanded)}
-              className="md:hidden flex items-center gap-2 text-sm font-mono text-amber-500 border-2 border-amber-500 px-4 py-2 hover:bg-amber-500 hover:text-black transition-all"
+              className="md:hidden flex items-center gap-2 text-xs font-mono text-amber-500 border-2 border-amber-500 px-3 py-1 hover:bg-amber-500 hover:text-black transition-all"
             >
               <span>FILTERS</span>
             </button>
-
-            {/* Critical alert badge - toggles carousel */}
-            {criticalIncidents.length > 0 && (
-              <button
-                onClick={() => setShowCriticalCarousel(!showCriticalCarousel)}
-                className="flex items-center gap-2 text-xs font-mono font-bold border-2 border-red-600 px-3 py-1.5 md:px-3 md:py-1 transition-all text-red-600 crt-bloom-red hover:bg-red-600 hover:text-black"
-              >
-                <span className="animate-blink">█</span>
-                <span className="hidden md:inline">CRITICAL: {criticalIncidents.length}</span>
-                <span className="md:hidden">CRIT</span>
-              </button>
-            )}
-
-            {/* Online/Loading badge */}
+            <button
+              onClick={() => setMapStyle(mapStyle === "crt" ? "normal" : "crt")}
+              className="flex items-center gap-2 text-xs font-mono text-amber-500 border-2 border-amber-500 px-3 py-1 hover:bg-amber-500 hover:text-black transition-all"
+            >
+              <span>{mapStyle === "crt" ? "CRT" : "SAT"}</span>
+            </button>
             <button
               onClick={() => setIsOnline(!isOnline)}
-              className="flex items-center gap-2 text-xs font-mono font-bold border-2 border-amber-500 px-3 py-1.5 md:px-3 md:py-1 transition-all text-amber-500 hover:bg-amber-500 hover:text-black"
+              className="flex items-center gap-2 text-xs font-mono text-amber-500 border-2 border-amber-500 px-3 py-1 hover:bg-amber-500 hover:text-black transition-all"
             >
-              <span className={loading ? "animate-blink" : isOnline ? "animate-blink" : "opacity-50"}>█</span>
-              <span className={isOnline ? "" : "opacity-50"}>
-                {loading ? "LOADING..." : isOnline ? "ONLINE" : "OFFLINE"}
-              </span>
+              <span className={isOnline ? "animate-blink" : "opacity-50"}>█</span>
+              <span className={isOnline ? "" : "opacity-50"}>{isOnline ? "ONLINE" : "OFFLINE"}</span>
             </button>
           </div>
         </div>
@@ -463,7 +399,6 @@ export default function Page() {
         onExpandedChange={setFilterPanelExpanded}
       />
 
-      {/* All incidents button - top right */}
       <button
         onClick={() => setShowListView(true)}
         className="hidden md:block absolute top-32 right-6 z-40 bg-black border-2 border-amber-500 px-6 py-3 text-xs font-mono font-bold hover:bg-amber-500 hover:text-black transition-all text-amber-500 tracking-wider"
@@ -472,7 +407,7 @@ export default function Page() {
       </button>
 
       {criticalIncidents.length > 0 && showCriticalCarousel && !showBottomSheet && (
-        <div className="absolute bottom-0 left-0 right-0 z-30 p-4 md:p-6 bg-gradient-to-t from-black via-black/95 to-transparent animate-slide-up md:animate-spring-zoom">
+        <div className="absolute bottom-0 left-0 right-0 z-30 p-4 md:p-6 bg-gradient-to-t from-black via-black/95 to-transparent animate-slide-up">
           <div className="max-w-3xl mx-auto bg-black/80 backdrop-blur-sm border-2 border-amber-500 p-2">
             <div className="border-2 border-red-600 p-4 crt-glow-red">
               <div className="flex items-center justify-between mb-3 pb-2 border-b-2 border-amber-500">
@@ -731,17 +666,15 @@ export default function Page() {
         />
       )}
 
-      <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center pointer-events-none">
-        <div className="pointer-events-auto bg-black border-2 border-amber-500 px-4 py-2">
-          <a
-            href="https://circlecreativegroup.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-amber-500 hover:text-amber-400 transition-colors font-mono tracking-wider font-bold"
-          >
-            [BUILT BY CIRCLE CREATIVE GROUP]
-          </a>
-        </div>
+      <div className="absolute bottom-4 left-0 right-0 z-20 flex justify-center pointer-events-none">
+        <a
+          href="https://circlecreativegroup.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-amber-500/60 hover:text-amber-500 transition-colors pointer-events-auto border-2 border-amber-500/40 px-4 py-2 font-mono tracking-wider"
+        >
+          [BUILT BY CIRCLE CREATIVE GROUP]
+        </a>
       </div>
     </div>
   )

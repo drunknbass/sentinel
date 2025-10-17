@@ -68,52 +68,57 @@ export default function IncidentListView({
   }, [items, hideWithoutLocation, searchQuery, getPriorityLabel])
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-end animate-fade-in pointer-events-none">
-      <div className="relative h-full w-full md:w-[500px] md:h-auto md:max-h-[calc(100vh-240px)] md:mt-20 md:mb-32 md:mr-6 md:rounded-lg bg-black/90 backdrop-blur-3xl terminal-border shadow-2xl flex flex-col overflow-hidden animate-slide-in-right pointer-events-auto">
-        <div className="terminal-scanlines" />
-        <div className="sticky top-0 z-10 bg-black/80 backdrop-blur-xl border-b terminal-border p-6">
+    <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center animate-fade-in">
+      <div className="absolute inset-0 bg-black/90" onClick={onClose} />
+
+      <div className="relative w-full md:max-w-4xl md:max-h-[85vh] h-full md:h-auto bg-black border-4 border-amber-500 flex flex-col overflow-hidden">
+        <div className="sticky top-0 z-10 bg-black border-b-4 border-amber-500 p-6">
+          <div className="text-xs font-mono text-amber-500 mb-2">
+            ╔═══════════════════════════════════════════════════════════════════════════════╗
+          </div>
+
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-mono text-green-400 terminal-text">All Incidents</h2>
+            <h2 className="text-2xl font-bold font-mono text-amber-500 tracking-wider">[ALL INCIDENTS]</h2>
             <button
               onClick={onClose}
-              className="flex items-center justify-center w-10 h-10 bg-black/60 terminal-border hover:bg-green-500/20 rounded transition-all"
+              className="flex items-center justify-center w-10 h-10 border-2 border-amber-500 hover:bg-amber-500 hover:text-black transition-all text-amber-500 font-mono font-bold"
               aria-label="Close"
             >
-              <X className="w-5 h-5 text-green-400" />
+              X
             </button>
           </div>
 
           <div className="space-y-3">
-            {/* Search input */}
+            {/* Search input - Amber MDT style */}
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-green-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-500" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search"
-                className="w-full pl-11 pr-10 py-2.5 bg-black/60 backdrop-blur-xl terminal-border rounded text-sm font-mono text-green-400 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all"
+                placeholder="TYPE TO SEARCH..."
+                className="w-full pl-11 pr-10 py-2.5 bg-black border-2 border-amber-500 text-sm font-mono font-bold text-amber-500 placeholder:text-amber-500/50 focus:outline-none focus:bg-amber-500/10 transition-all tracking-wide"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-green-500/20 rounded transition-all"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-amber-500/20 transition-all"
                   aria-label="Clear search"
                 >
-                  <X className="w-4 h-4 text-green-400" />
+                  <X className="w-4 h-4 text-amber-500" />
                 </button>
               )}
             </div>
 
-            {/* Toggle to hide incidents without location */}
+            {/* Toggle to hide incidents without location - Amber MDT style */}
             <button
               onClick={() => setHideWithoutLocation(!hideWithoutLocation)}
-              className="w-full px-4 py-2.5 bg-black/60 terminal-border hover:bg-green-500/10 rounded text-sm font-mono text-green-400 transition-all flex items-center gap-2"
+              className="w-full px-4 py-2.5 bg-black border-2 border-amber-500 hover:bg-amber-500/10 text-sm font-mono font-bold text-amber-500 transition-all flex items-center gap-2 tracking-wide"
             >
-              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+              <div className={`w-5 h-5 border-2 flex items-center justify-center transition-all ${
                 hideWithoutLocation
-                  ? 'bg-green-500 border-green-500'
-                  : 'border-green-400/40'
+                  ? 'bg-amber-500 border-amber-500'
+                  : 'border-amber-500'
               }`}>
                 {hideWithoutLocation && (
                   <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,44 +126,51 @@ export default function IncidentListView({
                   </svg>
                 )}
               </div>
-              <span>Only show incidents with location</span>
+              <span>[ONLY SHOW INCIDENTS WITH LOCATION]</span>
             </button>
           </div>
 
-          <div className="mt-3 text-sm font-mono text-green-400 terminal-text">
-            Showing {sortedAndFilteredItems.length} of {items.length} incidents
+          <div className="mt-3 text-sm font-mono text-amber-500/70 tracking-wider">
+            &gt; SHOWING {sortedAndFilteredItems.length} OF {items.length} INCIDENTS
+          </div>
+
+          <div className="text-xs font-mono text-amber-500 mt-2">
+            ╚═══════════════════════════════════════════════════════════════════════════════╝
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-3">
+        <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-black">
           {sortedAndFilteredItems.map((item) => (
             <button
               key={item.incident_id}
               onClick={() => {
                 onSelectIncident(item)
+                onClose()
               }}
-              className="w-full text-left bg-black/60 backdrop-blur-xl terminal-border rounded p-4 hover:bg-green-500/10 transition-all group"
+              className="w-full text-left bg-black border-2 border-amber-500 p-4 hover:bg-amber-500/10 transition-all group font-mono"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
                     <span
-                      className="inline-block px-2 py-1 rounded text-xs font-mono"
+                      className="inline-block px-2 py-1 border-2 text-xs font-bold tracking-wider"
                       style={{
-                        backgroundColor: getPriorityColor(item.priority) + "30",
+                        borderColor: getPriorityColor(item.priority),
                         color: getPriorityColor(item.priority),
                       }}
                     >
-                      {getPriorityLabel(item.priority)}
+                      [{getPriorityLabel(item.priority)}]
                     </span>
                     {item.call_category && (
-                      <span className="text-xs text-green-400 font-mono uppercase tracking-wide">{item.call_category}</span>
+                      <span className="text-xs text-amber-500/70 uppercase tracking-wide">{item.call_category}</span>
                     )}
                   </div>
-                  <h3 className="font-mono text-lg mb-1 text-green-400 group-hover:text-green-300 transition-colors">{item.call_type}</h3>
-                  <p className="text-sm font-mono text-gray-400 truncate">{item.address_raw || "No address"}</p>
+                  <h3 className="font-bold text-lg mb-1 group-hover:text-amber-400 transition-colors text-amber-500">
+                    &gt; {item.call_type}
+                  </h3>
+                  <p className="text-sm text-amber-500/70 truncate">LOCATION: {item.address_raw || "UNKNOWN"}</p>
                 </div>
-                <div className="text-right text-sm font-mono text-green-400 whitespace-nowrap">
+                <div className="text-right text-sm text-amber-500/70 whitespace-nowrap font-mono">
                   {new Date(item.received_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </div>
               </div>
@@ -166,7 +178,9 @@ export default function IncidentListView({
           ))}
 
           {sortedAndFilteredItems.length === 0 && (
-            <div className="text-center py-12 font-mono text-green-400">No incidents match your filters</div>
+            <div className="text-center py-12 text-amber-500/70 font-mono tracking-wider">
+              &gt; NO INCIDENTS MATCH YOUR FILTERS
+            </div>
           )}
         </div>
       </div>

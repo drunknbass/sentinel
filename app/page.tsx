@@ -382,6 +382,98 @@ export default function Page() {
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black">
+      {/* Legend - Bottom left corner with hover-to-expand */}
+      <div
+        className="absolute bottom-6 left-6 z-20 md:z-40 bg-black border border-amber-500 max-w-xs group hover:max-w-sm transition-all duration-300"
+        onMouseEnter={() => setFilterPanelExpanded(false)}
+      >
+        <div className="border border-amber-500/50 p-1.5">
+          {/* Collapsed state - always visible - much smaller now */}
+          <div className="text-[9px] font-mono font-bold text-amber-500 tracking-wider">[LEGEND]</div>
+
+          {/* Expanded content - visible on hover */}
+          <div className="space-y-3 text-xs font-mono opacity-0 max-h-0 overflow-hidden group-hover:opacity-100 group-hover:max-h-[500px] transition-all duration-300 group-hover:pt-2 group-hover:mt-2 group-hover:border-t group-hover:border-amber-500">
+            {/* Priority levels */}
+            <div>
+              <div className="text-amber-500/70 mb-2 text-[10px] tracking-wider">PRIORITY LEVELS:</div>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 bg-[#8b0000] border border-[#8b0000]"
+                    style={{ boxShadow: "0 0 4px #8b0000" }}
+                  />
+                  <span className="text-[#8b0000]">VIOLENT</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 bg-[#ff0000] border border-[#ff0000]"
+                    style={{ boxShadow: "0 0 4px #ff0000" }}
+                  />
+                  <span className="text-[#ff0000]">WEAPONS</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 bg-[#ff4500] border border-[#ff4500]"
+                    style={{ boxShadow: "0 0 4px #ff4500" }}
+                  />
+                  <span className="text-[#ff4500]">PROPERTY</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 bg-[#ff8c00] border border-[#ff8c00]"
+                    style={{ boxShadow: "0 0 4px #ff8c00" }}
+                  />
+                  <span className="text-[#ff8c00]">TRAFFIC</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 bg-[#ffa500] border border-[#ffa500]"
+                    style={{ boxShadow: "0 0 4px #ffa500" }}
+                  />
+                  <span className="text-[#ffa500]">DISTURBANCE</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 bg-[#ffb000] border border-[#ffb000]"
+                    style={{ boxShadow: "0 0 4px #ffb000" }}
+                  />
+                  <span className="text-[#ffb000]">DRUG</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-3 h-3 bg-[#d4af37] border border-[#d4af37]"
+                    style={{ boxShadow: "0 0 4px #d4af37" }}
+                  />
+                  <span className="text-[#d4af37]">MEDICAL</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-[#9b870c] border border-[#9b870c]" />
+                  <span className="text-[#9b870c]">OTHER</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-[#6b7280] border border-[#6b7280]" />
+                  <span className="text-[#6b7280]">ADMIN</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Location accuracy */}
+            <div className="pt-2 border-t border-amber-500">
+              <div className="text-amber-500/70 mb-2 text-[10px] tracking-wider">LOCATION TYPE:</div>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-amber-500 border border-amber-500" />
+                  <span className="text-amber-500">EXACT</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full border-2 border-dashed border-amber-500 animate-pulse" />
+                  <span className="text-amber-500">APPROXIMATE</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Top navigation bar - Amber MDT style */}
       <div className="absolute top-0 left-0 right-0 z-50 bg-black border-b-2 border-amber-500">
@@ -455,16 +547,13 @@ export default function Page() {
         <button
           onClick={() => setShowListView(true)}
           disabled={loading || isRefreshing}
-          className={`relative bg-black/80 backdrop-blur-2xl terminal-border rounded-lg px-6 py-3 text-sm font-mono tracking-wide transition-all shadow-2xl ${
+          className={`bg-black border-2 border-amber-500 px-6 py-3 text-xs font-mono font-bold transition-all text-amber-500 tracking-wider ${
             (loading || isRefreshing)
               ? 'opacity-50 cursor-not-allowed'
-              : 'hover:bg-green-500/10 cursor-pointer'
+              : 'hover:bg-amber-500 hover:text-black cursor-pointer'
           }`}
         >
-          <div className="terminal-scanlines" />
-          <span className="text-green-400 terminal-text">
-            {selectedCategory ? selectedCategory.toUpperCase() : "ALL INCIDENTS"} • {filteredItems.length}
-          </span>
+          [{selectedCategory ? selectedCategory.toUpperCase() : "ALL"}] INCIDENTS: {filteredItems.length}
         </button>
       </div>
 
@@ -891,9 +980,9 @@ export default function Page() {
           href="https://circlecreativegroup.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs text-white/40 hover:text-white/60 transition-colors pointer-events-auto bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/5"
+          className="text-xs text-amber-500/60 hover:text-amber-500 transition-colors pointer-events-auto border-2 border-amber-500/40 px-4 py-2 font-mono tracking-wider"
         >
-          Built with ♥ by Circle Creative Group • v1.0
+          [BUILT BY CIRCLE CREATIVE GROUP]
         </a>
       </div>
     </div>

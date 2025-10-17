@@ -17,10 +17,15 @@ type LeafletMapProps = {
 }
 
 const getPriorityColor = (priority: number) => {
-  if (priority <= 20) return "#ef4444"
-  if (priority <= 40) return "#f97316"
-  if (priority <= 60) return "#eab308"
-  return "#6b7280"
+  if (priority <= 10) return "#8b0000" // Violent - dark red
+  if (priority <= 20) return "#ff0000" // Weapons - red
+  if (priority <= 30) return "#ff4500" // Property - orange-red
+  if (priority <= 40) return "#ff8c00" // Traffic - dark orange
+  if (priority <= 50) return "#ffa500" // Disturbance - orange
+  if (priority <= 60) return "#ffb000" // Drug - amber
+  if (priority <= 70) return "#d4af37" // Medical - gold
+  if (priority <= 80) return "#9b870c" // Other - dark gold
+  return "#6b7280" // Admin - gray
 }
 
 export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet }: LeafletMapProps) {
@@ -104,25 +109,31 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
             right: 24px !important;
           }
           .leaflet-control-zoom {
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            border-radius: 12px !important;
+            border: 2px solid #ffb000 !important;
+            border-radius: 0 !important;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+            box-shadow: 0 0 8px rgba(255, 176, 0, 0.3) !important;
           }
           .leaflet-control-zoom a {
-            background: rgba(0, 0, 0, 0.8) !important;
-            backdrop-filter: blur(24px) !important;
-            -webkit-backdrop-filter: blur(24px) !important;
-            color: white !important;
+            background: #000000 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            color: #ffb000 !important;
             border: none !important;
+            border-bottom: 2px solid #ffb000 !important;
             width: 40px !important;
             height: 40px !important;
             line-height: 40px !important;
             font-size: 20px !important;
             font-weight: bold !important;
+            font-family: "IBM Plex Mono", "Courier New", monospace !important;
+          }
+          .leaflet-control-zoom a:last-child {
+            border-bottom: none !important;
           }
           .leaflet-control-zoom a:hover {
-            background: rgba(255, 255, 255, 0.1) !important;
+            background: #ffb000 !important;
+            color: #000000 !important;
           }
         `
         document.head.appendChild(style)
