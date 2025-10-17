@@ -20,28 +20,14 @@ type LeafletMapProps = {
 }
 
 /**
- * Category color mapping - matches CATEGORY_COLORS from page.tsx
+ * Get color for incident based on priority (1-100, lower = more urgent)
  */
-const CATEGORY_COLORS: Record<string, string> = {
-  violent: "#ef4444",      // Red - critical
-  weapons: "#f97316",      // Orange - serious
-  property: "#f59e0b",     // Amber - moderate
-  traffic: "#84cc16",      // Lime green - routine
-  disturbance: "#eab308",  // Yellow - moderate
-  drug: "#a855f7",         // Purple - specific
-  admin: "#06b6d4",        // Cyan - administrative
-  medical: "#ec4899",      // Pink - medical
-  fire: "#f43f5e",         // Rose - fire/emergency
-  other: "#64748b",        // Slate gray - miscellaneous
-  "public service": "#0ea5e9", // Sky blue - public service
-}
-
-/**
- * Get color for incident based on category (not priority)
- */
-const getCategoryColor = (category: string | null | undefined): string => {
-  if (!category) return "#ffb000" // Default amber
-  return CATEGORY_COLORS[category.toLowerCase()] || "#ffb000"
+const getPriorityColor = (priority: number): string => {
+  if (priority <= 20) return "#ef4444"  // Red - Critical
+  if (priority <= 40) return "#f97316"  // Orange - High
+  if (priority <= 60) return "#eab308"  // Yellow - Medium
+  if (priority <= 80) return "#84cc16"  // Lime - Low
+  return "#06b6d4"                       // Cyan - Very Low / Routine
 }
 
 const getApproximateLevel = (item: Incident): "exact" | "small" | "medium" | "large" => {
@@ -355,7 +341,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
     const validItems = items.filter((item) => item.lat && item.lon)
 
     validItems.forEach((item) => {
-      const color = getCategoryColor(item.call_category)
+      const color = getPriorityColor(item.priority)
 
       // Simple square terminal-style pin for all incidents
       const icon = L.divIcon({

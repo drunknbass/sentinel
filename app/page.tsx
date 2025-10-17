@@ -550,23 +550,30 @@ export default function Page() {
 
           {/* Expanded content - visible on hover */}
           <div className="space-y-3 text-xs font-mono opacity-0 max-h-0 overflow-hidden group-hover:opacity-100 group-hover:max-h-[500px] transition-all duration-300 group-hover:pt-2 group-hover:mt-2 group-hover:border-t group-hover:border-amber-500">
-            {/* Category colors */}
+            {/* Priority levels */}
             <div>
-              <div className="text-amber-500/70 mb-2 text-[10px] tracking-wider">INCIDENT CATEGORIES:</div>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-                {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
-                  <div key={category} className="flex items-center gap-1.5">
-                    <div
-                      className="w-2.5 h-2.5 border flex-shrink-0"
-                      style={{
-                        backgroundColor: color,
-                        borderColor: color,
-                        boxShadow: `0 0 3px ${color}`
-                      }}
-                    />
-                    <span className="text-[9px] uppercase" style={{ color }}>{category}</span>
-                  </div>
-                ))}
+              <div className="text-amber-500/70 mb-2 text-[10px] tracking-wider">PRIORITY LEVELS:</div>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 border" style={{ backgroundColor: "#ef4444", borderColor: "#ef4444", boxShadow: "0 0 4px #ef4444" }} />
+                  <span style={{ color: "#ef4444" }} className="text-[9px]">CRITICAL (1-20)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 border" style={{ backgroundColor: "#f97316", borderColor: "#f97316", boxShadow: "0 0 4px #f97316" }} />
+                  <span style={{ color: "#f97316" }} className="text-[9px]">HIGH (21-40)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 border" style={{ backgroundColor: "#eab308", borderColor: "#eab308", boxShadow: "0 0 4px #eab308" }} />
+                  <span style={{ color: "#eab308" }} className="text-[9px]">MEDIUM (41-60)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 border" style={{ backgroundColor: "#84cc16", borderColor: "#84cc16", boxShadow: "0 0 4px #84cc16" }} />
+                  <span style={{ color: "#84cc16" }} className="text-[9px]">LOW (61-80)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 border" style={{ backgroundColor: "#06b6d4", borderColor: "#06b6d4", boxShadow: "0 0 4px #06b6d4" }} />
+                  <span style={{ color: "#06b6d4" }} className="text-[9px]">ROUTINE (81-100)</span>
+                </div>
               </div>
             </div>
 
