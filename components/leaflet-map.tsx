@@ -343,34 +343,68 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
     validItems.forEach((item) => {
       const color = getPriorityColor(item.priority)
 
-      // Simple square terminal-style pin for all incidents
+      // Different visual styles based on priority level
+      let size, pulseSpeed, glowIntensity, borderWidth
+
+      if (item.priority <= 20) {
+        // Critical: Large, fast pulse, intense glow
+        size = 40
+        pulseSpeed = '0.8s'
+        glowIntensity = '12px'
+        borderWidth = 4
+      } else if (item.priority <= 40) {
+        // High: Medium-large, medium pulse
+        size = 36
+        pulseSpeed = '1.2s'
+        glowIntensity = '10px'
+        borderWidth = 3
+      } else if (item.priority <= 60) {
+        // Medium: Standard size
+        size = 32
+        pulseSpeed = '1.8s'
+        glowIntensity = '8px'
+        borderWidth = 3
+      } else if (item.priority <= 80) {
+        // Low: Small, slow pulse
+        size = 28
+        pulseSpeed = '2.5s'
+        glowIntensity = '6px'
+        borderWidth = 2
+      } else {
+        // Routine: Smallest, minimal animation
+        size = 24
+        pulseSpeed = '3s'
+        glowIntensity = '4px'
+        borderWidth = 2
+      }
+
       const icon = L.divIcon({
         className: "custom-marker",
         html: `
-          <div style="position: relative; width: 32px; height: 32px;">
+          <div style="position: relative; width: ${size}px; height: ${size}px;">
             <div style="
               position: absolute;
               inset: 0;
               background: ${color};
               opacity: 0.2;
-              animation: pulse-exact 2s ease-in-out infinite;
+              animation: pulse-priority ${pulseSpeed} ease-in-out infinite;
             "></div>
             <div style="
               position: absolute;
-              inset: 6px;
-              border: 3px solid ${color};
+              inset: ${size * 0.15}px;
+              border: ${borderWidth}px solid ${color};
               background: black;
-              box-shadow: 0 0 8px ${color}, inset 0 0 8px ${color}40;
+              box-shadow: 0 0 ${glowIntensity} ${color}, inset 0 0 ${glowIntensity} ${color}40;
             "></div>
             <div style="
               position: absolute;
               top: 50%;
               left: 50%;
               transform: translate(-50%, -50%);
-              width: 8px;
-              height: 8px;
+              width: ${size * 0.25}px;
+              height: ${size * 0.25}px;
               background: ${color};
-              box-shadow: 0 0 6px ${color};
+              box-shadow: 0 0 ${glowIntensity} ${color};
             "></div>
             <div style="
               position: absolute;
@@ -379,14 +413,14 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               transform: translateX(-50%);
               width: 0;
               height: 0;
-              border-left: 4px solid transparent;
-              border-right: 4px solid transparent;
-              border-bottom: 6px solid ${color};
+              border-left: ${size * 0.125}px solid transparent;
+              border-right: ${size * 0.125}px solid transparent;
+              border-bottom: ${size * 0.1875}px solid ${color};
             "></div>
           </div>
         `,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
       })
 
       const marker = L.marker([item.lat!, item.lon!], { icon })
@@ -503,7 +537,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
     <>
       <div ref={mapRef} className="absolute inset-0 w-full h-full bg-[#1a1a1a]">
         <style jsx global>{`
-          @keyframes pulse-exact {
+          @keyframes pulse-priority {
             0%, 100% {
               transform: scale(1);
               opacity: 0.2;
