@@ -393,7 +393,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
   return (
     <>
-      <div ref={mapRef} className="absolute inset-0 w-full h-full bg-[#1a1a1a]">
+      <div ref={mapRef} className="absolute inset-0 w-full h-full">
         <style jsx global>{`
           @keyframes pulse {
             0%,
