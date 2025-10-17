@@ -351,175 +351,52 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
     validItems.forEach((item) => {
       const color = getCategoryColor(item.call_category)
-      const approxLevel = getApproximateLevel(item)
 
-      let icon
-
-      if (approxLevel === "exact") {
-        // Exact location: sharp square terminal-style pin
-        icon = L.divIcon({
-          className: "custom-marker",
-          html: `
-            <div style="position: relative; width: 32px; height: 32px;">
-              <div style="
-                position: absolute;
-                inset: 0;
-                background: ${color};
-                opacity: 0.2;
-                animation: pulse-exact 2s ease-in-out infinite;
-              "></div>
-              <div style="
-                position: absolute;
-                inset: 6px;
-                border: 3px solid ${color};
-                background: black;
-                box-shadow: 0 0 8px ${color}, inset 0 0 8px ${color}40;
-              "></div>
-              <div style="
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                width: 8px;
-                height: 8px;
-                background: ${color};
-                box-shadow: 0 0 6px ${color};
-              "></div>
-              <div style="
-                position: absolute;
-                top: -2px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 0;
-                height: 0;
-                border-left: 4px solid transparent;
-                border-right: 4px solid transparent;
-                border-bottom: 6px solid ${color};
-              "></div>
-            </div>
-          `,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
-        })
-      } else {
-        // Approximate location with varying sizes based on uncertainty
-        const sizes = {
-          small: { outer: 56, middle: 12, inner: 20, opacity: 0.12 },
-          medium: { outer: 72, middle: 16, inner: 24, opacity: 0.15 },
-          large: { outer: 96, middle: 20, inner: 28, opacity: 0.18 },
-        }
-
-        const size = sizes[approxLevel]
-
-        icon = L.divIcon({
-          className: "custom-marker",
-          html: `
-            <div style="position: relative; width: ${size.outer}px; height: ${size.outer}px;">
-              <!-- Large uncertainty radius -->
-              <div style="
-                position: absolute;
-                inset: 0;
-                background: ${color};
-                border-radius: 50%;
-                opacity: ${size.opacity};
-                animation: pulse-approximate 2s ease-in-out infinite;
-              "></div>
-
-              <!-- Corner brackets (top-left) -->
-              <div style="
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 10px;
-                height: 10px;
-                border-top: 2px solid ${color};
-                border-left: 2px solid ${color};
-                opacity: 0.6;
-              "></div>
-
-              <!-- Corner brackets (top-right) -->
-              <div style="
-                position: absolute;
-                top: 0;
-                right: 0;
-                width: 10px;
-                height: 10px;
-                border-top: 2px solid ${color};
-                border-right: 2px solid ${color};
-                opacity: 0.6;
-              "></div>
-
-              <!-- Corner brackets (bottom-left) -->
-              <div style="
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                width: 10px;
-                height: 10px;
-                border-bottom: 2px solid ${color};
-                border-left: 2px solid ${color};
-                opacity: 0.6;
-              "></div>
-
-              <!-- Corner brackets (bottom-right) -->
-              <div style="
-                position: absolute;
-                bottom: 0;
-                right: 0;
-                width: 10px;
-                height: 10px;
-                border-bottom: 2px solid ${color};
-                border-right: 2px solid ${color};
-                opacity: 0.6;
-              "></div>
-
-              <!-- Rotating dashed border -->
-              <div style="
-                position: absolute;
-                inset: ${size.middle}px;
-                border: 3px dashed ${color};
-                border-radius: 50%;
-                opacity: 0.5;
-                animation: rotate-dashed 8s linear infinite;
-              "></div>
-
-              <!-- Inner solid ring -->
-              <div style="
-                position: absolute;
-                inset: ${size.inner}px;
-                border: 2px solid ${color};
-                border-radius: 50%;
-                background: black;
-                opacity: 0.8;
-                box-shadow: 0 0 8px ${color}80;
-              "></div>
-
-              <!-- Center dot -->
-              <div style="
-                position: absolute;
-                inset: ${size.inner + 8}px;
-                background: ${color};
-                border-radius: 50%;
-                box-shadow: 0 0 12px ${color}, 0 0 24px ${color}40;
-              "></div>
-
-              <!-- Inner white dot -->
-              <div style="
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                width: 4px;
-                height: 4px;
-                background: white;
-                border-radius: 50%;
-              "></div>
-            </div>
-          `,
-          iconSize: [size.outer, size.outer],
-          iconAnchor: [size.outer / 2, size.outer / 2],
-        })
-      }
+      // Simple square terminal-style pin for all incidents
+      const icon = L.divIcon({
+        className: "custom-marker",
+        html: `
+          <div style="position: relative; width: 32px; height: 32px;">
+            <div style="
+              position: absolute;
+              inset: 0;
+              background: ${color};
+              opacity: 0.2;
+              animation: pulse-exact 2s ease-in-out infinite;
+            "></div>
+            <div style="
+              position: absolute;
+              inset: 6px;
+              border: 3px solid ${color};
+              background: black;
+              box-shadow: 0 0 8px ${color}, inset 0 0 8px ${color}40;
+            "></div>
+            <div style="
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: 8px;
+              height: 8px;
+              background: ${color};
+              box-shadow: 0 0 6px ${color};
+            "></div>
+            <div style="
+              position: absolute;
+              top: -2px;
+              left: 50%;
+              transform: translateX(-50%);
+              width: 0;
+              height: 0;
+              border-left: 4px solid transparent;
+              border-right: 4px solid transparent;
+              border-bottom: 6px solid ${color};
+            "></div>
+          </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      })
 
       const marker = L.marker([item.lat!, item.lon!], { icon })
         .addTo(mapInstanceRef.current)
