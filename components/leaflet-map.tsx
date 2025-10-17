@@ -26,6 +26,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
   const markersRef = useRef<any[]>([])
   const [useMapbox, setUseMapbox] = useState(true)
   const tileLayerRef = useRef<any>(null)
+  const hasInitialZoomedRef = useRef(false)
+  const savedViewRef = useRef<{ center: [number, number]; zoom: number } | null>(null)
 
   useEffect(() => {
     if (typeof window === "undefined" || !mapRef.current) return
@@ -278,8 +280,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       markersRef.current.push(marker)
     })
 
-    // Only zoom to fit all pins on initial load or when filters change (not during polling/refresh)
-    if (validItems.length > 0 && !selectedIncident && !isRefreshing) {
+    // Only zoom to fit all pins on the very first load (never again after that)
+    if (validItems.length > 0 && !hasInitialZoomedRef.current && !selectedIncident) {
       // Add a small delay to ensure markers are rendered first
       setTimeout(() => {
         if (mapInstanceRef.current) {
@@ -290,20 +292,43 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
             animate: true,
             duration: 0.8
           })
+          hasInitialZoomedRef.current = true
+          console.log('[MAP] Initial auto-zoom completed')
         }
       }, 100)
     }
-  }, [items, onMarkerClick, selectedIncident, isRefreshing])
+  }, [items, onMarkerClick, selectedIncident])
 
   useEffect(() => {
-    if (!mapInstanceRef.current || !selectedIncident || typeof window === "undefined") return
+    if (!mapInstanceRef.current || typeof window === "undefined") return
 
     const L = (window as any).L
-    if (!L || !selectedIncident.lat || !selectedIncident.lon) return
+    if (!L) return
 
-    mapInstanceRef.current.flyTo([selectedIncident.lat, selectedIncident.lon], 15, {
-      duration: 0.5,
-    })
+    // When selecting an incident, save current view and zoom in
+    if (selectedIncident && selectedIncident.lat && selectedIncident.lon) {
+      // Save current view before zooming
+      if (!savedViewRef.current) {
+        const center = mapInstanceRef.current.getCenter()
+        const zoom = mapInstanceRef.current.getZoom()
+        savedViewRef.current = { center: [center.lat, center.lng], zoom }
+        console.log('[MAP] Saved user view:', savedViewRef.current)
+      }
+
+      // Zoom in close to the selected incident
+      mapInstanceRef.current.flyTo([selectedIncident.lat, selectedIncident.lon], 17, {
+        duration: 0.5,
+      })
+      console.log('[MAP] Zoomed to incident:', selectedIncident.incident_id)
+    }
+    // When deselecting, restore previous view
+    else if (!selectedIncident && savedViewRef.current) {
+      console.log('[MAP] Restoring user view:', savedViewRef.current)
+      mapInstanceRef.current.flyTo(savedViewRef.current.center, savedViewRef.current.zoom, {
+        duration: 0.5,
+      })
+      savedViewRef.current = null
+    }
   }, [selectedIncident])
 
   return (
