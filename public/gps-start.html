@@ -50,12 +50,12 @@
         } else {
           log('Permissions API not available');
         }
-        function saveAndReturn(lat, lon){
-          try { localStorage.setItem('disclaimerAccepted','1'); } catch{}
+        function renderLocation(lat, lon){
+          const msg = 'LAT,LON = '+lat+','+lon;
+          hintEl.textContent = 'Location acquired.';
+          log(msg);
+          // Also write to localStorage for convenience (no redirect)
           try { localStorage.setItem('gps:userLocation', lat+','+lon); localStorage.setItem('gps:ts', String(Date.now())); } catch{}
-          // Return to app with a URL fallback (in case localStorage is blocked)
-          const ul = encodeURIComponent(lat+','+lon);
-          location.replace('/?view=map&ul='+ul);
         }
         function ask(){
           log('requesting geolocation...');
@@ -63,7 +63,7 @@
           navigator.geolocation.getCurrentPosition(function(pos){
             const lat = pos.coords.latitude, lon = pos.coords.longitude;
             log('SUCCESS '+lat+','+lon);
-            saveAndReturn(lat, lon);
+            renderLocation(lat, lon);
           }, function(err){
             log('ERROR code='+err.code+' msg='+err.message);
             if (err.code === 1) {
@@ -81,6 +81,20 @@
           const run = () => { if (fired) return; fired = true; ask(); };
           btn.addEventListener('click', run, { passive: true, once: true });
           btn.addEventListener('touchstart', run, { passive: true, once: true });
+        })();
+        // If permission already granted, fetch immediately on load (no redirect)
+        (function(){
+          if (!('geolocation' in navigator)) return;
+          if ('permissions' in navigator && navigator.permissions?.query) {
+            navigator.permissions.query({ name: 'geolocation' }).then(p=>{
+              if (p.state === 'granted') {
+                log('permission already granted; fetching position now');
+                navigator.geolocation.getCurrentPosition(function(pos){
+                  renderLocation(pos.coords.latitude, pos.coords.longitude);
+                }, function(err){ log('prefetch error code='+err.code+' msg='+err.message); });
+              }
+            }).catch(()=>{});
+          }
         })();
         // In-app browser hint
         (function(){
