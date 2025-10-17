@@ -422,9 +422,10 @@ export default function Page() {
 
   // Accept disclaimer and immediately request geolocation via user gesture
   const handleAcceptDisclaimer = () => {
+    // Trigger geolocation first, inside the same user gesture (iOS requirement)
+    try { handleRequestLocation() } catch {}
     try { if (typeof window !== 'undefined') window.localStorage.setItem('disclaimerAccepted', '1') } catch {}
     setShowDisclaimer(false)
-    try { handleRequestLocation() } catch {}
   }
 
   // Receive hardware location from map and store it for API
