@@ -366,6 +366,8 @@ export default function Page() {
     url.searchParams.set('view', 'map')
     window.history.pushState({}, '', url)
     setShowLanding(false)
+    // Immediately request location on enter (user gesture)
+    try { handleRequestLocation() } catch {}
   }
 
   /**
