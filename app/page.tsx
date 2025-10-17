@@ -806,7 +806,7 @@ export default function Page() {
           since,
           geocode: true, // Enable geocoding to show markers on map
           nocache,
-          userLocation: locationEnabled && userLocation ? userLocation : undefined
+          userLocation: locationEnabled && userLocation ? userLocation : 'county'
         }, {
           signal: abortController.signal
         })
@@ -1251,6 +1251,7 @@ export default function Page() {
           onUserLocation={handleUserLocation}
           onLocationRequestReady={handleLocationRequestReady}
           disableInteractions={!!(isMobile && (showBottomSheet || mobileSheetType !== null))}
+          locationEnabled={locationEnabled}
           isRefreshing={isRefreshing}
           sidePanelOpen={!showBottomSheet && (showListView || !!selectedIncident)}
           panelWidth={showListView ? 500 : 320}

@@ -31,7 +31,11 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(Number(url.searchParams.get('limit') || 10000), 10000); // Increase default limit
   const withGeocode = ['1', 'true', 'yes'].includes((url.searchParams.get('geocode') || '').toLowerCase());
   const station = url.searchParams.get('station');
-  const userLocation = url.searchParams.get('userLocation');
+  let userLocation = url.searchParams.get('userLocation');
+  if (userLocation === 'county') {
+    // Riverside County centroid (from constants)
+    userLocation = '33.73,-115.98';
+  }
   const maxGeocode = Number(url.searchParams.get('maxGeocode') || process.env.MAX_GEOCODE_PER_REQUEST || 100);
   const geocodeConcurrency = Number(url.searchParams.get('geocodeConcurrency') || process.env.GEOCODE_CONCURRENCY || 3);
   const nocache = ['1', 'true', 'yes'].includes((url.searchParams.get('nocache') || '').toLowerCase());

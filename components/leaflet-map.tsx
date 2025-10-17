@@ -12,6 +12,7 @@ type LeafletMapProps = {
   onLocationPermission?: (granted: boolean) => void
   onUserLocation?: (lat: number, lon: number) => void
   disableInteractions?: boolean
+  locationEnabled?: boolean
   isRefreshing?: boolean
   sidePanelOpen?: boolean
   panelWidth?: number
@@ -55,7 +56,7 @@ const getApproximateLevel = (item: Incident): "exact" | "small" | "medium" | "la
   return "exact"
 }
 
-export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, onUserLocation, disableInteractions = false, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet, initialCenter, initialZoom, onMapMove, requestLocationTrigger, onLocationRequestReady }: LeafletMapProps) {
+export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, onUserLocation, disableInteractions = false, locationEnabled = true, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet, initialCenter, initialZoom, onMapMove, requestLocationTrigger, onLocationRequestReady }: LeafletMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -280,6 +281,13 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       }
     } catch {}
   }, [disableInteractions])
+
+  // Remove user marker when GPS is disabled
+  useEffect(() => {
+    if (!locationEnabled && userMarkerRef.current) {
+      try { userMarkerRef.current.remove(); userMarkerRef.current = null } catch {}
+    }
+  }, [locationEnabled])
 
   // Expose location request function to parent (for user-initiated requests on iOS)
   useEffect(() => {
