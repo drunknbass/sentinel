@@ -116,6 +116,7 @@ export default function Page() {
 
   // Store reference to location request function from map component
   const locationRequestFnRef = useRef<(() => void) | null>(null)
+  const autoPromptFiredRef = useRef(false)
 
   /**
    * Helper functions for mobile filter tag management
@@ -192,6 +193,45 @@ export default function Page() {
       }
     }
   }, [])
+
+  // Autoprompt geolocation on first load, plus first user interaction fallback
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!('geolocation' in navigator)) return
+    if (!window.isSecureContext) return
+    if (autoPromptFiredRef.current) return
+
+    const tryAutoPrompt = async () => {
+      autoPromptFiredRef.current = true
+      try {
+        // If Permissions API is available, avoid auto-prompting when explicitly denied
+        const anyNav: any = navigator as any
+        if (anyNav?.permissions?.query) {
+          const status = await anyNav.permissions.query({ name: 'geolocation' as PermissionName })
+          if (status.state === 'denied') return
+        }
+      } catch {}
+      // Best-effort attempt (may no-op on iOS without gesture)
+      try { handleRequestLocation() } catch {}
+    }
+
+    // Attempt immediately on load
+    tryAutoPrompt()
+
+    // Also hook the very first user interaction to guarantee a gesture-based prompt
+    const onFirstInteract = () => {
+      // If permission not yet granted, try again with gesture
+      if (locationPermission !== 'granted') {
+        try { handleRequestLocation() } catch {}
+      }
+    }
+    window.addEventListener('pointerdown', onFirstInteract, { once: true })
+    window.addEventListener('keydown', onFirstInteract, { once: true })
+    return () => {
+      window.removeEventListener('pointerdown', onFirstInteract)
+      window.removeEventListener('keydown', onFirstInteract)
+    }
+  }, [locationPermission])
 
   /**
    * Sync search query and hideWithoutLocation to URL params
