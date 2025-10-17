@@ -369,28 +369,19 @@ export default function Page() {
       <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-black/40 backdrop-blur-xl border-b border-white/5">
         <div className="text-sm font-semibold tracking-wider"></div>
         <div className="text-sm font-bold tracking-wider">RIVERSIDE INCIDENTS</div>
-        <div className="flex items-center gap-3">
-          {/* Filter button for mobile */}
-          <button
-            onClick={() => setShowFilterSheet(true)}
-            className="md:hidden relative p-2 bg-white/10 backdrop-blur-xl rounded-lg hover:bg-white/20 transition-all"
-            aria-label="Open filters"
-          >
-            <Filter className="w-5 h-5" />
-            {activeFilterCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-          {/* Signal bars */}
-          <div className="w-4 h-3 flex gap-0.5">
-            <div className="w-1 h-full bg-white rounded-sm" />
-            <div className="w-1 h-full bg-white rounded-sm" />
-            <div className="w-1 h-full bg-white rounded-sm" />
-            <div className="w-1 h-full bg-white/50 rounded-sm" />
-          </div>
-        </div>
+        {/* Filter button for mobile */}
+        <button
+          onClick={() => setShowFilterSheet(true)}
+          className="md:hidden relative p-2 bg-white/10 backdrop-blur-xl rounded-lg hover:bg-white/20 transition-all"
+          aria-label="Open filters"
+        >
+          <Filter className="w-5 h-5" />
+          {activeFilterCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* Main map view */}
@@ -408,6 +399,7 @@ export default function Page() {
           isRefreshing={isRefreshing}
           sidePanelOpen={!showBottomSheet && (showListView || !!selectedIncident)}
           panelWidth={showListView ? 500 : 320}
+          showBottomSheet={showBottomSheet}
         />
       </div>
 
@@ -727,7 +719,7 @@ export default function Page() {
               <div className="w-12 h-1.5 bg-gray-600 rounded-full" />
             </div>
 
-            <div className="p-6 space-y-4 overflow-y-auto h-[calc(45vh-2rem)]">
+            <div className="p-6 pb-12 space-y-4 overflow-y-auto h-[calc(45vh-2rem)]">
               <button
                 onClick={() => {
                   setShowBottomSheet(false)

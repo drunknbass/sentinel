@@ -1,8 +1,5 @@
 "use client"
 
-import { useState } from "react"
-import { X } from "lucide-react"
-
 interface FilterPanelProps {
   selectedCategory: string
   onCategoryChange: (category: string) => void
@@ -34,8 +31,6 @@ export default function FilterPanel({
   selectedRegion,
   onRegionChange,
 }: FilterPanelProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
-
   const activeFiltersCount = [
     selectedCategory ? 1 : 0,
     minPriority < 100 ? 1 : 0,
@@ -45,45 +40,20 @@ export default function FilterPanel({
 
   return (
     <div className="w-80 max-w-[calc(100vw-3rem)]">
-      {/* Collapsed state */}
-      {!isExpanded && (
-        <button
-          onClick={() => setIsExpanded(true)}
-          className="w-full bg-black/60 backdrop-blur-xl border border-white/20 rounded-2xl px-5 py-4 text-left hover:bg-black/70 transition-all shadow-2xl"
-          style={{
-            backdropFilter: "blur(30px) saturate(180%)",
-            WebkitBackdropFilter: "blur(30px) saturate(180%)",
-            boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
-          }}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-xs text-gray-400 uppercase tracking-wide mb-1">Filters</div>
-              <div className="font-bold">{activeFiltersCount > 0 ? `${activeFiltersCount} active` : "No filters"}</div>
-            </div>
-          </div>
-        </button>
-      )}
+      <div
+        className="bg-black/60 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden"
+        style={{
+          backdropFilter: "blur(30px) saturate(180%)",
+          WebkitBackdropFilter: "blur(30px) saturate(180%)",
+          boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
+        }}
+      >
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-white/10">
+          <h3 className="font-bold text-lg">Filters</h3>
+        </div>
 
-      {/* Expanded state */}
-      {isExpanded && (
-        <div
-          className="bg-black/60 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden animate-slide-down"
-          style={{
-            backdropFilter: "blur(30px) saturate(180%)",
-            WebkitBackdropFilter: "blur(30px) saturate(180%)",
-            boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
-          }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-            <h3 className="font-bold text-lg">Filters</h3>
-            <button onClick={() => setIsExpanded(false)} className="text-gray-400 hover:text-white transition-colors">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="p-5 space-y-6 max-h-[70vh] overflow-y-auto">
+        <div className="p-5 space-y-6 max-h-[70vh] overflow-y-auto">
             {/* Time range slider */}
             <div>
               <label className="text-xs text-gray-400 uppercase tracking-wide mb-3 block">Time Range</label>
@@ -208,23 +178,22 @@ export default function FilterPanel({
               </div>
             </div>
 
-            {/* Clear all */}
-            {activeFiltersCount > 0 && (
-              <button
-                onClick={() => {
-                  onCategoryChange("")
-                  onPriorityChange(100)
-                  onTimeRangeChange(2)
-                  onRegionChange("")
-                }}
-                className="w-full py-2.5 bg-red-500/20 border border-red-500/30 rounded-xl text-sm font-semibold hover:bg-red-500/30 transition-colors"
-              >
-                Clear All Filters
-              </button>
-            )}
-          </div>
+          {/* Clear all */}
+          {activeFiltersCount > 0 && (
+            <button
+              onClick={() => {
+                onCategoryChange("")
+                onPriorityChange(100)
+                onTimeRangeChange(2)
+                onRegionChange("")
+              }}
+              className="w-full py-2.5 bg-red-500/20 border border-red-500/30 rounded-xl text-sm font-semibold hover:bg-red-500/30 transition-colors"
+            >
+              Clear All Filters
+            </button>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }

@@ -13,6 +13,7 @@ type LeafletMapProps = {
   isRefreshing?: boolean
   sidePanelOpen?: boolean
   panelWidth?: number
+  showBottomSheet?: boolean
 }
 
 const getPriorityColor = (priority: number) => {
@@ -22,7 +23,7 @@ const getPriorityColor = (priority: number) => {
   return "#6b7280"
 }
 
-export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing, sidePanelOpen, panelWidth = 320 }: LeafletMapProps) {
+export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet }: LeafletMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -322,18 +323,34 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         duration: 1.5, // Slower animation so user can follow the movement
       })
 
-      // If side panel is open, pan the map slightly to avoid overlap with panel
-      if (sidePanelOpen) {
-        // Shift map left by half the panel width to keep pin visible in left 2/3rds
-        const panOffset = panelWidth / 2
+      // Handle panning for both desktop side panel and mobile bottom sheet
+      if (sidePanelOpen || showBottomSheet) {
         setTimeout(() => {
           if (mapInstanceRef.current) {
-            mapInstanceRef.current.panBy([panOffset, 0], { animate: true, duration: 0.8 })
+            let panX = 0
+            let panY = 0
+
+            // Desktop: shift map left by half the panel width to keep pin visible in left 2/3rds
+            if (sidePanelOpen) {
+              panX = panelWidth / 2
+            }
+
+            // Mobile: shift map up to center pin in visible area above bottom sheet
+            if (showBottomSheet) {
+              // Bottom sheet is ~45vh, so visible area is ~55vh
+              // To center pin in visible area (at ~27.5vh), need to shift up from center (50vh)
+              // Shift up by ~22.5vh = 0.225 * viewport height
+              const viewportHeight = window.innerHeight
+              panY = -viewportHeight * 0.225
+            }
+
+            mapInstanceRef.current.panBy([panX, panY], { animate: true, duration: 0.8 })
+            console.log('[MAP] Panned map:', { panX, panY, sidePanelOpen, showBottomSheet })
           }
         }, 1500) // Wait for flyTo animation to complete
       }
 
-      console.log('[MAP] Zoomed to incident:', selectedIncident.incident_id, sidePanelOpen ? 'with panel offset' : '')
+      console.log('[MAP] Zoomed to incident:', selectedIncident.incident_id, { sidePanelOpen, showBottomSheet })
     }
     // When deselecting, restore previous view
     else if (!selectedIncident && savedViewRef.current) {
@@ -343,7 +360,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       })
       savedViewRef.current = null
     }
-  }, [selectedIncident, sidePanelOpen, panelWidth])
+  }, [selectedIncident, sidePanelOpen, panelWidth, showBottomSheet])
 
   return (
     <>
