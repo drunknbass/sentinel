@@ -611,29 +611,6 @@ export default function Page() {
             RIVERSIDE SHERIFF MOBILE DATA TERMINAL
           </div>
           <div className="flex items-center gap-3">
-            {/* Mobile filters button */}
-            <button
-              onClick={() => {
-                setMobileSheetType(mobileSheetType === 'filters' ? null : 'filters')
-                setShowBottomSheet(false)
-                setSelectedIncident(null)
-              }}
-              className={`md:hidden flex items-center gap-2 text-xs font-mono border-2 border-amber-500 px-3 py-1 transition-all ${
-                mobileSheetType === 'filters'
-                  ? 'bg-amber-500 text-black border-amber-500'
-                  : 'text-amber-500 hover:bg-amber-500 hover:text-black'
-              }`}
-            >
-              <Filter className="w-3 h-3" />
-              <span>FILTERS</span>
-              {activeFilterCount > 0 && (
-                <span className={`ml-1 px-1.5 py-0.5 text-[10px] font-bold border ${
-                  mobileSheetType === 'filters' ? 'bg-black text-amber-500 border-black' : 'bg-amber-500 text-black border-amber-500'
-                }`}>
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
             <button
               onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
               disabled={loading && !isRefreshing}
@@ -683,52 +660,73 @@ export default function Page() {
       {/* Mobile segmented control - iOS style */}
       {!(loading && !isRefreshing) && (
         <div className="md:hidden absolute top-[92px] left-0 right-0 z-50 bg-black border-b-2 border-amber-500 px-4 py-3">
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                setMobileSheetType(mobileSheetType === 'incidents' ? null : 'incidents')
-                setShowBottomSheet(false)
-                setSelectedIncident(null)
-              }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 border-2 font-mono text-xs font-bold tracking-wider transition-all ${
-                mobileSheetType === 'incidents'
-                  ? 'bg-amber-500 text-black border-amber-500'
-                  : 'bg-black text-amber-500 border-amber-500 hover:bg-amber-500/10'
-              }`}
-            >
-              <span>INCIDENTS</span>
-              <span className={`px-1.5 py-0.5 text-[10px] font-bold border ${
-                mobileSheetType === 'incidents' ? 'bg-black text-amber-500 border-black' : 'bg-amber-500 text-black border-amber-500'
-              }`}>
-                {filteredItems.length}
-              </span>
-            </button>
-            <button
-              onClick={() => {
-                setMobileSheetType(mobileSheetType === 'critical' ? null : 'critical')
-                setShowBottomSheet(false)
-                setSelectedIncident(null)
-              }}
-              disabled={criticalIncidents.length === 0}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 border-2 font-mono text-xs font-bold tracking-wider transition-all ${
-                criticalIncidents.length === 0
-                  ? 'opacity-30 cursor-not-allowed bg-black text-amber-500 border-amber-500'
-                  : mobileSheetType === 'critical'
+          <div className="flex items-center gap-2">
+            <div className="flex flex-1 gap-2">
+              <button
+                onClick={() => {
+                  setMobileSheetType(mobileSheetType === 'filters' ? null : 'filters')
+                  setShowBottomSheet(false)
+                  setSelectedIncident(null)
+                }}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 border-2 font-mono text-xs font-bold tracking-wider transition-all ${
+                  mobileSheetType === 'filters'
+                    ? 'bg-amber-500 text-black border-amber-500'
+                    : 'bg-black text-amber-500 border-amber-500 hover:bg-amber-500/10'
+                }`}
+              >
+                <Filter className="w-4 h-4" />
+                <span>FILTERS</span>
+                {activeFilterCount > 0 && (
+                  <span className={`ml-1 px-1.5 py-0.5 text-[10px] font-bold border ${
+                    mobileSheetType === 'filters' ? 'bg-black text-amber-500 border-black' : 'bg-amber-500 text-black border-amber-500'
+                  }`}>
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setMobileSheetType(mobileSheetType === 'incidents' ? null : 'incidents')
+                  setShowBottomSheet(false)
+                  setSelectedIncident(null)
+                }}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 border-2 font-mono text-xs font-bold tracking-wider transition-all ${
+                  mobileSheetType === 'incidents'
+                    ? 'bg-amber-500 text-black border-amber-500'
+                    : 'bg-black text-amber-500 border-amber-500 hover:bg-amber-500/10'
+                }`}
+              >
+                <span>INCIDENTS</span>
+                <span className={`px-1.5 py-0.5 text-[10px] font-bold border ${
+                  mobileSheetType === 'incidents' ? 'bg-black text-amber-500 border-black' : 'bg-amber-500 text-black border-amber-500'
+                }`}>
+                  {filteredItems.length}
+                </span>
+              </button>
+            </div>
+            {/* Critical badge - separate from segmented control */}
+            {criticalIncidents.length > 0 && (
+              <button
+                onClick={() => {
+                  setMobileSheetType(mobileSheetType === 'critical' ? null : 'critical')
+                  setShowBottomSheet(false)
+                  setSelectedIncident(null)
+                }}
+                className={`flex items-center justify-center gap-1 py-2 px-3 border-2 font-mono text-xs font-bold tracking-wider transition-all ${
+                  mobileSheetType === 'critical'
                     ? 'bg-red-600 text-black border-red-600'
                     : 'bg-black text-red-600 border-red-600 hover:bg-red-600/10'
-              }`}
-            >
-              <span>CRITICAL</span>
-              <span className={`px-1.5 py-0.5 text-[10px] font-bold border ${
-                criticalIncidents.length === 0
-                  ? 'bg-amber-500 text-black border-amber-500'
-                  : mobileSheetType === 'critical'
+                }`}
+              >
+                <span className={`px-1.5 py-0.5 text-[10px] font-bold border animate-pulse ${
+                  mobileSheetType === 'critical'
                     ? 'bg-black text-red-600 border-black'
                     : 'bg-red-600 text-black border-red-600'
-              }`}>
-                {criticalIncidents.length}
-              </span>
-            </button>
+                }`}>
+                  {criticalIncidents.length}
+                </span>
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -836,9 +834,9 @@ export default function Page() {
       {/* Terminal loading overlay - only show on initial load, not refreshes */}
       {loading && !isRefreshing && <TerminalLoading />}
 
-      {/* Critical incidents carousel - Amber MDT style */}
+      {/* Critical incidents carousel - Amber MDT style - Desktop only */}
       {criticalIncidents.length > 0 && showCriticalCarousel && !showBottomSheet && !mobileSheetType && (
-        <div className="absolute bottom-0 left-0 right-0 z-30 p-4 md:p-6 bg-gradient-to-t from-black via-black/95 to-transparent animate-slide-up">
+        <div className="hidden md:block absolute bottom-0 left-0 right-0 z-30 p-4 md:p-6 bg-gradient-to-t from-black via-black/95 to-transparent animate-slide-up">
           <div className="max-w-3xl mx-auto bg-black/80 backdrop-blur-sm border-2 border-amber-500 p-2">
             <div className="border-2 border-red-600 p-4">
               <div className="flex items-center justify-between mb-3 pb-2 border-b-2 border-amber-500">
