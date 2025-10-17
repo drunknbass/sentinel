@@ -78,6 +78,12 @@ export async function saveToVercelKV(address: string, area: string | null, value
   const redis = getRedisClient();
   if (!redis) return;
 
+  // Don't cache null results in Vercel KV
+  if (value.lat === null || value.lon === null) {
+    console.log('[GEOCODE] Skipping Upstash Redis save for null result:', address);
+    return;
+  }
+
   try {
     const key = `${KV_PREFIX}${address}|${area || ''}`;
     await redis.set(key, JSON.stringify(value), { ex: KV_TTL_SECONDS });

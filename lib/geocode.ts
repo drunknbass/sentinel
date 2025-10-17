@@ -182,9 +182,11 @@ export async function geocodeOne(address: string | null, area: string | null): P
     value = await geocodeWithNominatim(address, area);
   }
 
-  // Save to both caches (fire-and-forget for Vercel KV)
-  geocodeCache.set(key, value);
-  saveToVercelKV(address, area, value).catch(() => {}); // Non-blocking
+  // Only cache successful geocoding results (don't cache null results)
+  if (value.lat !== null && value.lon !== null) {
+    geocodeCache.set(key, value);
+    saveToVercelKV(address, area, value).catch(() => {}); // Non-blocking
+  }
 
   return value;
 }
