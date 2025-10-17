@@ -125,7 +125,7 @@ body {
 }
 
 .safe-top-with-offset {
-  top: calc(92px + env(safe-area-inset-top));
+  top: calc(140px + env(safe-area-inset-top));
 }
 
 /* Terminal-style scrollbar with amber accent */
