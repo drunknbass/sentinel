@@ -179,6 +179,9 @@ export default function TerminalLoading() {
   }, [lines]);
 
   const getLineColor = (line: string) => {
+    // Safety check for undefined or null
+    if (!line || typeof line !== 'string') return 'text-green-500';
+
     // Commands
     if (line.startsWith('>')) return 'text-green-400';
 
