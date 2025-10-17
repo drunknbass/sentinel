@@ -517,11 +517,12 @@ export default function Page() {
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black">
-      {/* Legend - Bottom left corner with hover-to-expand */}
-      <div
-        className="absolute bottom-6 left-6 z-20 md:z-40 bg-black border border-amber-500 max-w-xs group hover:max-w-sm transition-all duration-300"
-        onMouseEnter={() => setFilterPanelExpanded(false)}
-      >
+      {/* Legend - Bottom left corner with hover-to-expand - Hide when loading */}
+      {!(loading && !isRefreshing) && (
+        <div
+          className="absolute bottom-6 left-6 z-20 md:z-40 bg-black border border-amber-500 max-w-xs group hover:max-w-sm transition-all duration-300"
+          onMouseEnter={() => setFilterPanelExpanded(false)}
+        >
         <div className="border border-amber-500/50 p-1.5">
           {/* Collapsed state - always visible - much smaller now */}
           <div className="text-[9px] font-mono font-bold text-amber-500 tracking-wider">[LEGEND]</div>
@@ -618,9 +619,11 @@ export default function Page() {
           </div>
         </div>
       </div>
+      )}
 
-      {/* Top navigation bar - Amber MDT style */}
-      <div className="absolute top-0 left-0 right-0 z-50 bg-black border-b-2 border-amber-500">
+      {/* Top navigation bar - Amber MDT style - Hide when loading */}
+      {!(loading && !isRefreshing) && (
+        <div className="absolute top-0 left-0 right-0 z-50 bg-black border-b-2 border-amber-500">
         <div className="flex items-center justify-between px-4 py-2">
           <div className="text-xs font-mono text-amber-500">
             ╔═══════════════════════════════════════════════════════════════════════════════╗
@@ -682,6 +685,7 @@ export default function Page() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Main map view */}
       <div className="absolute inset-0 bg-black z-10">
@@ -705,8 +709,9 @@ export default function Page() {
         />
       </div>
 
-      {/* Right-side HUD stack - Terminal style */}
-      <div className="absolute top-32 right-6 z-30 flex flex-col items-end gap-3">
+      {/* Right-side HUD stack - Terminal style - Hide when loading */}
+      {!(loading && !isRefreshing) && (
+        <div className="absolute top-32 right-6 z-30 flex flex-col items-end gap-3">
         {/* Location disabled indicator */}
         {locationPermission === 'denied' && (
           <div className="flex items-center gap-2 bg-black/80 backdrop-blur-2xl terminal-border rounded-lg px-4 py-2 shadow-lg">
@@ -759,9 +764,11 @@ export default function Page() {
           </div>
         </div>
       </div>
+      )}
 
-      {/* Left-side HUD stack - Terminal style */}
-      <div className="absolute top-32 left-6 z-[70] flex flex-col items-start gap-3">
+      {/* Left-side HUD stack - Terminal style - Hide when loading */}
+      {!(loading && !isRefreshing) && (
+        <div className="absolute top-32 left-6 z-[70] flex flex-col items-start gap-3">
         {/* Filter panel - hidden on mobile */}
         <FilterPanel
           selectedCategory={selectedCategory}
@@ -777,6 +784,7 @@ export default function Page() {
           onExpandedChange={setFilterPanelExpanded}
         />
       </div>
+      )}
 
       {/* Terminal loading overlay - only show on initial load, not refreshes */}
       {loading && !isRefreshing && <TerminalLoading />}
