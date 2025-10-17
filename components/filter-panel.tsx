@@ -15,8 +15,6 @@ interface FilterPanelProps {
   availableTags: string[]
   isExpanded: boolean
   onExpandedChange: (expanded: boolean) => void
-  searchQuery: string
-  onSearchQueryChange: (query: string) => void
 }
 
 const TIME_RANGES = [
@@ -41,8 +39,6 @@ export default function FilterPanel({
   availableTags,
   isExpanded,
   onExpandedChange,
-  searchQuery,
-  onSearchQueryChange,
 }: FilterPanelProps) {
   const [searchInput, setSearchInput] = useState("")
 
@@ -66,15 +62,14 @@ export default function FilterPanel({
     minPriority < 100 ? 1 : 0,
     timeRange < 999 ? 1 : 0,
     searchTags.length,
-    searchQuery ? 1 : 0,
   ].reduce((a, b) => a + b, 0)
 
   return (
-    <div className="absolute top-32 left-6 z-40 w-80 max-w-[calc(100vw-3rem)]">
-      {!isExpanded && (
+    <div className="w-80 max-w-[calc(100vw-3rem)]">
+      <div className="bg-black border-2 border-amber-500 font-mono transition-all duration-300 overflow-hidden">
         <button
-          onClick={() => onExpandedChange(true)}
-          className="w-full bg-black border-2 border-amber-500 px-5 py-4 text-left hover:bg-amber-500/10 transition-all font-mono"
+          onClick={() => onExpandedChange(!isExpanded)}
+          className="w-full px-5 py-3 text-left hover:bg-amber-500/10 transition-all"
         >
           <div className="flex items-center justify-between">
             <div>
@@ -85,10 +80,8 @@ export default function FilterPanel({
             </div>
           </div>
         </button>
-      )}
 
-      {isExpanded && (
-        <div className="bg-black border-4 border-amber-500 overflow-hidden animate-slide-up font-mono">
+        <div className={`transition-all duration-300 origin-top ${isExpanded ? 'max-h-[70vh] opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="flex items-center justify-between px-5 py-4 border-b-2 border-amber-500 bg-black">
             <h3 className="font-bold text-lg text-amber-500 tracking-wider">╔═ FILTER PANEL ═╗</h3>
             <button
@@ -102,20 +95,7 @@ export default function FilterPanel({
           <div className="p-5 space-y-6 max-h-[70vh] overflow-y-auto bg-black">
             <div>
               <label className="text-xs text-amber-500/70 uppercase tracking-wider mb-2 block">
-                &gt; SEARCH INCIDENTS
-              </label>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => onSearchQueryChange(e.target.value)}
-                placeholder="SEARCH BY TYPE, ADDRESS..."
-                className="w-full bg-black border-2 border-amber-500 px-4 py-2.5 text-sm placeholder:text-amber-500/50 focus:outline-none focus:border-amber-400 transition-colors text-amber-500 tracking-wide"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs text-amber-500/70 uppercase tracking-wider mb-2 block">
-                &gt; FILTER BY TAGS
+                &gt; SEARCH &amp; TAGS
               </label>
               <div className="space-y-2">
                 {searchTags.length > 0 && (
@@ -268,7 +248,6 @@ export default function FilterPanel({
                   onPriorityChange(100)
                   onTimeRangeChange(999)
                   onSearchTagsChange([])
-                  onSearchQueryChange("")
                 }}
                 className="w-full py-2.5 bg-red-600/20 border-2 border-red-600 text-sm font-bold hover:bg-red-600/30 transition-colors text-amber-500 tracking-wider"
               >
@@ -277,7 +256,7 @@ export default function FilterPanel({
             )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
