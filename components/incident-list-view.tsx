@@ -102,8 +102,8 @@ export default function IncidentListView({
   }, [items, hideWithoutLocation, searchQuery, getPriorityLabel])
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center animate-fade-in">
-      <div className="absolute inset-0 bg-black/90" onClick={onClose} />
+    <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center animate-fade-in no-overscroll">
+      <div className="absolute inset-0 bg-black/90 no-overscroll" onClick={onClose} onTouchMove={(e) => e.preventDefault()} />
 
       <div className="relative w-full md:max-w-4xl md:max-h-[85vh] h-full md:h-auto bg-black border-4 border-amber-500 flex flex-col overflow-hidden">
         <div className="sticky top-0 z-10 bg-black border-b-4 border-amber-500 p-6">

@@ -665,7 +665,7 @@ export default function Page() {
   }
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-black">
+    <div className="relative h-screen w-full overflow-hidden bg-black no-overscroll">
       {/* Legend - Bottom left corner with hover-to-expand - Hide when loading */}
       {!(loading && !isRefreshing) && (
         <div
@@ -1263,10 +1263,11 @@ export default function Page() {
 
       {/* Mobile unified bottom sheet - Terminal style with drag support */}
       {mobileSheetType && (
-        <div className="md:hidden absolute inset-0 z-50 flex items-end animate-slide-up">
+        <div className="md:hidden absolute inset-0 z-50 flex items-end animate-slide-up no-overscroll">
           <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm no-overscroll"
             onClick={() => setMobileSheetType(null)}
+            onTouchMove={(e) => e.preventDefault()}
           />
 
           <div

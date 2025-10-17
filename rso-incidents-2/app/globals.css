@@ -94,6 +94,11 @@ body {
   overflow: hidden;
   background: #000000;
   color: #ffb000;
+  /* Prevent iOS rubber-band scroll bounce */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  position: fixed;
+  width: 100%;
 }
 
 /* Support for iOS safe area insets (notch, home indicator, etc) */
@@ -267,6 +272,12 @@ body {
   color: #ffb000;
   font-size: 12px;
   line-height: 1;
+}
+
+/* Prevent scroll bounce on iOS and other mobile browsers */
+.no-overscroll {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Terminal text effects */
