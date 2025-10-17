@@ -28,6 +28,23 @@ const getPriorityColor = (priority: number) => {
   return "#6b7280" // Admin - gray
 }
 
+const getApproximateLevel = (item: Incident): "exact" | "small" | "medium" | "large" => {
+  if (!item.address_raw) return "large"
+
+  const hasStreetNumber = /^\d+/.test(item.address_raw.trim())
+  if (!hasStreetNumber) return "medium"
+
+  const genericTerms = ["AREA", "VICINITY", "NEAR", "BLOCK OF", "BLK"]
+  const isGeneric = genericTerms.some((term) => item.address_raw?.toUpperCase().includes(term))
+
+  if (isGeneric) return "medium"
+
+  // Check for intersection (two street names with &, AND, or /)
+  if (/\b(AND|&|\/)\b/i.test(item.address_raw)) return "small"
+
+  return "exact"
+}
+
 export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet }: LeafletMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
@@ -160,27 +177,105 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
                     const userIcon = L.divIcon({
                       className: "user-location-marker",
                       html: `
-                        <div style="position: relative; width: 20px; height: 20px;">
+                        <div style="position: relative; width: 40px; height: 40px;">
+                          <!-- Outer pulsing glow ring -->
                           <div style="
                             position: absolute;
                             inset: 0;
-                            background: #3b82f6;
-                            border-radius: 50%;
-                            filter: blur(6px);
-                            opacity: 0.6;
+                            background: #ffb000;
+                            opacity: 0.2;
+                            animation: pulse-gps 2s ease-in-out infinite;
                           "></div>
+
+                          <!-- Crosshair horizontal line -->
                           <div style="
                             position: absolute;
-                            inset: 4px;
-                            background: #3b82f6;
-                            border: 3px solid white;
+                            top: 50%;
+                            left: 4px;
+                            right: 4px;
+                            height: 2px;
+                            background: #ffb000;
+                            transform: translateY(-50%);
+                            box-shadow: 0 0 6px #ffb000;
+                          "></div>
+
+                          <!-- Crosshair vertical line -->
+                          <div style="
+                            position: absolute;
+                            left: 50%;
+                            top: 4px;
+                            bottom: 4px;
+                            width: 2px;
+                            background: #ffb000;
+                            transform: translateX(-50%);
+                            box-shadow: 0 0 6px #ffb000;
+                          "></div>
+
+                          <!-- Corner brackets (top-left) -->
+                          <div style="
+                            position: absolute;
+                            top: 6px;
+                            left: 6px;
+                            width: 8px;
+                            height: 8px;
+                            border-top: 2px solid #ffb000;
+                            border-left: 2px solid #ffb000;
+                            box-shadow: 0 0 4px #ffb000;
+                          "></div>
+
+                          <!-- Corner brackets (top-right) -->
+                          <div style="
+                            position: absolute;
+                            top: 6px;
+                            right: 6px;
+                            width: 8px;
+                            height: 8px;
+                            border-top: 2px solid #ffb000;
+                            border-right: 2px solid #ffb000;
+                            box-shadow: 0 0 4px #ffb000;
+                          "></div>
+
+                          <!-- Corner brackets (bottom-left) -->
+                          <div style="
+                            position: absolute;
+                            bottom: 6px;
+                            left: 6px;
+                            width: 8px;
+                            height: 8px;
+                            border-bottom: 2px solid #ffb000;
+                            border-left: 2px solid #ffb000;
+                            box-shadow: 0 0 4px #ffb000;
+                          "></div>
+
+                          <!-- Corner brackets (bottom-right) -->
+                          <div style="
+                            position: absolute;
+                            bottom: 6px;
+                            right: 6px;
+                            width: 8px;
+                            height: 8px;
+                            border-bottom: 2px solid #ffb000;
+                            border-right: 2px solid #ffb000;
+                            box-shadow: 0 0 4px #ffb000;
+                          "></div>
+
+                          <!-- Center pulsing dot -->
+                          <div style="
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            width: 6px;
+                            height: 6px;
+                            background: #ffb000;
                             border-radius: 50%;
-                            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+                            animation: pulse-center 1.5s ease-in-out infinite;
+                            box-shadow: 0 0 8px #ffb000;
                           "></div>
                         </div>
                       `,
-                      iconSize: [20, 20],
-                      iconAnchor: [10, 10],
+                      iconSize: [40, 40],
+                      iconAnchor: [20, 20],
                     })
 
                     L.marker([userLat, userLon], { icon: userIcon }).addTo(mapInstanceRef.current).bindPopup("Your Location")
@@ -232,64 +327,127 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
     validItems.forEach((item) => {
       const color = getPriorityColor(item.priority)
-      const isApproximate = item.location_approximate === true
+      const approxLevel = getApproximateLevel(item)
 
-      // Different marker styles for exact vs approximate locations
-      const icon = L.divIcon({
-        className: "custom-marker",
-        html: isApproximate ? `
-          <div style="position: relative; width: 32px; height: 32px;">
-            <!-- Larger dashed circle for approximate location area -->
-            <div style="
-              position: absolute;
-              inset: 0;
-              border: 2px dashed ${color};
-              border-radius: 50%;
-              opacity: 0.5;
-              animation: pulse-approximate 2s ease-in-out infinite;
-            "></div>
-            <!-- Inner solid dot -->
-            <div style="
-              position: absolute;
-              inset: 10px;
-              background: ${color};
-              border: 2px solid white;
-              border-radius: 50%;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-            "></div>
-            <!-- Opacity overlay to show it's approximate -->
-            <div style="
-              position: absolute;
-              inset: 10px;
-              background: black;
-              border-radius: 50%;
-              opacity: 0.3;
-            "></div>
-          </div>
-        ` : `
-          <div style="position: relative; width: 24px; height: 24px;">
-            <div style="
-              position: absolute;
-              inset: 0;
-              background: ${color};
-              border-radius: 50%;
-              filter: blur(8px);
-              opacity: 0.6;
-              animation: pulse 2s ease-in-out infinite;
-            "></div>
-            <div style="
-              position: absolute;
-              inset: 6px;
-              background: ${color};
-              border: 2px solid white;
-              border-radius: 50%;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-            "></div>
-          </div>
-        `,
-        iconSize: isApproximate ? [32, 32] : [24, 24],
-        iconAnchor: isApproximate ? [16, 16] : [12, 12],
-      })
+      let icon
+
+      if (approxLevel === "exact") {
+        // Exact location: sharp square terminal-style pin
+        icon = L.divIcon({
+          className: "custom-marker",
+          html: `
+            <div style="position: relative; width: 32px; height: 32px;">
+              <div style="
+                position: absolute;
+                inset: 0;
+                background: ${color};
+                opacity: 0.2;
+                animation: pulse-exact 2s ease-in-out infinite;
+              "></div>
+              <div style="
+                position: absolute;
+                inset: 6px;
+                border: 3px solid ${color};
+                background: black;
+                box-shadow: 0 0 8px ${color}, inset 0 0 8px ${color}40;
+              "></div>
+              <div style="
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 8px;
+                height: 8px;
+                background: ${color};
+                box-shadow: 0 0 6px ${color};
+              "></div>
+              <div style="
+                position: absolute;
+                top: -2px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 0;
+                height: 0;
+                border-left: 4px solid transparent;
+                border-right: 4px solid transparent;
+                border-bottom: 6px solid ${color};
+              "></div>
+            </div>
+          `,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+        })
+      } else {
+        // Approximate location with varying sizes based on uncertainty
+        const sizes = {
+          small: { outer: 56, middle: 12, inner: 20, opacity: 0.12 },
+          medium: { outer: 72, middle: 16, inner: 24, opacity: 0.15 },
+          large: { outer: 96, middle: 20, inner: 28, opacity: 0.18 },
+        }
+
+        const size = sizes[approxLevel]
+
+        icon = L.divIcon({
+          className: "custom-marker",
+          html: `
+            <div style="position: relative; width: ${size.outer}px; height: ${size.outer}px;">
+              <!-- Large uncertainty radius -->
+              <div style="
+                position: absolute;
+                inset: 0;
+                background: ${color};
+                border-radius: 50%;
+                opacity: ${size.opacity};
+                animation: pulse-approximate 2s ease-in-out infinite;
+              "></div>
+
+              <!-- Rotating dashed border -->
+              <div style="
+                position: absolute;
+                inset: ${size.middle}px;
+                border: 3px dashed ${color};
+                border-radius: 50%;
+                opacity: 0.5;
+                animation: rotate-dashed 8s linear infinite;
+              "></div>
+
+              <!-- Inner solid ring -->
+              <div style="
+                position: absolute;
+                inset: ${size.inner}px;
+                border: 2px solid ${color};
+                border-radius: 50%;
+                background: black;
+                opacity: 0.8;
+                box-shadow: 0 0 8px ${color}80;
+              "></div>
+
+              <!-- Center dot -->
+              <div style="
+                position: absolute;
+                inset: ${size.inner + 8}px;
+                background: ${color};
+                border-radius: 50%;
+                box-shadow: 0 0 12px ${color}, 0 0 24px ${color}40;
+              "></div>
+
+              <!-- Inner white dot -->
+              <div style="
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 4px;
+                height: 4px;
+                background: white;
+                border-radius: 50%;
+              "></div>
+            </div>
+          `,
+          iconSize: [size.outer, size.outer],
+          iconAnchor: [size.outer / 2, size.outer / 2],
+        })
+      }
 
       const marker = L.marker([item.lat!, item.lon!], { icon })
         .addTo(mapInstanceRef.current)
@@ -404,25 +562,55 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
     <>
       <div ref={mapRef} className="absolute inset-0 w-full h-full bg-[#1a1a1a]">
         <style jsx global>{`
-          @keyframes pulse {
-            0%,
-            100% {
+          @keyframes pulse-exact {
+            0%, 100% {
               transform: scale(1);
-              opacity: 0.6;
+              opacity: 0.2;
             }
             50% {
-              transform: scale(1.2);
-              opacity: 0.8;
-            }
-          }
-          @keyframes pulse-approximate {
-            0%,
-            100% {
-              transform: scale(1);
+              transform: scale(1.3);
               opacity: 0.4;
             }
+          }
+
+          @keyframes pulse-approximate {
+            0%, 100% {
+              transform: scale(1);
+              opacity: 0.15;
+            }
             50% {
-              transform: scale(1.15);
+              transform: scale(1.5);
+              opacity: 0.25;
+            }
+          }
+
+          @keyframes rotate-dashed {
+            from {
+              transform: rotate(0deg);
+            }
+            to {
+              transform: rotate(360deg);
+            }
+          }
+
+          @keyframes pulse-gps {
+            0%, 100% {
+              transform: scale(1);
+              opacity: 0.2;
+            }
+            50% {
+              transform: scale(1.8);
+              opacity: 0.4;
+            }
+          }
+
+          @keyframes pulse-center {
+            0%, 100% {
+              transform: translate(-50%, -50%) scale(1);
+              opacity: 1;
+            }
+            50% {
+              transform: translate(-50%, -50%) scale(1.4);
               opacity: 0.6;
             }
           }
