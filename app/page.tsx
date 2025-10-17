@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import dynamic from "next/dynamic"
 import FilterPanel from "@/components/filter-panel"
 import LandingPage from "@/components/landing-page"
@@ -105,6 +105,10 @@ export default function Page() {
   // Map position state
   const [mapCenter, setMapCenter] = useState<[number, number] | undefined>(undefined)
   const [mapZoom, setMapZoom] = useState<number | undefined>(undefined)
+
+  // Scroll position tracking for incidents list
+  const [incidentsScrollPos, setIncidentsScrollPos] = useState(0)
+  const incidentsScrollRef = useRef<HTMLDivElement | null>(null)
 
   /**
    * Helper functions for mobile filter tag management
@@ -312,6 +316,20 @@ export default function Page() {
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [])
+
+  /**
+   * Restore scroll position when incidents sheet opens
+   */
+  useEffect(() => {
+    if (mobileSheetType === 'incidents' && incidentsScrollRef.current) {
+      // Restore scroll position after a short delay to ensure DOM is ready
+      setTimeout(() => {
+        if (incidentsScrollRef.current) {
+          incidentsScrollRef.current.scrollTop = incidentsScrollPos
+        }
+      }, 50)
+    }
+  }, [mobileSheetType, incidentsScrollPos])
 
   /**
    * Handles entering the map view from landing page
@@ -1345,7 +1363,15 @@ export default function Page() {
               <div className="w-12 h-1 bg-amber-500" />
             </div>
 
-            <div className="overflow-y-auto" style={{ maxHeight: 'calc(85vh - 3rem)' }}>
+            <div
+              ref={(el) => {
+                if (mobileSheetType === 'incidents') {
+                  incidentsScrollRef.current = el
+                }
+              }}
+              className="overflow-y-auto"
+              style={{ maxHeight: 'calc(85vh - 3rem)' }}
+            >
               {mobileSheetType === 'filters' && (
                 <div className="p-6 space-y-6 font-mono">
                   {/* Search & Tags */}
@@ -1544,6 +1570,10 @@ export default function Page() {
                       <button
                         key={item.incident_id}
                         onClick={() => {
+                          // Save scroll position before navigating
+                          if (incidentsScrollRef.current) {
+                            setIncidentsScrollPos(incidentsScrollRef.current.scrollTop)
+                          }
                           setSelectedIncident(item)
                           setMobileSheetType(null)
                           setShowBottomSheet(true)
@@ -1619,6 +1649,10 @@ export default function Page() {
                       <button
                         key={item.incident_id}
                         onClick={() => {
+                          // Save scroll position before navigating (critical incidents)
+                          if (incidentsScrollRef.current) {
+                            setIncidentsScrollPos(incidentsScrollRef.current.scrollTop)
+                          }
                           setSelectedIncident(item)
                           setMobileSheetType(null)
                           setShowBottomSheet(true)
