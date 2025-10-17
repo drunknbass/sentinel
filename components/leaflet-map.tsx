@@ -23,12 +23,17 @@ type LeafletMapProps = {
  * Category color mapping - matches CATEGORY_COLORS from page.tsx
  */
 const CATEGORY_COLORS: Record<string, string> = {
-  violent: "#ef4444",
-  weapons: "#f97316",
-  property: "#f59e0b",
-  traffic: "#84cc16",
-  disturbance: "#eab308",
-  drug: "#a855f7",
+  violent: "#ef4444",      // Red - critical
+  weapons: "#f97316",      // Orange - serious
+  property: "#f59e0b",     // Amber - moderate
+  traffic: "#84cc16",      // Lime green - routine
+  disturbance: "#eab308",  // Yellow - moderate
+  drug: "#a855f7",         // Purple - specific
+  admin: "#06b6d4",        // Cyan - administrative
+  medical: "#ec4899",      // Pink - medical
+  fire: "#f43f5e",         // Rose - fire/emergency
+  other: "#64748b",        // Slate gray - miscellaneous
+  "public service": "#0ea5e9", // Sky blue - public service
 }
 
 /**

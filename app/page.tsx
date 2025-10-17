@@ -14,15 +14,19 @@ type Incident = IncidentsResponse["items"][number]
 /**
  * Category color mapping for incident classification
  * Used to color-code markers and badges throughout the app
- * Maps to the 6 filterable categories from the API
  */
 const CATEGORY_COLORS: Record<string, string> = {
-  violent: "#ef4444",
-  weapons: "#f97316",
-  property: "#f59e0b",
-  traffic: "#84cc16",
-  disturbance: "#eab308",
-  drug: "#a855f7",
+  violent: "#ef4444",      // Red - critical
+  weapons: "#f97316",      // Orange - serious
+  property: "#f59e0b",     // Amber - moderate
+  traffic: "#84cc16",      // Lime green - routine
+  disturbance: "#eab308",  // Yellow - moderate
+  drug: "#a855f7",         // Purple - specific
+  admin: "#06b6d4",        // Cyan - administrative
+  medical: "#ec4899",      // Pink - medical
+  fire: "#f43f5e",         // Rose - fire/emergency
+  other: "#64748b",        // Slate gray - miscellaneous
+  "public service": "#0ea5e9", // Sky blue - public service
 }
 
 // Dynamically import LeafletMap to avoid SSR issues with Leaflet
@@ -549,73 +553,20 @@ export default function Page() {
             {/* Category colors */}
             <div>
               <div className="text-amber-500/70 mb-2 text-[10px] tracking-wider">INCIDENT CATEGORIES:</div>
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 border"
-                    style={{
-                      backgroundColor: CATEGORY_COLORS.violent,
-                      borderColor: CATEGORY_COLORS.violent,
-                      boxShadow: `0 0 4px ${CATEGORY_COLORS.violent}`
-                    }}
-                  />
-                  <span style={{ color: CATEGORY_COLORS.violent }}>VIOLENT</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 border"
-                    style={{
-                      backgroundColor: CATEGORY_COLORS.weapons,
-                      borderColor: CATEGORY_COLORS.weapons,
-                      boxShadow: `0 0 4px ${CATEGORY_COLORS.weapons}`
-                    }}
-                  />
-                  <span style={{ color: CATEGORY_COLORS.weapons }}>WEAPONS</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 border"
-                    style={{
-                      backgroundColor: CATEGORY_COLORS.property,
-                      borderColor: CATEGORY_COLORS.property,
-                      boxShadow: `0 0 4px ${CATEGORY_COLORS.property}`
-                    }}
-                  />
-                  <span style={{ color: CATEGORY_COLORS.property }}>PROPERTY</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 border"
-                    style={{
-                      backgroundColor: CATEGORY_COLORS.traffic,
-                      borderColor: CATEGORY_COLORS.traffic,
-                      boxShadow: `0 0 4px ${CATEGORY_COLORS.traffic}`
-                    }}
-                  />
-                  <span style={{ color: CATEGORY_COLORS.traffic }}>TRAFFIC</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 border"
-                    style={{
-                      backgroundColor: CATEGORY_COLORS.disturbance,
-                      borderColor: CATEGORY_COLORS.disturbance,
-                      boxShadow: `0 0 4px ${CATEGORY_COLORS.disturbance}`
-                    }}
-                  />
-                  <span style={{ color: CATEGORY_COLORS.disturbance }}>DISTURBANCE</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 border"
-                    style={{
-                      backgroundColor: CATEGORY_COLORS.drug,
-                      borderColor: CATEGORY_COLORS.drug,
-                      boxShadow: `0 0 4px ${CATEGORY_COLORS.drug}`
-                    }}
-                  />
-                  <span style={{ color: CATEGORY_COLORS.drug }}>DRUG</span>
-                </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+                {Object.entries(CATEGORY_COLORS).map(([category, color]) => (
+                  <div key={category} className="flex items-center gap-1.5">
+                    <div
+                      className="w-2.5 h-2.5 border flex-shrink-0"
+                      style={{
+                        backgroundColor: color,
+                        borderColor: color,
+                        boxShadow: `0 0 3px ${color}`
+                      }}
+                    />
+                    <span className="text-[9px] uppercase" style={{ color }}>{category}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
