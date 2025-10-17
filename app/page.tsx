@@ -1000,8 +1000,8 @@ export default function Page() {
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black no-overscroll">
-      {/* Unofficial use disclaimer – dismiss to continue and request location */}
-      {showDisclaimer && (
+      {/* Unofficial use disclaimer – desktop only (mobile uses TosGate) */}
+      {!isMobile && showDisclaimer && (
         <div className="absolute inset-0 z-[200] flex items-center justify-center p-4 bg-black/90">
           <div className="max-w-lg w-full bg-black border-4 border-amber-500">
             <div className="border-2 border-amber-500/50 p-5 md:p-6 space-y-4 font-mono">

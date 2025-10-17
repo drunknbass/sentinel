@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from '@/lib/themes/theme-provider';
 import { PanelProvider } from '@/lib/ui/panel-provider';
 import RootClient from '@/components/RootClient';
+import TosGate from '@/components/TosGate';
 
 export const metadata: Metadata = {
   title: 'RSO PressAccess Intelligence',
@@ -24,7 +25,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="mobile-lock-select">
         <PanelProvider>
           <ThemeProvider defaultTheme="amber-mdt">
-            <RootClient>{children}</RootClient>
+            <RootClient>
+              {children}
+              <TosGate />
+            </RootClient>
           </ThemeProvider>
         </PanelProvider>
       </body>
