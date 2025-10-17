@@ -403,6 +403,36 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           className: "custom-marker",
           html: `
             <div style="position: relative; width: ${size.outer}px; height: ${size.outer}px;">
+              <!-- Radar ring 1 - outermost expanding -->
+              <div style="
+                position: absolute;
+                inset: 0;
+                border: 2px solid ${color};
+                border-radius: 50%;
+                opacity: 0;
+                animation: radar-ping 3s ease-out infinite;
+              "></div>
+
+              <!-- Radar ring 2 - middle expanding -->
+              <div style="
+                position: absolute;
+                inset: 0;
+                border: 2px solid ${color};
+                border-radius: 50%;
+                opacity: 0;
+                animation: radar-ping 3s ease-out infinite 1s;
+              "></div>
+
+              <!-- Radar ring 3 - inner expanding -->
+              <div style="
+                position: absolute;
+                inset: 0;
+                border: 2px solid ${color};
+                border-radius: 50%;
+                opacity: 0;
+                animation: radar-ping 3s ease-out infinite 2s;
+              "></div>
+
               <!-- Large uncertainty radius -->
               <div style="
                 position: absolute;
@@ -625,6 +655,20 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
             50% {
               transform: translate(-50%, -50%) scale(1.4);
               opacity: 0.6;
+            }
+          }
+
+          @keyframes radar-ping {
+            0% {
+              transform: scale(0.5);
+              opacity: 0.6;
+            }
+            50% {
+              opacity: 0.3;
+            }
+            100% {
+              transform: scale(1.8);
+              opacity: 0;
             }
           }
         `}</style>
