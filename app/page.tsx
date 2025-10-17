@@ -155,6 +155,26 @@ export default function Page() {
   }
 
   /**
+   * Determines location accuracy level based on address
+   */
+  const getLocationAccuracy = (incident: Incident): string => {
+    if (!incident.address_raw) return "APPROXIMATE (LARGE AREA)"
+
+    const hasStreetNumber = /^\d+/.test(incident.address_raw.trim())
+    if (!hasStreetNumber) return "APPROXIMATE (MEDIUM AREA)"
+
+    const genericTerms = ["AREA", "VICINITY", "NEAR", "BLOCK OF", "BLK"]
+    const isGeneric = genericTerms.some((term) => incident.address_raw?.toUpperCase().includes(term))
+
+    if (isGeneric) return "APPROXIMATE (MEDIUM AREA)"
+
+    // Check for intersection (two street names with &, AND, or /)
+    if (/\b(AND|&|\/)\b/i.test(incident.address_raw)) return "APPROXIMATE (SMALL AREA)"
+
+    return "EXACT"
+  }
+
+  /**
    * Extracts all available tags from incidents for search functionality
    */
   const availableTags = useMemo(() => {
@@ -758,36 +778,34 @@ export default function Page() {
         </div>
       )}
 
-      {/* Incident detail popup panel for desktop */}
+      {/* Incident detail popup panel for desktop - Amber MDT style */}
       {selectedIncident && !showBottomSheet && (
-        <div className="hidden md:block absolute top-20 right-6 z-40 w-80 pointer-events-none">
-          <div
-            className="relative bg-black/60 backdrop-blur-3xl border border-white/20 rounded-3xl shadow-2xl pointer-events-auto animate-modal-in overflow-hidden"
-            style={{
-              backdropFilter: "blur(40px) saturate(180%)",
-              WebkitBackdropFilter: "blur(40px) saturate(180%)",
-              boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
-            }}
-          >
-            <div className="p-6 space-y-4">
-              <button
-                onClick={() => setSelectedIncident(null)}
-                className="flex items-center justify-center w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all mb-4"
-              >
-                <X className="w-4 h-4" />
-              </button>
+        <div className="hidden md:block absolute top-20 right-6 z-40 w-96 pointer-events-none">
+          <div className="relative bg-black border-4 border-amber-500 pointer-events-auto animate-modal-in overflow-hidden">
+            <div className="border-2 border-amber-500/50 p-6 space-y-4 font-mono">
+              <div className="flex items-center justify-between border-b-2 border-amber-500 pb-3 mb-4">
+                <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ INCIDENT DETAILS ╗</div>
+                <button
+                  onClick={() => setSelectedIncident(null)}
+                  className="w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
+                >
+                  X
+                </button>
+              </div>
 
               <div>
                 <div
-                  className="inline-block px-3 py-1 rounded-full text-xs mb-3"
+                  className="inline-block px-3 py-1 border-2 text-xs font-bold mb-3 tracking-wider"
                   style={{
-                    backgroundColor: getPriorityColor(selectedIncident.priority) + "30",
+                    borderColor: getPriorityColor(selectedIncident.priority),
                     color: getPriorityColor(selectedIncident.priority),
                   }}
                 >
-                  {getPriorityLabel(selectedIncident.priority)} PRIORITY
+                  [{getPriorityLabel(selectedIncident.priority)}]
                 </div>
-                <h2 className="text-2xl leading-tight mb-2">{selectedIncident.call_type}</h2>
+                <h2 className="text-xl font-bold mb-2 text-amber-500 tracking-wide">
+                  &gt; {selectedIncident.call_type}
+                </h2>
                 <button
                   onClick={() => {
                     // Re-trigger the zoom by clearing and re-setting the incident
@@ -795,103 +813,113 @@ export default function Page() {
                     setSelectedIncident(null)
                     setTimeout(() => setSelectedIncident(incident), 50)
                   }}
-                  className="text-left text-gray-400 hover:text-white transition-colors group"
+                  className="text-left text-amber-400 hover:text-amber-300 transition-colors group text-sm"
                   title="Click to refocus on map"
                 >
-                  <span className="group-hover:underline">{selectedIncident.address_raw || "No address available"}</span>
+                  <span className="group-hover:underline">LOCATION: {selectedIncident.address_raw || "UNKNOWN"}</span>
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700">
+              <div className="grid grid-cols-2 gap-4 pt-2">
                 <div>
-                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Area</div>
-                  <div className="font-semibold">{selectedIncident.area || "Unknown"}</div>
+                  <div className="text-xs text-amber-500/70 mb-1 tracking-wider">AREA:</div>
+                  <div className="font-bold text-amber-500">{selectedIncident.area || "N/A"}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Time</div>
-                  <div className="font-semibold">{new Date(selectedIncident.received_at).toLocaleTimeString()}</div>
+                  <div className="text-xs text-amber-500/70 mb-1 tracking-wider">TIME:</div>
+                  <div className="font-bold text-amber-500">
+                    {new Date(selectedIncident.received_at).toLocaleTimeString()}
+                  </div>
                 </div>
               </div>
 
+              <div className="pt-2">
+                <div className="text-xs text-amber-500/70 mb-1 tracking-wider">LOCATION ACCURACY:</div>
+                <div className="font-bold text-amber-500">{getLocationAccuracy(selectedIncident)}</div>
+              </div>
+
               {selectedIncident.disposition && (
-                <div className="pt-4 border-t border-gray-700">
-                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Status</div>
-                  <div className="font-semibold">{selectedIncident.disposition}</div>
+                <div className="pt-2 border-t-2 border-amber-500">
+                  <div className="text-xs text-amber-500/70 mb-1 tracking-wider">STATUS:</div>
+                  <div className="font-bold text-amber-500">{selectedIncident.disposition}</div>
                 </div>
               )}
 
-              <div className="pt-4 border-t border-gray-700">
-                <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Incident ID</div>
-                <div className="font-mono text-sm text-gray-400">{selectedIncident.incident_id}</div>
+              <div className="pt-2 border-t-2 border-amber-500">
+                <div className="text-xs text-amber-500/70 mb-1 tracking-wider">INCIDENT ID:</div>
+                <div className="text-sm text-amber-400">{selectedIncident.incident_id}</div>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Incident detail sheet for mobile */}
+      {/* Incident detail sheet for mobile - Amber MDT style */}
       {selectedIncident && showBottomSheet && (
         <div className="md:hidden absolute bottom-0 left-0 right-0 z-40 animate-slide-up">
-          <div
-            className="relative w-full h-[45vh] bg-black/60 backdrop-blur-3xl border-t border-white/20 rounded-t-3xl shadow-2xl overflow-hidden"
-            style={{
-              backdropFilter: "blur(40px) saturate(180%)",
-              WebkitBackdropFilter: "blur(40px) saturate(180%)",
-              boxShadow: "0 -8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
-            }}
-          >
-            <div className="flex justify-center py-3">
-              <div className="w-12 h-1.5 bg-gray-600 rounded-full" />
+          <div className="relative w-full max-h-[80vh] bg-black border-t-4 border-amber-500 overflow-hidden">
+            <div className="flex justify-center py-3 border-b-2 border-amber-500">
+              <div className="w-12 h-1 bg-amber-500" />
             </div>
 
-            <div className="p-6 pb-12 space-y-4 overflow-y-auto h-[calc(45vh-2rem)]">
-              <button
-                onClick={() => {
-                  setShowBottomSheet(false)
-                  setSelectedIncident(null)
-                }}
-                className="absolute top-6 right-6 flex items-center justify-center w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all"
-              >
-                <X className="w-4 h-4" />
-              </button>
+            <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(80vh-3rem)] font-mono">
+              <div className="flex items-center justify-between border-b-2 border-amber-500 pb-3 mb-4">
+                <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ INCIDENT DETAILS ╗</div>
+                <button
+                  onClick={() => {
+                    setShowBottomSheet(false)
+                    setSelectedIncident(null)
+                  }}
+                  className="w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
+                >
+                  X
+                </button>
+              </div>
 
               <div>
                 <div
-                  className="inline-block px-3 py-1 rounded-full text-xs mb-3"
+                  className="inline-block px-3 py-1 border-2 text-xs font-bold mb-3 tracking-wider"
                   style={{
-                    backgroundColor: getPriorityColor(selectedIncident.priority) + "30",
+                    borderColor: getPriorityColor(selectedIncident.priority),
                     color: getPriorityColor(selectedIncident.priority),
                   }}
                 >
-                  {getPriorityLabel(selectedIncident.priority)} PRIORITY
+                  [{getPriorityLabel(selectedIncident.priority)}]
                 </div>
-                <h2 className="text-2xl leading-tight mb-2">{selectedIncident.call_type}</h2>
-                <div className="text-left text-gray-400">
-                  {selectedIncident.address_raw || "No address available"}
+                <h2 className="text-xl font-bold mb-2 text-amber-500 tracking-wide">
+                  &gt; {selectedIncident.call_type}
+                </h2>
+                <p className="text-amber-400 text-sm">LOCATION: {selectedIncident.address_raw || "UNKNOWN"}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-xs text-amber-500/70 mb-1 tracking-wider">AREA:</div>
+                  <div className="font-bold text-amber-500">{selectedIncident.area || "N/A"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-amber-500/70 mb-1 tracking-wider">TIME:</div>
+                  <div className="font-bold text-amber-500">
+                    {new Date(selectedIncident.received_at).toLocaleTimeString()}
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700">
-                <div>
-                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Area</div>
-                  <div className="font-semibold">{selectedIncident.area || "Unknown"}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Time</div>
-                  <div className="font-semibold">{new Date(selectedIncident.received_at).toLocaleTimeString()}</div>
-                </div>
+              <div>
+                <div className="text-xs text-amber-500/70 mb-1 tracking-wider">LOCATION ACCURACY:</div>
+                <div className="font-bold text-amber-500">{getLocationAccuracy(selectedIncident)}</div>
               </div>
 
               {selectedIncident.disposition && (
-                <div className="pt-4 border-t border-gray-700">
-                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Status</div>
-                  <div className="font-semibold">{selectedIncident.disposition}</div>
+                <div className="pt-2 border-t-2 border-amber-500">
+                  <div className="text-xs text-amber-500/70 mb-1 tracking-wider">STATUS:</div>
+                  <div className="font-bold text-amber-500">{selectedIncident.disposition}</div>
                 </div>
               )}
 
-              <div className="pt-4 border-t border-gray-700">
-                <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Incident ID</div>
-                <div className="font-mono text-sm text-gray-400">{selectedIncident.incident_id}</div>
+              <div className="pt-2 border-t-2 border-amber-500">
+                <div className="text-xs text-amber-500/70 mb-1 tracking-wider">INCIDENT ID:</div>
+                <div className="text-sm text-amber-400">{selectedIncident.incident_id}</div>
               </div>
             </div>
           </div>
