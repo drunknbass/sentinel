@@ -1,5 +1,6 @@
 import { TTLCache } from './cache';
 import { getFromVercelKV, saveToVercelKV } from './geocode-cache';
+import { generateAppleMapsToken } from './apple-maps-auth';
 
 export type GeocodeResult = {
   lat: number | null;
@@ -13,6 +14,63 @@ const geocodeCache = new TTLCache<GeocodeResult>(
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Riverside County center coordinates for user location context
+const RIVERSIDE_COUNTY_CENTER = {
+  lat: 33.7175,
+  lon: -115.4734
+};
+
+/**
+ * Geocode using Apple Maps API
+ * Excellent at handling block addresses and partial addresses with user location context
+ */
+async function geocodeWithAppleMaps(address: string, area: string | null): Promise<GeocodeResult> {
+  const token = generateAppleMapsToken();
+  if (!token) {
+    console.log('[GEOCODE] Apple Maps token generation failed, falling back');
+    return { lat: null, lon: null };
+  }
+
+  // Construct the query
+  const q = `${address}${area ? `, ${area}` : ''}, Riverside County, CA`;
+
+  // Use Riverside County center as user location for better local results
+  const url = new URL('https://maps-api.apple.com/v1/geocode');
+  url.searchParams.append('q', q);
+  url.searchParams.append('limitToCountries', 'US');
+  url.searchParams.append('userLocation', `${RIVERSIDE_COUNTY_CENTER.lat},${RIVERSIDE_COUNTY_CENTER.lon}`);
+
+  try {
+    const res = await fetch(url.toString(), {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!res.ok) {
+      console.log('[GEOCODE] Apple Maps error:', res.status, res.statusText);
+      return { lat: null, lon: null };
+    }
+
+    const data: any = await res.json();
+    if (data?.results && data.results.length > 0) {
+      const result = data.results[0];
+      const lat = result.coordinate?.latitude;
+      const lon = result.coordinate?.longitude;
+
+      if (lat && lon) {
+        console.log('[GEOCODE] Apple Maps success:', address, '→', { lat, lon });
+        return { lat, lon, approximate: false };
+      }
+    }
+
+    return { lat: null, lon: null };
+  } catch (err) {
+    console.log('[GEOCODE] Apple Maps fetch error:', err);
+    return { lat: null, lon: null };
+  }
+}
 
 /**
  * Geocode using OpenStreetMap Nominatim (free, flexible)
@@ -148,8 +206,9 @@ async function geocodeWithCensus(address: string, area: string | null, allowAppr
  * Geocode an address using multi-tier caching:
  * 1. Local memory cache (instant)
  * 2. Vercel KV edge cache (fast, shared across deployments)
- * 3. OpenStreetMap Nominatim (primary geocoder)
- * 4. Census Bureau (fallback geocoder)
+ * 3. Apple Maps API (primary - excellent for block addresses)
+ * 4. US Census Bureau (fallback - good for exact addresses)
+ * 5. OpenStreetMap Nominatim (final fallback)
  */
 export async function geocodeOne(address: string | null, area: string | null): Promise<GeocodeResult> {
   if (!address) return { lat: null, lon: null };
@@ -171,13 +230,18 @@ export async function geocodeOne(address: string | null, area: string | null): P
     return kvHit;
   }
 
-  // Tier 3 & 4: Geocode from APIs (slow)
+  // Tier 3, 4 & 5: Geocode from APIs (slow)
   console.log('[GEOCODE] Cache miss, geocoding:', key);
 
-  // Prefer Census first (generally faster; avoids Nominatim 1 rps guidance)
-  let value = await geocodeWithCensus(address, area);
+  // Try Apple Maps first (best for block addresses with user location context)
+  let value = await geocodeWithAppleMaps(address, area);
 
-  // Fallback to Nominatim only if Census fails
+  // Fallback to Census if Apple Maps fails
+  if (value.lat === null && value.lon === null) {
+    value = await geocodeWithCensus(address, area);
+  }
+
+  // Final fallback to Nominatim if both fail
   if (value.lat === null && value.lon === null) {
     value = await geocodeWithNominatim(address, area);
   }
