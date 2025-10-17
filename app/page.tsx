@@ -74,6 +74,9 @@ export default function Page() {
   // Auto-refresh toggle
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
 
+  // Location accuracy filter
+  const [locationFilter, setLocationFilter] = useState<'all' | 'exact' | 'approximate'>('all')
+
   // nocache flag from URL
   const [nocache, setNocache] = useState(false)
 
@@ -299,8 +302,20 @@ export default function Page() {
       return isInRiverside
     })
 
+    // Filter by location accuracy
+    if (locationFilter !== 'all') {
+      filtered = filtered.filter((item) => {
+        const accuracy = getLocationAccuracy(item)
+        if (locationFilter === 'exact') {
+          return accuracy === 'EXACT'
+        } else {
+          return accuracy !== 'EXACT'
+        }
+      })
+    }
+
     return filtered
-  }, [items, timeRange, searchTags])
+  }, [items, timeRange, searchTags, locationFilter])
 
   /**
    * Identifies critical incidents for the carousel
@@ -731,19 +746,31 @@ export default function Page() {
         {/* Incident count and critical alerts - 2 column button */}
         <div className="bg-black border-2 border-amber-500 overflow-hidden">
           <div className="grid grid-cols-2 divide-x-2 divide-amber-500">
-            {/* Left column: All incidents */}
-            <button
-              onClick={() => setShowListView(true)}
-              disabled={loading || isRefreshing}
-              className={`group px-6 py-3 text-xs font-mono font-bold transition-all text-amber-500 tracking-wider ${
-                (loading || isRefreshing)
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:bg-amber-500 hover:text-black cursor-pointer'
-              }`}
-            >
-              <div className="text-[10px] text-amber-500/70 group-hover:text-black uppercase tracking-wider mb-1 transition-colors">ALL INCIDENTS</div>
-              <div className="text-lg font-bold group-hover:text-black transition-colors">{filteredItems.length}</div>
-            </button>
+            {/* Left column: All incidents with location filter */}
+            <div className="flex flex-col">
+              <button
+                onClick={() => setShowListView(true)}
+                disabled={loading || isRefreshing}
+                className={`group px-6 py-2 text-xs font-mono font-bold transition-all text-amber-500 tracking-wider ${
+                  (loading || isRefreshing)
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'hover:bg-amber-500 hover:text-black cursor-pointer'
+                }`}
+              >
+                <div className="text-[10px] text-amber-500/70 group-hover:text-black uppercase tracking-wider mb-1 transition-colors">ALL INCIDENTS</div>
+                <div className="text-lg font-bold group-hover:text-black transition-colors">{filteredItems.length}</div>
+              </button>
+              <button
+                onClick={() => {
+                  setLocationFilter(prev =>
+                    prev === 'all' ? 'exact' : prev === 'exact' ? 'approximate' : 'all'
+                  )
+                }}
+                className="border-t-2 border-amber-500 px-2 py-1 text-[9px] font-mono text-amber-500/70 hover:bg-amber-500/20 hover:text-amber-500 transition-all tracking-wider"
+              >
+                {locationFilter === 'all' ? '[ ALL LOCATIONS ]' : locationFilter === 'exact' ? '[ EXACT ONLY ]' : '[ APPROX ONLY ]'}
+              </button>
+            </div>
 
             {/* Right column: Critical alerts */}
             <button
