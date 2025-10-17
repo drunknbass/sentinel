@@ -63,8 +63,17 @@ export async function getFromVercelKV(address: string, area: string | null): Pro
     }
 
     if (value && typeof value === 'object' && 'lat' in value && 'lon' in value) {
-      console.log('[GEOCODE] Upstash Redis cache hit:', key);
-      return value as GeocodeResult;
+      // CRITICAL: Validate that cached values are not null
+      // This prevents returning old bad cache data
+      if (value.lat !== null && value.lon !== null) {
+        console.log('[GEOCODE] Upstash Redis cache hit (valid):', key);
+        return value as GeocodeResult;
+      } else {
+        console.log('[GEOCODE] Upstash Redis cache hit but NULL values, ignoring:', key);
+        // Optionally delete the bad cache entry
+        redis.del(key as any).catch(() => {});
+        return null;
+      }
     }
 
     return null;

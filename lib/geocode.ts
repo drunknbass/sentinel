@@ -504,16 +504,25 @@ export async function geocodeOne(address: string | null, area: string | null, no
     // Tier 1: Check local memory cache (instant)
     const localHit = geocodeCache.get(key);
     if (localHit) {
-      console.log('[GEOCODE] Local cache hit:', key);
-      return localHit;
+      // CRITICAL: Validate that cached values are not null
+      if (localHit.lat !== null && localHit.lon !== null) {
+        console.log('[GEOCODE] Local cache hit (valid):', key);
+        return localHit;
+      } else {
+        console.log('[GEOCODE] Local cache hit but NULL values, ignoring:', key);
+        geocodeCache.delete(key);
+      }
     }
 
     // Tier 2: Check Vercel KV edge cache (fast, shared across instances)
     const kvHit = await getFromVercelKV(address, area);
     if (kvHit) {
-      // Populate local cache for next time
-      geocodeCache.set(key, kvHit);
-      return kvHit;
+      // Validate before using - getFromVercelKV already validates, but double-check
+      if (kvHit.lat !== null && kvHit.lon !== null) {
+        // Populate local cache for next time
+        geocodeCache.set(key, kvHit);
+        return kvHit;
+      }
     }
   }
 
