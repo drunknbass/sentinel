@@ -27,13 +27,25 @@ export function ThemeProvider({ children, defaultTheme = 'terminal-green' }: The
   const [themeName, setThemeName] = useState<ThemeName>(defaultTheme);
   const [theme, setTheme] = useState<ThemeConfig>(themes[defaultTheme]);
 
-  // Load theme from localStorage on mount
+  // Load theme from URL params or localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('sentinel-theme') as ThemeName | null;
-      if (stored && themes[stored]) {
-        setThemeName(stored);
-        setTheme(themes[stored]);
+      // Check URL params first (priority over localStorage)
+      const params = new URLSearchParams(window.location.search);
+      const urlTheme = params.get('theme') as ThemeName | null;
+
+      if (urlTheme && themes[urlTheme]) {
+        setThemeName(urlTheme);
+        setTheme(themes[urlTheme]);
+        // Also update localStorage to persist the URL choice
+        localStorage.setItem('sentinel-theme', urlTheme);
+      } else {
+        // Fallback to localStorage
+        const stored = localStorage.getItem('sentinel-theme') as ThemeName | null;
+        if (stored && themes[stored]) {
+          setThemeName(stored);
+          setTheme(themes[stored]);
+        }
       }
     }
   }, []);

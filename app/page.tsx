@@ -6,7 +6,6 @@ import FilterPanel from "@/components/filter-panel"
 import LandingPage from "@/components/landing-page"
 import IncidentListView from "@/components/incident-list-view"
 import TerminalLoading from "@/components/terminal-loading"
-import ThemeSwitcher from "@/components/theme-switcher"
 import { fetchIncidents, type IncidentsResponse } from "@/lib/api/incidents"
 import { X, ChevronLeft, ChevronRight, Filter } from "lucide-react"
 
@@ -382,18 +381,7 @@ export default function Page() {
   }
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-[#0a0e14]">
-      {/* Subtle grid pattern overlay */}
-      <div
-        className="absolute inset-0 opacity-[0.03] z-0"
-        style={{
-          backgroundImage: `
-            linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .05) 25%, rgba(255, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .05) 75%, rgba(255, 255, 255, .05) 76%, transparent 77%, transparent),
-            linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, .05) 25%, rgba(255, 255, 255, .05) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .05) 75%, rgba(255, 255, 255, .05) 76%, transparent 77%, transparent)
-          `,
-          backgroundSize: "50px 50px",
-        }}
-      />
+    <div className="relative h-screen w-full overflow-hidden bg-black">
 
       {/* Top navigation bar - Amber MDT style */}
       <div className="absolute top-0 left-0 right-0 z-50 bg-black border-b-2 border-amber-500">
@@ -431,7 +419,7 @@ export default function Page() {
       </div>
 
       {/* Main map view */}
-      <div className="absolute inset-0 bg-[#0a0e14] z-10">
+      <div className="absolute inset-0 bg-black z-10">
         <LeafletMap
           items={filteredItems}
           onMarkerClick={(item) => {
@@ -450,7 +438,7 @@ export default function Page() {
       </div>
 
       {/* Right-side HUD stack - Terminal style */}
-      <div className="absolute top-20 right-6 z-30 flex flex-col items-end gap-3">
+      <div className="absolute top-32 right-6 z-30 flex flex-col items-end gap-3">
         {/* Location disabled indicator */}
         {locationPermission === 'denied' && (
           <div className="flex items-center gap-2 bg-black/80 backdrop-blur-2xl terminal-border rounded-lg px-4 py-2 shadow-lg">
@@ -481,7 +469,7 @@ export default function Page() {
       </div>
 
       {/* Left-side HUD stack - Terminal style */}
-      <div className="absolute top-20 left-6 z-[70] flex flex-col items-start gap-3">
+      <div className="absolute top-32 left-6 z-[70] flex flex-col items-start gap-3">
         {/* LIVE indicator badge - toggle for auto-refresh */}
         <button
           onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
@@ -542,9 +530,6 @@ export default function Page() {
           </button>
         )}
 
-        {/* Theme Switcher */}
-        <ThemeSwitcher />
-
         {/* Filter panel - hidden on mobile */}
         <FilterPanel
           selectedCategory={selectedCategory}
@@ -564,96 +549,96 @@ export default function Page() {
       {/* Terminal loading overlay - only show on initial load, not refreshes */}
       {loading && !isRefreshing && <TerminalLoading />}
 
-      {/* Critical incidents carousel - Added navigation buttons */}
+      {/* Critical incidents carousel - Amber MDT style */}
       {criticalIncidents.length > 0 && showCriticalCarousel && !showBottomSheet && (
-        <div className="absolute bottom-0 left-0 right-0 z-30 p-4 md:p-6 bg-gradient-to-t from-black/60 via-black/30 to-transparent animate-slide-up">
-          <div
-            className="max-w-2xl mx-auto bg-black/60 backdrop-blur-3xl border border-white/20 rounded-3xl p-6 shadow-2xl"
-            style={{
-              backdropFilter: "blur(40px) saturate(180%)",
-              WebkitBackdropFilter: "blur(40px) saturate(180%)",
-              boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
-            }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse-red" />
-                <span className="text-sm tracking-wider text-red-500">CRITICAL ALERT</span>
-              </div>
-              <button
-                onClick={() => setShowCriticalCarousel(false)}
-                className="flex items-center justify-center w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all"
-                aria-label="Dismiss"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div key={criticalCarouselIndex}>
-                <h2 className="text-2xl md:text-3xl animate-carousel-wipe">
-                  {criticalIncidents[criticalCarouselIndex].call_type}
-                </h2>
-                <p className="text-white/90 animate-carousel-wipe-delay-1">
-                  {criticalIncidents[criticalCarouselIndex].address_raw}
-                </p>
-              </div>
-
-              {criticalIncidents.length > 1 && (
-                <div className="flex items-center justify-between pt-2">
-                  <button
-                    onClick={() =>
-                      setCriticalCarouselIndex(
-                        (prev) => (prev - 1 + criticalIncidents.length) % criticalIncidents.length,
-                      )
-                    }
-                    className="flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all"
-                    aria-label="Previous incident"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-
-                  <div className="flex items-center gap-2">
-                    {criticalIncidents.map((_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setCriticalCarouselIndex(idx)}
-                        className={`h-1.5 rounded-full transition-all ${
-                          idx === criticalCarouselIndex ? "w-8 bg-red-500" : "w-1.5 bg-white/40"
-                        }`}
-                        aria-label={`View incident ${idx + 1}`}
-                      />
-                    ))}
-                    <span className="ml-2 text-xs text-white/60">
-                      {criticalCarouselIndex + 1} of {criticalIncidents.length}
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={() => setCriticalCarouselIndex((prev) => (prev + 1) % criticalIncidents.length)}
-                    className="flex items-center justify-center w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all"
-                    aria-label="Next incident"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
+        <div className="absolute bottom-0 left-0 right-0 z-30 p-4 md:p-6 bg-gradient-to-t from-black via-black/95 to-transparent animate-slide-up">
+          <div className="max-w-3xl mx-auto bg-black/80 backdrop-blur-sm border-2 border-amber-500 p-2">
+            <div className="border-2 border-red-600 p-4 crt-glow-red">
+              <div className="flex items-center justify-between mb-3 pb-2 border-b-2 border-amber-500">
+                <div className="flex items-center gap-3">
+                  <span className="text-red-600 animate-blink font-bold text-xl crt-bloom-red">█</span>
+                  <span className="text-xs font-mono font-bold text-red-600 tracking-wider crt-bloom-red">
+                    *** CRITICAL ALERT ***
+                  </span>
                 </div>
-              )}
+                <button
+                  onClick={() => setShowCriticalCarousel(false)}
+                  className="flex items-center justify-center w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
+                  aria-label="Dismiss"
+                >
+                  X
+                </button>
+              </div>
 
-              <button
-                onClick={() => {
-                  // Set selected incident first to trigger map zoom
-                  setSelectedIncident(criticalIncidents[criticalCarouselIndex])
+              <div className="space-y-3">
+                <div key={criticalCarouselIndex}>
+                  <h2 className="text-xl md:text-2xl font-mono font-bold animate-carousel-wipe text-amber-500 mb-2 tracking-wide">
+                    &gt; {criticalIncidents[criticalCarouselIndex].call_type}
+                  </h2>
+                  <p className="text-amber-400 animate-carousel-wipe-delay-1 font-mono text-sm">
+                    LOCATION: {criticalIncidents[criticalCarouselIndex].address_raw}
+                  </p>
+                </div>
 
-                  // Dismiss carousel and show mobile sheet if needed
-                  setShowCriticalCarousel(false)
-                  if (window.innerWidth < 768) {
-                    setShowBottomSheet(true)
-                  }
-                }}
-                className="w-full bg-white/95 backdrop-blur-xl text-red-600 text-lg py-4 rounded-full hover:bg-white transition-all shadow-xl mt-4"
-              >
-                View Details
-              </button>
+                {criticalIncidents.length > 1 && (
+                  <div className="flex items-center justify-between pt-3 border-t-2 border-amber-500">
+                    <button
+                      onClick={() =>
+                        setCriticalCarouselIndex(
+                          (prev) => (prev - 1 + criticalIncidents.length) % criticalIncidents.length,
+                        )
+                      }
+                      className="flex items-center justify-center w-10 h-10 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-mono font-bold"
+                      aria-label="Previous incident"
+                    >
+                      &lt;
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      {criticalIncidents.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setCriticalCarouselIndex(idx)}
+                          className={`w-3 h-3 border transition-all ${
+                            idx === criticalCarouselIndex
+                              ? "bg-red-600 border-red-600 crt-bloom-red"
+                              : "bg-transparent border-amber-500"
+                          }`}
+                          aria-label={`View incident ${idx + 1}`}
+                        />
+                      ))}
+                      <span className="ml-2 text-xs text-amber-500 font-mono font-bold">
+                        [{criticalCarouselIndex + 1}/{criticalIncidents.length}]
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => setCriticalCarouselIndex((prev) => (prev + 1) % criticalIncidents.length)}
+                      className="flex items-center justify-center w-10 h-10 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-mono font-bold"
+                      aria-label="Next incident"
+                    >
+                      &gt;
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => {
+                    setShowCriticalCarousel(false)
+                    setSelectedIncident(criticalIncidents[criticalCarouselIndex])
+                    setTimeout(() => {
+                      if (window.innerWidth < 768) {
+                        setShowBottomSheet(true)
+                      } else {
+                        setShowBottomSheet(false)
+                      }
+                    }, 600)
+                  }}
+                  className="w-full bg-amber-500 text-black font-mono font-bold text-base py-4 hover:bg-amber-400 transition-all mt-4 tracking-wider"
+                >
+                  [ENTER] VIEW DETAILS
+                </button>
+              </div>
             </div>
           </div>
         </div>
