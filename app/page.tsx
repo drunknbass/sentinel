@@ -178,6 +178,14 @@ export default function Page() {
           setMapZoom(zoom)
         }
       }
+      // Pick up GPS coords set by the static /gps-start.html bootstrap page
+      try {
+        const stored = window.localStorage.getItem('gps:userLocation')
+        if (stored && /-?\d+(\.\d+)?,-?\d+(\.\d+)?/.test(stored)) {
+          setUserLocation(stored)
+          setLocationPermission('granted')
+        }
+      } catch {}
       // Read panel state from URL
       const panelParam = params.get('panel')
       if (panelParam === 'incidents') {
@@ -422,10 +430,11 @@ export default function Page() {
 
   // Accept disclaimer and immediately request geolocation via user gesture
   const handleAcceptDisclaimer = () => {
-    // Trigger geolocation first, inside the same user gesture (iOS requirement)
-    try { handleRequestLocation() } catch {}
+    // Minimal, reliable flow: send user to a static HTML page that requests geolocation on tap
     try { if (typeof window !== 'undefined') window.localStorage.setItem('disclaimerAccepted', '1') } catch {}
-    setShowDisclaimer(false)
+    if (typeof window !== 'undefined') {
+      window.location.href = '/gps-start.html'
+    }
   }
 
   // Receive hardware location from map and store it for API
