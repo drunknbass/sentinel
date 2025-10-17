@@ -25,7 +25,7 @@ const RIVERSIDE_COUNTY_CENTER = {
  * Excellent at handling block addresses and partial addresses with user location context
  */
 async function geocodeWithAppleMaps(address: string, area: string | null): Promise<GeocodeResult> {
-  const token = generateAppleMapsToken();
+  const token = await generateAppleMapsToken();
   if (!token) {
     console.log('[GEOCODE] Apple Maps token generation failed, falling back');
     return { lat: null, lon: null };
