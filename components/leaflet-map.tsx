@@ -344,9 +344,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
     // Convert back to lat/lng - this is where the map center should be
     const targetCenter = mapInstanceRef.current.unproject(offsetPoint, zoom)
 
-    // Use setView with animation - better tile loading behavior than flyTo
-    mapInstanceRef.current.setView(targetCenter, zoom, {
-      animate: true,
+    // Fly to the calculated center point with smooth animation
+    mapInstanceRef.current.flyTo(targetCenter, zoom, {
       duration: 1.5,
       easeLinearity: 0.25,
     })
@@ -382,8 +381,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
     // When deselecting, restore previous view
     else if (!selectedIncident && savedViewRef.current) {
       console.log('[MAP] Restoring user view:', savedViewRef.current)
-      mapInstanceRef.current.setView(savedViewRef.current.center, savedViewRef.current.zoom, {
-        animate: true,
+      mapInstanceRef.current.flyTo(savedViewRef.current.center, savedViewRef.current.zoom, {
         duration: 1.2,
         easeLinearity: 0.25,
       })
