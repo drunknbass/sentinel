@@ -23,6 +23,16 @@ export async function generateAppleMapsToken(): Promise<string | null> {
     return null;
   }
 
+  // Log key characteristics for debugging (without exposing the actual key)
+  console.log('[APPLE_MAPS] Initial key characteristics:', {
+    length: privateKey.length,
+    startsWithBegin: privateKey.startsWith('-----BEGIN'),
+    hasNewlines: privateKey.includes('\n'),
+    hasBackslashN: privateKey.includes('\\n'),
+    firstChars: privateKey.substring(0, 20),
+    lastChars: privateKey.substring(Math.max(0, privateKey.length - 20))
+  });
+
   // Strip any accidental quotes that might wrap the key
   privateKey = privateKey.trim().replace(/^["']|["']$/g, '');
 
@@ -31,11 +41,24 @@ export async function generateAppleMapsToken(): Promise<string | null> {
                           !privateKey.includes('\n') &&
                           /^[A-Za-z0-9+/]+=*$/.test(privateKey.replace(/\s/g, ''));
 
+  console.log('[APPLE_MAPS] Base64 detection:', {
+    looksLikeBase64,
+    hasBeginHeader: privateKey.includes('-----BEGIN'),
+    hasNewlines: privateKey.includes('\n'),
+    matchesBase64Pattern: /^[A-Za-z0-9+/]+=*$/.test(privateKey.replace(/\s/g, ''))
+  });
+
   if (looksLikeBase64) {
     console.log('[APPLE_MAPS] Detected base64-encoded private key, decoding...');
     try {
       privateKey = Buffer.from(privateKey, 'base64').toString('utf-8');
       console.log('[APPLE_MAPS] Successfully decoded base64 private key');
+      console.log('[APPLE_MAPS] After decoding:', {
+        length: privateKey.length,
+        startsWithBegin: privateKey.startsWith('-----BEGIN'),
+        hasNewlines: privateKey.includes('\n'),
+        firstChars: privateKey.substring(0, 30)
+      });
     } catch (e) {
       console.error('[APPLE_MAPS] Failed to decode base64 private key:', e);
       return null;
