@@ -59,7 +59,7 @@ export default function Page() {
   const [locationPermission, setLocationPermission] = useState<'pending' | 'granted' | 'denied'>('pending')
   const [userLocation, setUserLocation] = useState<string | undefined>(undefined)
   const [showDisclaimer, setShowDisclaimer] = useState<boolean>(true)
-  const [showLocationPrompt, setShowLocationPrompt] = useState(false)
+  // Removed fullscreen location prompt; GPS is toggled via nav button only
   const [locationRequestTrigger, setLocationRequestTrigger] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [loadingProgress, setLoadingProgress] = useState<{stage: string; current?: number; total?: number} | null>(null)
@@ -85,6 +85,7 @@ export default function Page() {
 
   // Auto-refresh toggle
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
+  const [locationEnabled, setLocationEnabled] = useState(false)
 
   // Time range options for filters
   const TIME_RANGES = [
@@ -277,9 +278,9 @@ export default function Page() {
     }
   }, [locationPermission])
 
-  // If permission becomes granted after map is mounted, ask map to place user marker
+  // If permission becomes granted (and GPS toggle is ON), ask map to place user marker once
   useEffect(() => {
-    if (locationPermission === 'granted' && locationRequestFnRef.current && !mapLocationRequestedRef.current) {
+    if (locationEnabled && locationPermission === 'granted' && locationRequestFnRef.current && !mapLocationRequestedRef.current) {
       try {
         mapLocationRequestedRef.current = true
         locationRequestFnRef.current()
@@ -288,7 +289,7 @@ export default function Page() {
         mapLocationRequestedRef.current = false
       }
     }
-  }, [locationPermission])
+  }, [locationPermission, locationEnabled])
 
   /**
    * Sync search query and hideWithoutLocation to URL params
@@ -521,7 +522,6 @@ export default function Page() {
 
     console.log('[PAGE] Manually requesting location permission')
     setLocationPermission('pending')
-    setShowLocationPrompt(false)
 
     // Call the location request function directly (maintains user gesture context for iOS)
     if (locationRequestFnRef.current) {
@@ -1035,26 +1035,50 @@ export default function Page() {
           </div>
           {/* Controls */}
           <div className="flex items-center gap-2 min-w-0">
-            {/* Location status badge */}
+            {/* GPS toggle button */}
             <button
               onClick={() => {
-                // Trigger native permission prompt immediately via user gesture
-                handleRequestLocation()
-                if (locationPermission !== 'granted') {
-                  setShowLocationPrompt(true)
+                // Toggle location: if on, disable; if off, request permission then enable watch
+                if (locationEnabled) {
+                  setLocationEnabled(false)
+                } else {
+                  if (typeof window !== 'undefined' && 'geolocation' in navigator) {
+                    if (locationPermission === 'granted') {
+                      setLocationEnabled(true)
+                    } else {
+                      setLocationPermission('pending')
+                      navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                          const loc = `${pos.coords.latitude},${pos.coords.longitude}`
+                          setUserLocation(loc)
+                          try { window.localStorage.setItem('gps:userLocation', loc); window.localStorage.setItem('gps:ts', String(Date.now())) } catch {}
+                          setLocationPermission('granted')
+                          setLocationEnabled(true)
+                          if (locationRequestFnRef.current) {
+                            try { locationRequestFnRef.current() } catch {}
+                          }
+                        },
+                        (err) => {
+                          console.warn('[NAV] geolocation error', err)
+                          setLocationPermission('denied')
+                        },
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                      )
+                    }
+                  }
                 }
               }}
               className={`flex items-center gap-1 sm:gap-2 text-[11px] sm:text-xs font-mono border-2 px-2 sm:px-3 py-1 transition-all ${
-                locationPermission === 'granted'
-                  ? 'border-cyan-500 text-cyan-500 cursor-default'
+                locationEnabled && locationPermission === 'granted'
+                  ? 'border-cyan-500 text-cyan-500'
                   : locationPermission === 'denied'
-                    ? 'border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black cursor-pointer'
-                    : 'border-amber-500/50 text-amber-500/50 hover:bg-amber-500/50 hover:text-black cursor-pointer animate-pulse'
+                    ? 'border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black'
+                    : 'border-amber-500/50 text-amber-500/50 hover:bg-amber-500/50 hover:text-black'
               }`}
             >
               <Navigation className={`w-3 h-3 ${locationPermission === 'pending' ? 'animate-pulse' : ''}`} />
               <span>
-                {locationPermission === 'granted' ? 'GPS' : locationPermission === 'denied' ? 'NO GPS' : 'GPS?'}
+                {locationPermission === 'granted' ? (locationEnabled ? 'GPS ON' : 'GPS OFF') : (locationPermission === 'denied' ? 'NO GPS' : 'GPS?')}
               </span>
             </button>
 
@@ -2002,95 +2026,7 @@ export default function Page() {
         </a>
       </div>
 
-      {/* Location Permission Prompt */}
-      {showLocationPrompt && (
-        <div className="absolute inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-fade-in">
-          <div className="max-w-md w-full bg-black border-4 border-amber-500 animate-modal-in">
-            <div className="border-2 border-amber-500/50 p-6 space-y-4 font-mono">
-              <div className="flex items-center justify-between border-b-2 border-amber-500 pb-3 mb-4">
-                <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ LOCATION REQUEST ╗</div>
-                <button
-                  onClick={() => setShowLocationPrompt(false)}
-                  className="w-8 h-8 border-2 border-amber-500 hover:bg-amber-500 hover:text-black text-amber-500 transition-all font-bold"
-                >
-                  X
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-center mb-4">
-                  <div className="relative w-20 h-20">
-                    <div className="absolute inset-0 border-4 border-cyan-500 animate-pulse" />
-                    <div className="absolute inset-2 flex items-center justify-center">
-                      <Navigation className="w-10 h-10 text-cyan-500" />
-                    </div>
-                    <div className="absolute inset-0 border-2 border-cyan-500/30 animate-ping" />
-                  </div>
-                </div>
-
-                <h2 className="text-xl font-bold text-amber-500 tracking-wide text-center">
-                  &gt; ENABLE LOCATION ACCESS
-                </h2>
-
-                <p className="text-sm text-amber-400 leading-relaxed">
-                  Allow location access to:
-                </p>
-
-                <ul className="space-y-2 text-sm text-amber-400">
-                  <li className="flex items-start gap-2">
-                    <span className="text-cyan-500 mt-0.5">▸</span>
-                    <span>See your position on the map</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-cyan-500 mt-0.5">▸</span>
-                    <span>View incidents near you</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-cyan-500 mt-0.5">▸</span>
-                    <span>Get distance to incidents</span>
-                  </li>
-                </ul>
-
-                <div className="bg-amber-500/10 border-2 border-amber-500/50 p-3 text-xs text-amber-500/70">
-                  <div className="mb-1 font-bold text-amber-500">NOTE:</div>
-                  Your location is only used in your browser and is never stored or transmitted to our servers.
-                </div>
-
-                <div className="space-y-3 pt-4">
-                  <button
-                    onClick={handleRequestLocation}
-                    disabled={locationPermission === 'pending'}
-                    className={`w-full py-3 px-6 font-bold tracking-wider transition-all ${
-                      locationPermission === 'pending'
-                        ? 'bg-amber-500/50 text-black/50 cursor-not-allowed'
-                        : 'bg-amber-500 text-black hover:bg-amber-400 cursor-pointer'
-                    }`}
-                  >
-                    {locationPermission === 'pending' ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        REQUESTING...
-                      </span>
-                    ) : (
-                      '[ENTER] ALLOW LOCATION'
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => setShowLocationPrompt(false)}
-                    className="w-full border-2 border-amber-500 text-amber-500 py-3 px-6 hover:bg-amber-500 hover:text-black transition-all font-bold tracking-wider"
-                  >
-                    [ESC] MAYBE LATER
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Fullscreen location prompt removed per request; GPS now toggled via nav button */}
     </div>
   )
 }
