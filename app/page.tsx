@@ -120,12 +120,6 @@ export default function Page() {
     setSearchTags(searchTags.filter((t) => t !== tag))
   }
 
-  const filteredSuggestions = useMemo(() => {
-    return availableTags.filter(
-      (tag) => tag.toLowerCase().includes(mobileFilterSearchInput.toLowerCase()) && !searchTags.includes(tag),
-    )
-  }, [availableTags, mobileFilterSearchInput, searchTags])
-
   /**
    * Check URL params on client mount to skip landing page if returning
    */
@@ -415,6 +409,15 @@ export default function Page() {
     })
     return Array.from(tags).sort()
   }, [items])
+
+  /**
+   * Filtered tag suggestions for mobile filter search
+   */
+  const filteredSuggestions = useMemo(() => {
+    return availableTags.filter(
+      (tag) => tag.toLowerCase().includes(mobileFilterSearchInput.toLowerCase()) && !searchTags.includes(tag),
+    )
+  }, [availableTags, mobileFilterSearchInput, searchTags])
 
   /**
    * Filters incidents based on time range, search tags, and geographic bounds
