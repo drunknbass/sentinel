@@ -741,7 +741,7 @@ export default function Page() {
       {/* Legend - Bottom left corner with hover-to-expand - Hide when loading */}
       {!(loading && !isRefreshing) && (
         <div
-          className="absolute left-6 safe-bottom-with-offset z-[25] md:z-40 bg-black border border-amber-500 max-w-xs group hover:max-w-sm transition-all duration-300 pointer-events-auto"
+          className="absolute left-6 safe-bottom-legend z-[25] md:z-40 bg-black border border-amber-500 max-w-xs group hover:max-w-sm transition-all duration-300 pointer-events-auto"
           onMouseEnter={() => setFilterPanelExpanded(false)}
         >
         <div className="border border-amber-500/50 p-1.5">
@@ -1332,7 +1332,7 @@ export default function Page() {
 
       {/* Mobile unified bottom sheet - Terminal style with drag support */}
       {mobileSheetType && (
-        <div className="md:hidden absolute inset-0 z-50 flex items-end animate-slide-up no-overscroll">
+        <div className="md:hidden absolute left-0 right-0 bottom-0 safe-top-with-offset z-50 flex flex-col no-overscroll">
           <div
             className="absolute inset-0 bg-black/80 backdrop-blur-sm no-overscroll"
             onClick={() => setMobileSheetType(null)}
@@ -1340,9 +1340,8 @@ export default function Page() {
           />
 
           <div
-            className="relative w-full bg-black border-t-4 border-amber-500 overflow-hidden"
+            className="relative w-full h-full bg-black border-t-4 border-amber-500 overflow-hidden flex flex-col"
             style={{
-              maxHeight: '85vh',
               transform: `translateY(${sheetDragOffset}px)`,
               transition: sheetDragOffset === 0 ? 'transform 0.3s ease-out' : 'none'
             }}
@@ -1385,8 +1384,7 @@ export default function Page() {
                   incidentsScrollRef.current = el
                 }
               }}
-              className="overflow-y-auto"
-              style={{ maxHeight: 'calc(85vh - 3rem)' }}
+              className="overflow-y-auto flex-1"
             >
               {mobileSheetType === 'filters' && (
                 <div className="p-6 space-y-6 font-mono">

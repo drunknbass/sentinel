@@ -129,7 +129,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         style.textContent = `
           .leaflet-bottom.leaflet-right {
             bottom: 24px !important;
-            right: 24px !important;
+            right: 28px !important;
           }
           .leaflet-control-zoom {
             border: 2px solid #ffb000 !important;
