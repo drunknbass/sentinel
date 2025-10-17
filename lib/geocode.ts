@@ -31,8 +31,8 @@ async function geocodeWithAppleMaps(address: string, area: string | null): Promi
     return { lat: null, lon: null };
   }
 
-  // Construct the query
-  const q = `${address}${area ? `, ${area}` : ''}, Riverside County, CA`;
+  // Construct the query - just address and area, no extra county/state
+  const q = `${address}${area ? `, ${area}` : ''}`;
 
   // Use Riverside County center as user location for better local results
   const url = new URL('https://maps-api.apple.com/v1/geocode');
