@@ -8,19 +8,36 @@ let cachedAccessToken: { token: string; expires: number } | null = null;
  * Access tokens are valid for 30 minutes
  */
 export async function generateAppleMapsToken(): Promise<string | null> {
-  // Check if we have a valid cached access token
-  if (cachedAccessToken && cachedAccessToken.expires > Date.now()) {
-    console.log('[APPLE_MAPS] Using cached access token');
-    return cachedAccessToken.token;
+  const timestamp = new Date().toISOString();
+  console.log(`[APPLE_MAPS ${timestamp}] ========== TOKEN GENERATION START ==========`);
+
+  // Check cache status
+  if (cachedAccessToken) {
+    const isValid = cachedAccessToken.expires > Date.now();
+    const timeLeft = Math.floor((cachedAccessToken.expires - Date.now()) / 1000);
+    console.log(`[APPLE_MAPS ${timestamp}] Cache status: EXISTS, valid=${isValid}, timeLeft=${timeLeft}s`);
+
+    if (isValid) {
+      console.log(`[APPLE_MAPS ${timestamp}] Using cached access token (${timeLeft}s remaining)`);
+      console.log(`[APPLE_MAPS ${timestamp}] ========== TOKEN GENERATION END (CACHED) ==========`);
+      return cachedAccessToken.token;
+    } else {
+      console.log(`[APPLE_MAPS ${timestamp}] Cache expired, clearing...`);
+      cachedAccessToken = null;
+    }
+  } else {
+    console.log(`[APPLE_MAPS ${timestamp}] Cache status: EMPTY`);
   }
 
-  // TEST: Try using pre-generated token first
+  // TEST: Try using pre-generated token FIRST
   const testToken = process.env.APPLE_MAPKIT_TEST_TOKEN || 'eyJraWQiOiJKUDNDQjQzRFUyIiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJTS1c5N1I2MzRNIiwiaWF0IjoxNzYwNjQ4NzM1LCJleHAiOjE3NjEyODkxOTl9.IZIezMgJRGG5Eevt4qrlqP-iOUet7w_cSTgRB3P8iJrYmsvjuL1npJ7dx2No-wzU9-sms6Gw4uPvmmXf6G-Yow';
+  const hasTestToken = testToken && testToken !== 'SKIP';
 
-  if (testToken && testToken !== 'SKIP') {
-    console.log('[APPLE_MAPS] Trying pre-generated test token...');
+  console.log(`[APPLE_MAPS ${timestamp}] Test token: ${hasTestToken ? 'PRESENT' : 'SKIP'}`);
+
+  if (hasTestToken) {
+    console.log(`[APPLE_MAPS ${timestamp}] Attempting test token exchange...`);
     try {
-      // Try to exchange the test token directly
       const tokenUrl = 'https://maps-api.apple.com/v1/token';
       const response = await fetch(tokenUrl, {
         method: 'GET',
@@ -29,36 +46,45 @@ export async function generateAppleMapsToken(): Promise<string | null> {
         }
       });
 
+      console.log(`[APPLE_MAPS ${timestamp}] Test token response: ${response.status} ${response.statusText}`);
+
       if (response.ok) {
         const data = await response.json();
         const accessToken = data.accessToken;
         const expiresInSeconds = data.expiresInSeconds || 1800;
 
         if (accessToken) {
-          console.log('[APPLE_MAPS] Test token worked! Got access token');
-          // Cache the access token
+          console.log(`[APPLE_MAPS ${timestamp}] ✅ Test token SUCCESS! Got access token, expires in ${expiresInSeconds}s`);
           cachedAccessToken = {
             token: accessToken,
             expires: Date.now() + (expiresInSeconds * 1000) - 60000
           };
+          console.log(`[APPLE_MAPS ${timestamp}] ========== TOKEN GENERATION END (TEST TOKEN) ==========`);
           return accessToken;
+        } else {
+          console.error(`[APPLE_MAPS ${timestamp}] ❌ Test token response missing accessToken:`, data);
         }
       } else {
         const error = await response.text();
-        console.error('[APPLE_MAPS] Test token failed:', response.status, error);
+        console.error(`[APPLE_MAPS ${timestamp}] ❌ Test token failed: ${response.status} - ${error}`);
       }
     } catch (err) {
-      console.error('[APPLE_MAPS] Test token error:', err);
+      console.error(`[APPLE_MAPS ${timestamp}] ❌ Test token exception:`, err);
     }
   }
 
-  // Fall back to generating token
+  // Fall back to generating token from credentials
+  console.log(`[APPLE_MAPS ${timestamp}] Attempting JWT generation with credentials...`);
+
   const teamId = process.env.APPLE_MAPKIT_TEAM_ID;
   const keyId = process.env.APPLE_MAPKIT_KEY_ID;
   let privateKey = process.env.APPLE_MAPKIT_PRIVATE_KEY;
 
+  console.log(`[APPLE_MAPS ${timestamp}] Credentials check: teamId=${!!teamId}, keyId=${!!keyId}, privateKey=${!!privateKey}`);
+
   if (!teamId || !keyId || !privateKey) {
-    console.log('[APPLE_MAPS] Missing Apple MapKit credentials');
+    console.error(`[APPLE_MAPS ${timestamp}] ❌ Missing Apple MapKit credentials`);
+    console.log(`[APPLE_MAPS ${timestamp}] ========== TOKEN GENERATION END (NO CREDS) ==========`);
     return null;
   }
 
@@ -119,6 +145,7 @@ export async function generateAppleMapsToken(): Promise<string | null> {
 
   try {
     // Step 1: Generate JWT auth token
+    console.log(`[APPLE_MAPS ${timestamp}] Signing JWT with ES256...`);
     const authToken = jwt.sign(
       {
         iss: teamId,
@@ -132,8 +159,8 @@ export async function generateAppleMapsToken(): Promise<string | null> {
       }
     );
 
-    console.log('[APPLE_MAPS] Generated auth token, exchanging for access token...');
-    console.log('[APPLE_MAPS] Team ID:', teamId, 'Key ID:', keyId);
+    console.log(`[APPLE_MAPS ${timestamp}] ✅ JWT signed successfully. Team ID: ${teamId}, Key ID: ${keyId}`);
+    console.log(`[APPLE_MAPS ${timestamp}] Exchanging JWT for access token...`);
 
     // Step 2: Exchange auth token for access token
     const tokenUrl = 'https://maps-api.apple.com/v1/token';
@@ -144,19 +171,25 @@ export async function generateAppleMapsToken(): Promise<string | null> {
       }
     });
 
+    console.log(`[APPLE_MAPS ${timestamp}] Exchange response: ${response.status} ${response.statusText}`);
+
     if (!response.ok) {
       const error = await response.text();
-      console.error('[APPLE_MAPS] Token exchange failed:', response.status, error);
-      console.error('[APPLE_MAPS] Credentials used - Team ID:', teamId, 'Key ID:', keyId);
+      console.error(`[APPLE_MAPS ${timestamp}] ❌ Token exchange FAILED: ${response.status} - ${error}`);
+      console.error(`[APPLE_MAPS ${timestamp}] Credentials: Team ID=${teamId}, Key ID=${keyId}`);
 
       if (response.status === 401) {
-        console.error('[APPLE_MAPS] 401 typically means:');
-        console.error('  1. Team ID and Key ID mismatch');
-        console.error('  2. Private key doesn\'t match the Key ID');
-        console.error('  3. Private key is malformed (check Vercel env var)');
-        console.error('[APPLE_MAPS] Verify the private key starts with:',
-                     privateKey.substring(0, 30).replace(/\n/g, '\\n'));
+        console.error(`[APPLE_MAPS ${timestamp}] 401 Unauthorized typically means:`);
+        console.error(`[APPLE_MAPS ${timestamp}]   1. Team ID and Key ID mismatch`);
+        console.error(`[APPLE_MAPS ${timestamp}]   2. Private key doesn't match the Key ID`);
+        console.error(`[APPLE_MAPS ${timestamp}]   3. Private key is malformed`);
+        console.error(`[APPLE_MAPS ${timestamp}] Key starts with: ${privateKey.substring(0, 30).replace(/\n/g, '\\n')}...`);
+
+        // Clear the cached token since it's invalid
+        cachedAccessToken = null;
+        console.error(`[APPLE_MAPS ${timestamp}] Cleared invalid cached token`);
       }
+      console.log(`[APPLE_MAPS ${timestamp}] ========== TOKEN GENERATION END (EXCHANGE FAILED) ==========`);
       return null;
     }
 
@@ -165,7 +198,8 @@ export async function generateAppleMapsToken(): Promise<string | null> {
     const expiresInSeconds = data.expiresInSeconds || 1800; // Default 30 minutes
 
     if (!accessToken) {
-      console.error('[APPLE_MAPS] No access token in response');
+      console.error(`[APPLE_MAPS ${timestamp}] ❌ No accessToken in response:`, data);
+      console.log(`[APPLE_MAPS ${timestamp}] ========== TOKEN GENERATION END (NO ACCESS TOKEN) ==========`);
       return null;
     }
 
@@ -175,24 +209,26 @@ export async function generateAppleMapsToken(): Promise<string | null> {
       expires: Date.now() + (expiresInSeconds * 1000) - 60000 // Refresh 1 minute before expiry
     };
 
-    console.log('[APPLE_MAPS] Got access token, expires in', expiresInSeconds, 'seconds');
+    console.log(`[APPLE_MAPS ${timestamp}] ✅ JWT exchange SUCCESS! Access token expires in ${expiresInSeconds}s`);
+    console.log(`[APPLE_MAPS ${timestamp}] ========== TOKEN GENERATION END (JWT SUCCESS) ==========`);
     return accessToken;
   } catch (err: any) {
-    console.error('[APPLE_MAPS] Failed to get access token:', err?.message || err);
+    console.error(`[APPLE_MAPS ${timestamp}] ❌ EXCEPTION during token generation:`, err?.message || err);
 
     if (err?.message?.includes('secretOrPrivateKey')) {
-      console.error('[APPLE_MAPS] Private key format issue detected!');
-      console.error('[APPLE_MAPS] Key should start with: -----BEGIN PRIVATE KEY-----');
-      console.error('[APPLE_MAPS] Current key length:', privateKey?.length || 0);
-      console.error('[APPLE_MAPS] First 50 chars:', privateKey?.substring(0, 50).replace(/\n/g, '\\n'));
-      console.error('[APPLE_MAPS] Tip: In Vercel, paste the raw .p8 content, no base64 encoding needed');
+      console.error(`[APPLE_MAPS ${timestamp}] Private key format issue detected!`);
+      console.error(`[APPLE_MAPS ${timestamp}] Key should start with: -----BEGIN PRIVATE KEY-----`);
+      console.error(`[APPLE_MAPS ${timestamp}] Current key length:`, privateKey?.length || 0);
+      console.error(`[APPLE_MAPS ${timestamp}] First 50 chars:`, privateKey?.substring(0, 50).replace(/\n/g, '\\n'));
+      console.error(`[APPLE_MAPS ${timestamp}] Tip: In Vercel, paste the raw .p8 content`);
     } else if (err?.code === 'ERR_OSSL_EC_INVALID_PRIVATE_KEY') {
-      console.error('[APPLE_MAPS] Invalid EC private key format');
-      console.error('[APPLE_MAPS] The private key is corrupted or not an ES256 key');
+      console.error(`[APPLE_MAPS ${timestamp}] Invalid EC private key format`);
+      console.error(`[APPLE_MAPS ${timestamp}] The private key is corrupted or not an ES256 key`);
     } else if (err?.message?.includes('error:')) {
-      console.error('[APPLE_MAPS] OpenSSL error - likely malformed private key');
-      console.error('[APPLE_MAPS] Check that the private key in Vercel matches your .p8 file exactly');
+      console.error(`[APPLE_MAPS ${timestamp}] OpenSSL error - likely malformed private key`);
+      console.error(`[APPLE_MAPS ${timestamp}] Check that the private key in Vercel matches your .p8 file`);
     }
+    console.log(`[APPLE_MAPS ${timestamp}] ========== TOKEN GENERATION END (EXCEPTION) ==========`);
     return null;
   }
 }
