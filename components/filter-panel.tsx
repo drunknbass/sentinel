@@ -76,12 +76,12 @@ export default function FilterPanel({
           <div className="p-5 space-y-6 max-h-[70vh] overflow-y-auto">
             {/* Time range slider */}
             <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wide mb-3 block">Time Range</label>
+              <label className="text-xs text-green-400 font-mono uppercase tracking-wider mb-3 block terminal-text">Time Range</label>
               <div className="space-y-3">
                 {/* Visual slider track */}
-                <div className="relative h-2 bg-black/30 rounded-full overflow-hidden">
+                <div className="relative h-2 bg-black/50 terminal-border rounded-sm overflow-hidden">
                   <div
-                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-300"
+                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-green-500 to-cyan-500 transition-all duration-300"
                     style={{
                       width: `${(TIME_RANGES.findIndex((r) => r.hours === timeRange) / (TIME_RANGES.length - 1)) * 100}%`,
                     }}
@@ -94,10 +94,10 @@ export default function FilterPanel({
                     <button
                       key={range.hours}
                       onClick={() => onTimeRangeChange(range.hours)}
-                      className={`py-2.5 rounded-lg text-xs font-bold transition-all ${
+                      className={`py-2.5 rounded text-xs font-mono font-bold transition-all ${
                         timeRange === range.hours
-                          ? "bg-white text-black"
-                          : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white"
+                          ? "bg-green-500 text-black terminal-border"
+                          : "bg-black/50 text-green-400 terminal-border hover:bg-green-500/20"
                       }`}
                     >
                       {range.label}
@@ -109,12 +109,12 @@ export default function FilterPanel({
 
             {/* Region filter */}
             <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wide mb-2 block">Region</label>
+              <label className="text-xs text-green-400 font-mono uppercase tracking-wider mb-2 block terminal-text">Region</label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => onRegionChange("")}
-                  className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                    selectedRegion === "" ? "bg-white text-black" : "bg-white/5 hover:bg-white/10"
+                  className={`py-2.5 rounded text-sm font-mono font-semibold transition-all ${
+                    selectedRegion === "" ? "bg-green-500 text-black terminal-border" : "bg-black/50 text-green-400 terminal-border hover:bg-green-500/20"
                   }`}
                 >
                   All
@@ -129,8 +129,8 @@ export default function FilterPanel({
                   <button
                     key={key}
                     onClick={() => onRegionChange(key)}
-                    className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                      selectedRegion === key ? "bg-white text-black" : "bg-white/5 hover:bg-white/10"
+                    className={`py-2.5 rounded text-sm font-mono font-semibold transition-all ${
+                      selectedRegion === key ? "bg-green-500 text-black terminal-border" : "bg-black/50 text-green-400 terminal-border hover:bg-green-500/20"
                     }`}
                   >
                     {label}
@@ -141,12 +141,12 @@ export default function FilterPanel({
 
             {/* Category filter */}
             <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wide mb-2 block">Category</label>
+              <label className="text-xs text-green-400 font-mono uppercase tracking-wider mb-2 block terminal-text">Category</label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => onCategoryChange("")}
-                  className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                    selectedCategory === "" ? "bg-white text-black" : "bg-white/5 hover:bg-white/10"
+                  className={`py-2.5 rounded text-sm font-mono font-semibold transition-all ${
+                    selectedCategory === "" ? "bg-green-500 text-black terminal-border" : "bg-black/50 text-green-400 terminal-border hover:bg-green-500/20"
                   }`}
                 >
                   All
@@ -162,8 +162,8 @@ export default function FilterPanel({
                   <button
                     key={key}
                     onClick={() => onCategoryChange(key)}
-                    className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                      selectedCategory === key ? "bg-white text-black" : "bg-white/5 hover:bg-white/10"
+                    className={`py-2.5 rounded text-sm font-mono font-semibold transition-all ${
+                      selectedCategory === key ? "bg-green-500 text-black terminal-border" : "bg-black/50 text-green-400 terminal-border hover:bg-green-500/20"
                     }`}
                   >
                     {label}
@@ -174,7 +174,7 @@ export default function FilterPanel({
 
             {/* Priority filter */}
             <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wide mb-2 block">
+              <label className="text-xs text-green-400 font-mono uppercase tracking-wider mb-2 block terminal-text">
                 Min Priority:{" "}
                 {minPriority <= 20 ? "Critical" : minPriority <= 40 ? "High" : minPriority <= 60 ? "Medium" : "All"}
               </label>
@@ -188,8 +188,8 @@ export default function FilterPanel({
                   <button
                     key={value}
                     onClick={() => onPriorityChange(value)}
-                    className={`py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                      minPriority === value ? "bg-white text-black" : "bg-white/5 hover:bg-white/10"
+                    className={`py-2.5 rounded text-xs font-mono font-semibold transition-all ${
+                      minPriority === value ? "bg-green-500 text-black terminal-border" : "bg-black/50 text-green-400 terminal-border hover:bg-green-500/20"
                     }`}
                   >
                     {label}
@@ -207,7 +207,7 @@ export default function FilterPanel({
                   onTimeRangeChange(2)
                   onRegionChange("")
                 }}
-                className="w-full py-2.5 bg-red-500/20 border border-red-500/30 rounded-xl text-sm font-semibold hover:bg-red-500/30 transition-colors"
+                className="w-full py-2.5 bg-red-500/20 terminal-border rounded text-sm font-mono font-semibold hover:bg-red-500/30 transition-colors text-red-400"
               >
                 Clear All Filters
               </button>
