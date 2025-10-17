@@ -73,6 +73,9 @@ export default function Page() {
   // Auto-refresh toggle
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
 
+  // nocache flag from URL
+  const [nocache, setNocache] = useState(false)
+
   // Critical carousel state
   const [criticalCarouselIndex, setCriticalCarouselIndex] = useState(0)
   const [showCriticalCarousel, setShowCriticalCarousel] = useState(true)
@@ -85,6 +88,10 @@ export default function Page() {
       const params = new URLSearchParams(window.location.search)
       if (params.get('view') === 'map') {
         setShowLanding(false)
+      }
+      // Check for nocache parameter
+      if (params.get('nocache') === '1' || params.get('nocache') === 'true') {
+        setNocache(true)
       }
     }
   }, [])
@@ -203,7 +210,8 @@ export default function Page() {
         timeRange,
         since,
         geocode: true,
-        station: selectedRegion
+        station: selectedRegion,
+        nocache
       })
 
       setLoading(true)
@@ -224,7 +232,8 @@ export default function Page() {
           minPriority,
           since,
           geocode: true, // Enable geocoding to show markers on map
-          station: selectedRegion || undefined
+          station: selectedRegion || undefined,
+          nocache
         }, {
           signal: abortController.signal
         })
@@ -276,7 +285,7 @@ export default function Page() {
       abortController.abort() // Cancel in-flight request when filters change
       if (interval) clearInterval(interval)
     }
-  }, [selectedCategory, minPriority, timeRange, showLanding, autoRefreshEnabled, selectedRegion])
+  }, [selectedCategory, minPriority, timeRange, showLanding, autoRefreshEnabled, selectedRegion, nocache])
 
   /**
    * Auto-advances critical carousel every 8 seconds

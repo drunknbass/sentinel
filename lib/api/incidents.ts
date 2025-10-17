@@ -12,6 +12,7 @@ export type IncidentFilters = {
   geocode?: boolean;
   limit?: number;
   station?: string;
+  nocache?: boolean;
 };
 
 export type IncidentsResponse = {
@@ -61,6 +62,7 @@ const buildQuery = (filters: IncidentFilters) => {
   if (filters.geocode) params.set('geocode', '1');
   if (filters.bbox?.length === 4) params.set('bbox', filters.bbox.join(','));
   if (filters.station) params.set('station', filters.station);
+  if (filters.nocache) params.set('nocache', '1');
 
   return params.toString();
 };
