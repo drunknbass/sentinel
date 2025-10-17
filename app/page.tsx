@@ -628,19 +628,18 @@ export default function Page() {
         </div>
       )}
 
-      {/* Incident detail side panel for desktop */}
+      {/* Incident detail popup panel for desktop */}
       {selectedIncident && !showBottomSheet && (
-        <div className="hidden md:block absolute top-0 bottom-0 right-0 z-40 w-96 pointer-events-none">
+        <div className="hidden md:block absolute top-20 right-6 z-40 w-80 pointer-events-none">
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-3xl border-l border-white/20 shadow-2xl pointer-events-auto animate-slide-in-right overflow-y-auto"
+            className="relative bg-black/60 backdrop-blur-3xl border border-white/20 rounded-3xl shadow-2xl pointer-events-auto animate-modal-in overflow-hidden"
             style={{
               backdropFilter: "blur(40px) saturate(180%)",
               WebkitBackdropFilter: "blur(40px) saturate(180%)",
-              boxShadow: "-8px 0 32px 0 rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
+              boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
             }}
           >
-            {/* Add top padding to avoid navbar overlap */}
-            <div className="pt-20 p-6 space-y-4">
+            <div className="p-6 space-y-4">
               <button
                 onClick={() => setSelectedIncident(null)}
                 className="flex items-center justify-center w-8 h-8 bg-white/10 hover:bg-white/20 rounded-full text-white/80 hover:text-white transition-all mb-4"

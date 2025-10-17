@@ -322,13 +322,12 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         duration: 0.5,
       })
 
-      // If side panel is open, pan the map to center the pin in the visible area
+      // If side panel is open, pan the map slightly to avoid overlap with popup
       if (sidePanelOpen) {
-        // Panel is 384px wide, so we need to shift the map left by half that amount (192px)
-        // to center the pin in the remaining visible area
+        // Popup is 320px wide (w-80), shift map left by 160px to keep pin visible
         setTimeout(() => {
           if (mapInstanceRef.current) {
-            mapInstanceRef.current.panBy([192, 0], { animate: true, duration: 0.3 })
+            mapInstanceRef.current.panBy([160, 0], { animate: true, duration: 0.3 })
           }
         }, 300) // Wait for initial zoom animation to mostly complete
       }
