@@ -240,11 +240,11 @@ body {
 /* Added modal animation for desktop detail view */
 @keyframes modalIn {
   from {
-    transform: scale(0.95);
+    transform: scale(0.9) translateY(-20px);
     opacity: 0;
   }
   to {
-    transform: scale(1);
+    transform: scale(1) translateY(0);
     opacity: 1;
   }
 }
@@ -298,7 +298,7 @@ body {
 }
 
 .animate-modal-in {
-  animation: modalIn 0.3s ease-out;
+  animation: modalIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .animate-slide-in-right {

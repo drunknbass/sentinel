@@ -316,10 +316,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         console.log('[MAP] Saved user view:', savedViewRef.current)
       }
 
-      // Zoom in close to the selected incident (level 18 for detailed view)
-      mapInstanceRef.current.setView([selectedIncident.lat, selectedIncident.lon], 18, {
-        animate: true,
-        duration: 0.5,
+      // Smoothly fly to the selected incident (level 18 for detailed view)
+      mapInstanceRef.current.flyTo([selectedIncident.lat, selectedIncident.lon], 18, {
+        duration: 1.5, // Slower animation so user can follow the movement
       })
 
       // If side panel is open, pan the map slightly to avoid overlap with popup
@@ -327,9 +326,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         // Popup is 320px wide (w-80), shift map left by 160px to keep pin visible
         setTimeout(() => {
           if (mapInstanceRef.current) {
-            mapInstanceRef.current.panBy([160, 0], { animate: true, duration: 0.3 })
+            mapInstanceRef.current.panBy([160, 0], { animate: true, duration: 0.8 })
           }
-        }, 300) // Wait for initial zoom animation to mostly complete
+        }, 1500) // Wait for flyTo animation to complete
       }
 
       console.log('[MAP] Zoomed to incident:', selectedIncident.incident_id, sidePanelOpen ? 'with panel offset' : '')
@@ -338,7 +337,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
     else if (!selectedIncident && savedViewRef.current) {
       console.log('[MAP] Restoring user view:', savedViewRef.current)
       mapInstanceRef.current.flyTo(savedViewRef.current.center, savedViewRef.current.zoom, {
-        duration: 0.5,
+        duration: 1.2, // Smooth animation back to original position
       })
       savedViewRef.current = null
     }
