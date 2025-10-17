@@ -2,9 +2,9 @@
 
 import { useState, useMemo } from "react"
 import type { IncidentsResponse } from "@/lib/api/incidents"
+import { X, ChevronDown } from "lucide-react"
 
 type Incident = IncidentsResponse["items"][number]
-import { X } from "lucide-react"
 
 interface IncidentListViewProps {
   items: Incident[]
@@ -12,6 +12,66 @@ interface IncidentListViewProps {
   onSelectIncident: (incident: Incident) => void
   getPriorityLabel: (priority: number) => string
   getPriorityColor: (priority: number) => string
+}
+
+interface DropdownProps {
+  label: string
+  value: string
+  options: { value: string; label: string }[]
+  onChange: (value: string) => void
+}
+
+function CustomDropdown({ label, value, options, onChange }: DropdownProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const selectedOption = options.find((opt) => opt.value === value)
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-4 py-2.5 bg-black/60 backdrop-blur-xl border border-white/20 rounded-full text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 cursor-pointer hover:bg-black/80 hover:border-white/30 transition-all shadow-lg flex items-center justify-between gap-2"
+        style={{
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+          boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
+        }}
+      >
+        <span>{selectedOption?.label || label}</span>
+        <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <div
+            className="absolute top-full left-0 right-0 mt-2 bg-black/90 backdrop-blur-3xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden z-50 animate-slide-down"
+            style={{
+              backdropFilter: "blur(40px) saturate(180%)",
+              WebkitBackdropFilter: "blur(40px) saturate(180%)",
+              boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
+            }}
+          >
+            {options.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => {
+                  onChange(option.value)
+                  setIsOpen(false)
+                }}
+                className={`w-full px-4 py-3 text-left text-sm font-semibold transition-all ${
+                  value === option.value
+                    ? "bg-white/20 text-white"
+                    : "text-gray-300 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
 }
 
 export default function IncidentListView({
@@ -52,10 +112,15 @@ export default function IncidentListView({
     return filtered
   }, [items, sortBy, filterPriority, filterCategory, getPriorityLabel])
 
+  const categoryOptions = [
+    { value: "all", label: "All Categories" },
+    ...categories.map((cat) => ({ value: cat, label: cat })),
+  ]
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-center justify-end animate-fade-in">
       <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+        className="absolute inset-0 bg-black/60 backdrop-blur-md"
         style={{
           backdropFilter: "blur(16px) saturate(180%)",
           WebkitBackdropFilter: "blur(16px) saturate(180%)",
@@ -64,7 +129,7 @@ export default function IncidentListView({
       />
 
       <div
-        className="relative w-full md:max-w-4xl md:max-h-[85vh] h-full md:h-auto bg-black/60 backdrop-blur-3xl border border-white/20 md:rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+        className="relative h-full w-full md:w-[500px] md:h-auto md:max-h-[calc(100vh-120px)] md:top-20 md:right-6 md:rounded-3xl bg-black/60 backdrop-blur-3xl border-l md:border border-white/20 shadow-2xl flex flex-col overflow-hidden animate-slide-in-right"
         style={{
           backdropFilter: "blur(40px) saturate(180%)",
           WebkitBackdropFilter: "blur(40px) saturate(180%)",
@@ -89,71 +154,36 @@ export default function IncidentListView({
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <select
+          <div className="flex flex-col gap-3">
+            <CustomDropdown
+              label="Sort by"
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as "time" | "priority")}
-              className="px-4 py-2.5 bg-black/60 backdrop-blur-xl border border-white/20 rounded-full text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 cursor-pointer hover:bg-black/80 hover:border-white/30 transition-all shadow-lg appearance-none"
-              style={{
-                backdropFilter: "blur(24px) saturate(180%)",
-                WebkitBackdropFilter: "blur(24px) saturate(180%)",
-                boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
-              }}
-            >
-              <option value="time" className="bg-[#1a2332] text-white font-semibold">
-                Sort by Time
-              </option>
-              <option value="priority" className="bg-[#1a2332] text-white font-semibold">
-                Sort by Priority
-              </option>
-            </select>
+              options={[
+                { value: "time", label: "Sort by Time" },
+                { value: "priority", label: "Sort by Priority" },
+              ]}
+              onChange={(val) => setSortBy(val as "time" | "priority")}
+            />
 
-            <select
+            <CustomDropdown
+              label="Filter Priority"
               value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value)}
-              className="px-4 py-2.5 bg-black/60 backdrop-blur-xl border border-white/20 rounded-full text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 cursor-pointer hover:bg-black/80 hover:border-white/30 transition-all shadow-lg appearance-none"
-              style={{
-                backdropFilter: "blur(24px) saturate(180%)",
-                WebkitBackdropFilter: "blur(24px) saturate(180%)",
-                boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
-              }}
-            >
-              <option value="all" className="bg-[#1a2332] text-white font-semibold">
-                All Priorities
-              </option>
-              <option value="CRITICAL" className="bg-[#1a2332] text-white font-semibold">
-                Critical
-              </option>
-              <option value="HIGH" className="bg-[#1a2332] text-white font-semibold">
-                High
-              </option>
-              <option value="MEDIUM" className="bg-[#1a2332] text-white font-semibold">
-                Medium
-              </option>
-              <option value="LOW" className="bg-[#1a2332] text-white font-semibold">
-                Low
-              </option>
-            </select>
+              options={[
+                { value: "all", label: "All Priorities" },
+                { value: "CRITICAL", label: "Critical" },
+                { value: "HIGH", label: "High" },
+                { value: "MEDIUM", label: "Medium" },
+                { value: "LOW", label: "Low" },
+              ]}
+              onChange={setFilterPriority}
+            />
 
-            <select
+            <CustomDropdown
+              label="Filter Category"
               value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="px-4 py-2.5 bg-black/60 backdrop-blur-xl border border-white/20 rounded-full text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 cursor-pointer hover:bg-black/80 hover:border-white/30 transition-all shadow-lg appearance-none"
-              style={{
-                backdropFilter: "blur(24px) saturate(180%)",
-                WebkitBackdropFilter: "blur(24px) saturate(180%)",
-                boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
-              }}
-            >
-              <option value="all" className="bg-[#1a2332] text-white font-semibold">
-                All Categories
-              </option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat} className="bg-[#1a2332] text-white font-semibold">
-                  {cat}
-                </option>
-              ))}
-            </select>
+              options={categoryOptions}
+              onChange={setFilterCategory}
+            />
           </div>
 
           <div className="mt-3 text-sm text-gray-400">
