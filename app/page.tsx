@@ -356,16 +356,21 @@ export default function Page() {
       // Only set isRefreshing if we already have data (this is a refresh, not initial load)
       if (hasInitialLoad) {
         setIsRefreshing(true)
+      } else {
+        // Only show loading progress on initial load, not refreshes
+        setLoadingProgress({ stage: 'FETCHING' })
       }
-      setLoadingProgress({ stage: 'FETCHING' })
 
       try {
-        // Show geocoding stage after 1 second (gives time for API fetch to complete)
-        const geocodeTimer = setTimeout(() => {
-          if (active) {
-            setLoadingProgress({ stage: 'GEOCODING' })
-          }
-        }, 1000)
+        // Show geocoding stage after 1 second (only on initial load)
+        let geocodeTimer: NodeJS.Timeout | null = null
+        if (!hasInitialLoad) {
+          geocodeTimer = setTimeout(() => {
+            if (active) {
+              setLoadingProgress({ stage: 'GEOCODING' })
+            }
+          }, 1000)
+        }
 
         const data = await fetchIncidents({
           callCategory: selectedCategory || undefined,
@@ -377,7 +382,7 @@ export default function Page() {
           signal: abortController.signal
         })
 
-        clearTimeout(geocodeTimer)
+        if (geocodeTimer) clearTimeout(geocodeTimer)
 
         console.log('[PAGE] Received data:', {
           count: data.count,
@@ -386,7 +391,12 @@ export default function Page() {
         })
 
         if (!active) return
-        setLoadingProgress({ stage: 'RENDERING', current: data.items?.length, total: data.items?.length })
+
+        // Only show rendering stage on initial load
+        if (!hasInitialLoad) {
+          setLoadingProgress({ stage: 'RENDERING', current: data.items?.length, total: data.items?.length })
+        }
+
         setItems((data.items || []) as Incident[])
         setHasInitialLoad(true)  // Mark that we've loaded data at least once
         console.log('[PAGE] Set items state:', data.items?.length || 0)
