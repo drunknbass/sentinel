@@ -243,7 +243,6 @@ export default function TerminalLoading() {
         style={{
           textShadow: "0 0 8px rgba(0, 255, 0, 0.5)",
           filter: "contrast(1.2) brightness(1.1)",
-          fontFamily: "'Courier New', monospace"
         }}
       >
         {lines.map((line, index) => (
