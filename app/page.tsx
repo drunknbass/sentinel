@@ -89,6 +89,17 @@ export default function Page() {
   const [locationEnabled, setLocationEnabled] = useState(false)
   const isMobile = useIsMobile()
 
+  // Body scroll/interaction lock when any mobile panel is open
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const anyPanelOpen = !!(isMobile && (showBottomSheet || mobileSheetType !== null))
+    if (anyPanelOpen) {
+      const prev = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = prev }
+    }
+  }, [isMobile, showBottomSheet, mobileSheetType])
+
   // Time range options for filters
   const TIME_RANGES = [
     { label: "1h", hours: 1 },
@@ -1137,7 +1148,9 @@ export default function Page() {
             <div className="flex flex-1 gap-2">
               <button
                 onClick={() => {
-                  setMobileSheetType(mobileSheetType === 'filters' ? null : 'filters')
+                  // Only one panel at a time on mobile
+                  const next = mobileSheetType === 'filters' ? null : 'filters'
+                  setMobileSheetType(next)
                   setShowBottomSheet(false)
                   setSelectedIncident(null)
                 }}
@@ -1159,7 +1172,8 @@ export default function Page() {
               </button>
               <button
                 onClick={() => {
-                  setMobileSheetType(mobileSheetType === 'incidents' ? null : 'incidents')
+                  const next = mobileSheetType === 'incidents' ? null : 'incidents'
+                  setMobileSheetType(next)
                   setShowBottomSheet(false)
                   setSelectedIncident(null)
                 }}
@@ -1181,7 +1195,8 @@ export default function Page() {
             {criticalIncidents.length > 0 && (
               <button
                 onClick={() => {
-                  setMobileSheetType(mobileSheetType === 'critical' ? null : 'critical')
+                  const next = mobileSheetType === 'critical' ? null : 'critical'
+                  setMobileSheetType(next)
                   setShowBottomSheet(false)
                   setSelectedIncident(null)
                 }}
@@ -1219,7 +1234,7 @@ export default function Page() {
           onLocationPermission={handleLocationPermission}
           onUserLocation={handleUserLocation}
           onLocationRequestReady={handleLocationRequestReady}
-          disableInteractions={!!(isMobile && (showBottomSheet || mobileSheetType !== null || showListView || !!selectedIncident))}
+          disableInteractions={!!(isMobile && (showBottomSheet || mobileSheetType !== null))}
           isRefreshing={isRefreshing}
           sidePanelOpen={!showBottomSheet && (showListView || !!selectedIncident)}
           panelWidth={showListView ? 500 : 320}
