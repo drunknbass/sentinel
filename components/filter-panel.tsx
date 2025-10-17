@@ -10,9 +10,6 @@ interface FilterPanelProps {
   onPriorityChange: (priority: number) => void
   timeRange: number
   onTimeRangeChange: (hours: number) => void
-  searchTags: string[]
-  onSearchTagsChange: (tags: string[]) => void
-  availableTags: string[]
   selectedRegion: string
   onRegionChange: (region: string) => void
 }
@@ -34,35 +31,15 @@ export default function FilterPanel({
   onPriorityChange,
   timeRange,
   onTimeRangeChange,
-  searchTags,
-  onSearchTagsChange,
-  availableTags,
   selectedRegion,
   onRegionChange,
 }: FilterPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const [searchInput, setSearchInput] = useState("")
-
-  const handleAddTag = (tag: string) => {
-    if (!searchTags.includes(tag)) {
-      onSearchTagsChange([...searchTags, tag])
-    }
-    setSearchInput("")
-  }
-
-  const handleRemoveTag = (tag: string) => {
-    onSearchTagsChange(searchTags.filter((t) => t !== tag))
-  }
-
-  const filteredSuggestions = availableTags.filter(
-    (tag) => tag.toLowerCase().includes(searchInput.toLowerCase()) && !searchTags.includes(tag),
-  )
 
   const activeFiltersCount = [
     selectedCategory ? 1 : 0,
     minPriority < 100 ? 1 : 0,
     timeRange < 999 ? 1 : 0,
-    searchTags.length,
     selectedRegion ? 1 : 0,
   ].reduce((a, b) => a + b, 0)
 
@@ -107,57 +84,6 @@ export default function FilterPanel({
           </div>
 
           <div className="p-5 space-y-6 max-h-[70vh] overflow-y-auto">
-            {/* Search with tags */}
-            <div>
-              <label className="text-xs text-gray-400 uppercase tracking-wide mb-2 block">Search & Tags</label>
-              <div className="space-y-2">
-                {/* Selected tags */}
-                {searchTags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {searchTags.map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => handleRemoveTag(tag)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-500/20 border border-red-500/30 rounded-full text-sm font-medium hover:bg-red-500/30 transition-colors"
-                      >
-                        {tag}
-                        <X className="w-3 h-3" />
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Search input */}
-                <input
-                  type="text"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && searchInput.trim()) {
-                      handleAddTag(searchInput.trim())
-                    }
-                  }}
-                  placeholder="Type to search tags..."
-                  className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-sm placeholder:text-gray-500 focus:outline-none focus:border-white/30 transition-colors"
-                />
-
-                {/* Tag suggestions */}
-                {searchInput && filteredSuggestions.length > 0 && (
-                  <div className="bg-black/30 border border-white/10 rounded-xl overflow-hidden">
-                    {filteredSuggestions.slice(0, 5).map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => handleAddTag(tag)}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-white/5 transition-colors"
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* Time range slider */}
             <div>
               <label className="text-xs text-gray-400 uppercase tracking-wide mb-3 block">Time Range</label>
@@ -289,7 +215,6 @@ export default function FilterPanel({
                   onCategoryChange("")
                   onPriorityChange(100)
                   onTimeRangeChange(2)
-                  onSearchTagsChange([])
                   onRegionChange("")
                 }}
                 className="w-full py-2.5 bg-red-500/20 border border-red-500/30 rounded-xl text-sm font-semibold hover:bg-red-500/30 transition-colors"

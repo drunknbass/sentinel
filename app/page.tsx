@@ -69,7 +69,6 @@ export default function Page() {
   const [selectedCategory, setSelectedCategory] = useState<string>("")
   const [minPriority, setMinPriority] = useState(100)
   const [timeRange, setTimeRange] = useState(2) // Default to last 2 hours for better UX
-  const [searchTags, setSearchTags] = useState<string[]>([])
   const [selectedRegion, setSelectedRegion] = useState<string>("")
 
   // Auto-refresh toggle
@@ -155,21 +154,7 @@ export default function Page() {
   }
 
   /**
-   * Extracts all available tags from incidents for search functionality
-   */
-  const availableTags = useMemo(() => {
-    const tags = new Set<string>()
-    items.forEach((item) => {
-      if (item.call_category) tags.add(item.call_category)
-      if (item.area) tags.add(item.area)
-      const priority = getPriorityLabel(item.priority)
-      tags.add(priority.toLowerCase())
-    })
-    return Array.from(tags).sort()
-  }, [items])
-
-  /**
-   * Filters incidents based on time range and search tags
+   * Filters incidents based on time range
    */
   const filteredItems = useMemo(() => {
     let filtered = items
@@ -180,22 +165,8 @@ export default function Page() {
       filtered = filtered.filter((item) => new Date(item.received_at).getTime() >= cutoffTime)
     }
 
-    // Filter by search tags
-    if (searchTags.length > 0) {
-      filtered = filtered.filter((item) => {
-        const itemTags = [
-          item.call_category?.toLowerCase(),
-          item.area?.toLowerCase(),
-          getPriorityLabel(item.priority).toLowerCase(),
-          item.call_type?.toLowerCase(),
-        ].filter(Boolean)
-
-        return searchTags.some((tag) => itemTags.some((itemTag) => itemTag?.includes(tag.toLowerCase())))
-      })
-    }
-
     return filtered
-  }, [items, timeRange, searchTags])
+  }, [items, timeRange])
 
   /**
    * Identifies critical incidents for the carousel
@@ -213,10 +184,9 @@ export default function Page() {
     if (selectedCategory) count++
     if (minPriority < 100) count++
     if (timeRange < 999) count++
-    if (searchTags.length > 0) count += searchTags.length
     if (selectedRegion) count++
     return count
-  }, [selectedCategory, minPriority, timeRange, searchTags, selectedRegion])
+  }, [selectedCategory, minPriority, timeRange, selectedRegion])
 
   /**
    * Fetches incidents from API on mount and every 60 seconds
@@ -517,9 +487,6 @@ export default function Page() {
             onPriorityChange={setMinPriority}
             timeRange={timeRange}
             onTimeRangeChange={setTimeRange}
-            searchTags={searchTags}
-            onSearchTagsChange={setSearchTags}
-            availableTags={availableTags}
             selectedRegion={selectedRegion}
             onRegionChange={setSelectedRegion}
           />

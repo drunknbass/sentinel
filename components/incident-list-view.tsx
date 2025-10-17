@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import type { IncidentsResponse } from "@/lib/api/incidents"
-import { X, ChevronDown } from "lucide-react"
+import { X, ChevronDown, Search } from "lucide-react"
 
 type Incident = IncidentsResponse["items"][number]
 
@@ -85,6 +85,7 @@ export default function IncidentListView({
   const [filterPriority, setFilterPriority] = useState<string>("all")
   const [filterCategory, setFilterCategory] = useState<string>("all")
   const [hideWithoutLocation, setHideWithoutLocation] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
 
   const categories = useMemo(() => {
     const cats = new Set(items.map((item) => item.call_category).filter(Boolean))
@@ -106,6 +107,39 @@ export default function IncidentListView({
       filtered = filtered.filter((item) => item.lat && item.lon)
     }
 
+    // Search filter with regex support
+    if (searchQuery.trim()) {
+      try {
+        // Try to create a regex from the search query (case insensitive)
+        const regex = new RegExp(searchQuery, "i")
+        filtered = filtered.filter((item) => {
+          const searchableFields = [
+            item.call_type,
+            item.address_raw,
+            item.call_category,
+            item.area,
+            getPriorityLabel(item.priority),
+          ].filter(Boolean).join(" ")
+
+          return regex.test(searchableFields)
+        })
+      } catch (e) {
+        // If regex is invalid, fall back to simple case-insensitive includes
+        const query = searchQuery.toLowerCase()
+        filtered = filtered.filter((item) => {
+          const searchableFields = [
+            item.call_type,
+            item.address_raw,
+            item.call_category,
+            item.area,
+            getPriorityLabel(item.priority),
+          ].filter(Boolean).map(f => f.toLowerCase()).join(" ")
+
+          return searchableFields.includes(query)
+        })
+      }
+    }
+
     filtered.sort((a, b) => {
       if (sortBy === "time") {
         return new Date(b.received_at).getTime() - new Date(a.received_at).getTime()
@@ -115,7 +149,7 @@ export default function IncidentListView({
     })
 
     return filtered
-  }, [items, sortBy, filterPriority, filterCategory, hideWithoutLocation, getPriorityLabel])
+  }, [items, sortBy, filterPriority, filterCategory, hideWithoutLocation, searchQuery, getPriorityLabel])
 
   const categoryOptions = [
     { value: "all", label: "All Categories" },
@@ -151,6 +185,32 @@ export default function IncidentListView({
           </div>
 
           <div className="flex flex-col gap-3">
+            {/* Search input with regex support */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search (supports regex)..."
+                className="w-full pl-11 pr-4 py-2.5 bg-black/60 backdrop-blur-xl border border-white/20 rounded-full text-sm font-semibold text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 hover:bg-black/80 hover:border-white/30 transition-all shadow-lg"
+                style={{
+                  backdropFilter: "blur(24px) saturate(180%)",
+                  WebkitBackdropFilter: "blur(24px) saturate(180%)",
+                  boxShadow: "0 4px 12px 0 rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
+                }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-white/10 rounded-full transition-all"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
             <CustomDropdown
               label="Sort by"
               value={sortBy}
