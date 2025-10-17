@@ -7,7 +7,7 @@ import LandingPage from "@/components/landing-page"
 import IncidentListView from "@/components/incident-list-view"
 import TerminalLoading from "@/components/terminal-loading"
 import { fetchIncidents, type IncidentsResponse } from "@/lib/api/incidents"
-import { X, ChevronLeft, ChevronRight, Filter, MapPin, AlertTriangle } from "lucide-react"
+import { X, ChevronLeft, ChevronRight, Filter, MapPin, AlertTriangle, Navigation } from "lucide-react"
 
 type Incident = IncidentsResponse["items"][number]
 
@@ -808,7 +808,23 @@ export default function Page() {
           <div className="text-sm font-mono font-bold text-amber-500 tracking-wider hidden md:block">
             RIVERSIDE SHERIFF MOBILE DATA TERMINAL
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Location status badge */}
+            <div
+              className={`flex items-center gap-2 text-xs font-mono border-2 px-3 py-1 ${
+                locationPermission === 'granted'
+                  ? 'border-cyan-500 text-cyan-500'
+                  : locationPermission === 'denied'
+                    ? 'border-yellow-500 text-yellow-500'
+                    : 'border-amber-500/50 text-amber-500/50'
+              }`}
+            >
+              <Navigation className={`w-3 h-3 ${locationPermission === 'pending' ? 'animate-pulse' : ''}`} />
+              <span>
+                {locationPermission === 'granted' ? 'GPS' : locationPermission === 'denied' ? 'NO GPS' : 'GPS?'}
+              </span>
+            </div>
+
             <button
               onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
               disabled={loading && !isRefreshing}
