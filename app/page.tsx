@@ -65,7 +65,7 @@ export default function Page() {
   // Filter state
   const [selectedCategory, setSelectedCategory] = useState<string>("")
   const [minPriority, setMinPriority] = useState(100)
-  const [timeRange, setTimeRange] = useState(24) // Default to last 24 hours
+  const [timeRange, setTimeRange] = useState(2) // Default to last 2 hours for better UX
   const [searchTags, setSearchTags] = useState<string[]>([])
   const [selectedRegion, setSelectedRegion] = useState<string>("")
 
@@ -75,6 +75,36 @@ export default function Page() {
   // Critical carousel state
   const [criticalCarouselIndex, setCriticalCarouselIndex] = useState(0)
   const [showCriticalCarousel, setShowCriticalCarousel] = useState(true)
+
+  // Funny loading messages
+  const loadingMessages = [
+    "Accessing Skynet...",
+    "Stitching map tiles...",
+    "Database defragmentation almost complete...",
+    "Hacking into the mainframe...",
+    "Reticulating splines...",
+    "Calibrating quantum flux capacitor...",
+    "Downloading more RAM...",
+    "Enhancing surveillance footage...",
+    "Triangulating satellite positions...",
+    "Decrypting police frequencies...",
+    "Warming up the flux capacitor...",
+    "Consulting the oracle...",
+    "Syncing with dispatch mainframe...",
+    "Resolving temporal anomalies...",
+    "Activating crime prediction algorithm...",
+    "Cross-referencing incident database...",
+    "Deploying reconnaissance drones...",
+    "Establishing secure connection...",
+    "Loading tactical operations map...",
+    "Initializing incident tracker v2.0...",
+    "Buffering real-time feed...",
+    "Calculating optimal patrol routes...",
+    "Synchronizing with emergency services...",
+    "Analyzing crime patterns...",
+    "Establishing uplink to satellite...",
+  ]
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0)
 
   /**
    * Check URL params on client mount to skip landing page if returning
@@ -278,6 +308,18 @@ export default function Page() {
   }, [selectedCategory, minPriority, timeRange, showLanding, autoRefreshEnabled, selectedRegion])
 
   /**
+   * Rotate loading messages while loading
+   */
+  useEffect(() => {
+    if (loading || isRefreshing) {
+      const interval = setInterval(() => {
+        setLoadingMessageIndex((prev) => (prev + 1) % loadingMessages.length)
+      }, 2000) // Change message every 2 seconds
+      return () => clearInterval(interval)
+    }
+  }, [loading, isRefreshing, loadingMessages.length])
+
+  /**
    * Auto-advances critical carousel every 8 seconds
    */
   useEffect(() => {
@@ -442,14 +484,31 @@ export default function Page() {
         />
       </div>
 
-      {/* Loading overlay - visual feedback only, doesn't block interaction */}
+      {/* Loading overlay with funny animated text */}
       {(loading || isRefreshing) && (
-        <div className="absolute inset-0 z-[60] bg-black/10 backdrop-blur-[2px] pointer-events-none"
+        <div className="absolute inset-0 z-[60] bg-black/40 backdrop-blur-sm pointer-events-none flex items-center justify-center"
           style={{
-            backdropFilter: "blur(2px)",
-            WebkitBackdropFilter: "blur(2px)"
+            backdropFilter: "blur(4px)",
+            WebkitBackdropFilter: "blur(4px)"
           }}
-        />
+        >
+          <div className="text-center space-y-4 px-8">
+            <div className="text-4xl md:text-6xl font-bold text-white animate-pulse">
+              {loadingMessages[loadingMessageIndex]}
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <svg className="w-5 h-5 animate-spin text-white/80" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-white/60 text-sm font-medium">
+                {loadingProgress?.current && loadingProgress?.total
+                  ? `Processing ${loadingProgress.current} of ${loadingProgress.total} incidents...`
+                  : "Please wait..."}
+              </span>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Critical incidents carousel - Added navigation buttons */}

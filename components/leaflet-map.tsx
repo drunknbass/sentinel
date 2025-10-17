@@ -23,7 +23,6 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
-  const [userLocationUsed, setUserLocationUsed] = useState(false)
   const [useMapbox, setUseMapbox] = useState(true)
   const tileLayerRef = useRef<any>(null)
 
@@ -164,8 +163,6 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
                     })
 
                     L.marker([userLat, userLon], { icon: userIcon }).addTo(mapInstanceRef.current).bindPopup("Your Location")
-
-                    setUserLocationUsed(true)
                   } catch (e) {
                     console.error('[MAP] Error setting user location:', e)
                   }
@@ -280,11 +277,22 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       markersRef.current.push(marker)
     })
 
-    if (validItems.length > 0 && !userLocationUsed) {
-      const bounds = L.latLngBounds(validItems.map((item) => [item.lat!, item.lon!]))
-      mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 })
+    // Always zoom to fit all pins after loading (unless a specific incident is selected)
+    if (validItems.length > 0 && !selectedIncident) {
+      // Add a small delay to ensure markers are rendered first
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          const bounds = L.latLngBounds(validItems.map((item) => [item.lat!, item.lon!]))
+          mapInstanceRef.current.fitBounds(bounds, {
+            padding: [80, 80],
+            maxZoom: 13,
+            animate: true,
+            duration: 0.8
+          })
+        }
+      }, 100)
     }
-  }, [items, onMarkerClick, userLocationUsed])
+  }, [items, onMarkerClick, selectedIncident])
 
   useEffect(() => {
     if (!mapInstanceRef.current || !selectedIncident || typeof window === "undefined") return
