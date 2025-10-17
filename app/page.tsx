@@ -1005,7 +1005,7 @@ export default function Page() {
       )}
       {/* Legend - fixed bottom-left; hover expands on desktop, tap toggles on mobile */}
       {!(loading && !isRefreshing) && (
-        <div ref={legendRef} className="fixed left-4 bottom-4 safe-bottom z-[60] md:z-40 pointer-events-auto">
+        <div ref={legendRef} className="fixed left-4 bottom-4 safe-bottom z-20 md:z-20 pointer-events-auto">
           <div
             className={`bg-black border border-amber-500 ${isMobile ? (legendOpen ? 'max-w-sm' : 'max-w-[88px]') : 'max-w-sm'} transition-all duration-200`}
             onMouseEnter={() => !isMobile && setLegendOpen(true)}
