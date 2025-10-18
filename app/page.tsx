@@ -1045,8 +1045,8 @@ export default function Page() {
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black no-overscroll">
-      {/* Unofficial use disclaimer – desktop only (mobile uses TosGate) */}
-      {!isMobile && showDisclaimer && (
+      {/* Unofficial use disclaimer with location request on user gesture */}
+      {showDisclaimer && (
         <div className="absolute inset-0 z-[200] flex items-center justify-center p-4 bg-black/90">
           <div className="max-w-lg w-full bg-black border-4 border-amber-500">
             <div className="border-2 border-amber-500/50 p-5 md:p-6 space-y-4 font-mono">
@@ -1055,30 +1055,32 @@ export default function Page() {
                 This application is unofficial. It is not affiliated with, endorsed by, or associated with the Riverside County Sheriff's Office or the Riverside Police Department. Data shown is aggregated from publicly available sources for informational purposes only and may be incomplete or delayed. Do not use this app for emergency response. For emergencies, call 911.
               </div>
               <div className="text-[11px] text-amber-500/60">
-                By continuing you acknowledge this notice.
+                By continuing you acknowledge this notice and may be prompted for location access.
               </div>
-              <div className="pt-2 flex gap-3">
+              <div className="pt-2 flex flex-col md:flex-row gap-3">
                 <button
-                  onClick={handleAcceptDisclaimer}
-                  className="flex-1 bg-amber-500 text-black font-bold py-2.5 border-2 border-amber-500 hover:bg-amber-400 tracking-wider"
+                  onClick={() => {
+                    try { if (typeof window !== 'undefined') window.localStorage.setItem('disclaimerAccepted', '1') } catch {}
+                    setShowDisclaimer(false)
+                    // Request location immediately with user gesture context
+                    if (locationRequestFnRef.current) {
+                      setTimeout(() => {
+                        try { locationRequestFnRef.current?.() } catch {}
+                      }, 100)
+                    }
+                  }}
+                  className="flex-1 bg-amber-500 text-black font-bold py-2.5 border-2 border-amber-500 hover:bg-amber-400 tracking-wider text-xs md:text-sm"
                 >
-                  [ENTER] ACKNOWLEDGE & CONTINUE
+                  {isMobile ? 'ACKNOWLEDGE & CONTINUE' : '[ENTER] ACKNOWLEDGE & CONTINUE'}
                 </button>
                 <button
                   onClick={() => {
-                    if (typeof window !== 'undefined') {
-                      window.open('/gps-start.html','_blank','noopener');
-                    }
+                    try { if (typeof window !== 'undefined') window.localStorage.setItem('disclaimerAccepted', '1') } catch {}
+                    setShowDisclaimer(false)
                   }}
-                  className="px-4 border-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black font-bold tracking-wider"
+                  className="px-4 py-2.5 border-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black font-bold tracking-wider text-xs md:text-sm"
                 >
-                  [ALT] OPEN GPS TEST (NEW TAB)
-                </button>
-                <button
-                  onClick={() => setShowDisclaimer(false)}
-                  className="px-4 border-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black font-bold tracking-wider"
-                >
-                  [ESC] DISMISS
+                  {isMobile ? 'DISMISS' : '[ESC] DISMISS'}
                 </button>
               </div>
             </div>
