@@ -312,6 +312,31 @@ export default function Page() {
 
   // (Removed global pointerdown hook; rely on explicit triggers + first-interaction fallback above)
 
+  // Check geolocation permission state on mount to sync UI
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('permissions' in navigator)) return
+
+    navigator.permissions.query({ name: 'geolocation' as PermissionName })
+      .then((result) => {
+        if (result.state === 'granted') {
+          setLocationPermission('granted')
+        } else if (result.state === 'denied') {
+          setLocationPermission('denied')
+        }
+        // Listen for permission changes
+        result.addEventListener('change', () => {
+          if (result.state === 'granted') {
+            setLocationPermission('granted')
+          } else if (result.state === 'denied') {
+            setLocationPermission('denied')
+          }
+        })
+      })
+      .catch((err) => {
+        console.log('[PAGE] Permissions API not available:', err)
+      })
+  }, [])
+
   // Start/stop persistent watchPosition based on toggle + permission
   useEffect(() => {
     if (typeof window === 'undefined') return
