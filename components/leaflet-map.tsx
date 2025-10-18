@@ -781,56 +781,6 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
             animation: target-pulse 2s ease-in-out infinite !important;
           }
 
-          /* Crosshair - vertical line */
-          .marker-cluster div::before {
-            content: '' !important;
-            position: absolute !important;
-            width: 2px !important;
-            height: 100% !important;
-            background: linear-gradient(
-              to bottom,
-              transparent 0%,
-              transparent 30%,
-              #ffb000 30%,
-              #ffb000 38%,
-              transparent 38%,
-              transparent 62%,
-              #ffb000 62%,
-              #ffb000 70%,
-              transparent 70%,
-              transparent 100%
-            ) !important;
-            top: 0 !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
-            opacity: 0.6 !important;
-          }
-
-          /* Crosshair - horizontal line */
-          .marker-cluster div::after {
-            content: '' !important;
-            position: absolute !important;
-            height: 2px !important;
-            width: 100% !important;
-            background: linear-gradient(
-              to right,
-              transparent 0%,
-              transparent 30%,
-              #ffb000 30%,
-              #ffb000 38%,
-              transparent 38%,
-              transparent 62%,
-              #ffb000 62%,
-              #ffb000 70%,
-              transparent 70%,
-              transparent 100%
-            ) !important;
-            top: 50% !important;
-            left: 0 !important;
-            transform: translateY(-50%) !important;
-            opacity: 0.6 !important;
-          }
-
           /* Corner targeting brackets */
           .marker-cluster {
             position: relative !important;
