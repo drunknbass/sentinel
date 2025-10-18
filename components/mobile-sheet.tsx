@@ -12,7 +12,7 @@ type MobileSheetProps = {
   initialSnap?: number
 }
 
-export default function MobileSheet({ open, onClose, title, children, snapPoints = [0.9, 0.5, 0], initialSnap = 1 }: MobileSheetProps) {
+export default function MobileSheet({ open, onClose, title, children, snapPoints = [0, 0.5, 0.9], initialSnap = 1 }: MobileSheetProps) {
   return (
     <Sheet
       isOpen={open}

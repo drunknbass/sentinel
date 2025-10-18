@@ -1640,10 +1640,10 @@ export default function Page() {
           open={!!(selectedIncident && showBottomSheet)}
           onClose={() => window.history.back()}
           title="INCIDENT DETAILS"
-          snapPoints={[0.9, 0.4, 0]}
+          snapPoints={[0, 0.4, 0.9]}
           initialSnap={1}
         >
-          <div className="allow-text-select space-y-4">
+          <div className="allow-text-select p-6 space-y-4 font-mono">
             <div>
               <div className="flex items-center gap-2 mb-3 flex-wrap">
                 {/* Priority badge - colored by priority */}
