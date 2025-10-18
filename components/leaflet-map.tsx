@@ -596,10 +596,10 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
     // Mobile: offset for bottom sheet
     if (showBottomSheet && viewportWidth < 768) {
-      // Bottom sheet is ~45vh from bottom
-      // Visible area is ~55vh, we want pin centered in that area (~27.5vh from top)
-      // Viewport center is at 50vh, so shift up by (50vh - 27.5vh) = 22.5vh
-      offsetY = viewportHeight * 0.225
+      // Bottom sheet opens at 40vh (0.4 snap point)
+      // Visible area is 60vh, we want pin centered in that area (30vh from top)
+      // Viewport center is at 50vh, so shift up by (50vh - 30vh) = 20vh
+      offsetY = viewportHeight * 0.20
     }
 
     // Get the container point for the pin's actual position at target zoom

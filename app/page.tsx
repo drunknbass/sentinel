@@ -1640,6 +1640,8 @@ export default function Page() {
           open={!!(selectedIncident && showBottomSheet)}
           onClose={() => window.history.back()}
           title="INCIDENT DETAILS"
+          snapPoints={[0.9, 0.4, 0]}
+          initialSnap={1}
         >
           <div className="allow-text-select space-y-4">
             <div>
