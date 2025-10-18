@@ -994,6 +994,18 @@ export default function Page() {
   }, [selectedCategory, minPriority, timeRange, showLanding, autoRefreshEnabled, nocache, isTabVisible, userLocation])
 
   /**
+   * Reset carousel index when critical incidents array changes or becomes invalid
+   */
+  useEffect(() => {
+    if (criticalIncidents.length === 0) {
+      setCriticalCarouselIndex(0)
+    } else if (criticalCarouselIndex >= criticalIncidents.length) {
+      // Index is out of bounds, reset to 0
+      setCriticalCarouselIndex(0)
+    }
+  }, [criticalIncidents.length, criticalCarouselIndex])
+
+  /**
    * Auto-advances critical carousel every 8 seconds
    */
   useEffect(() => {
@@ -1555,14 +1567,16 @@ export default function Page() {
               </div>
 
               <div className="space-y-3">
-                <div key={criticalCarouselIndex}>
-                  <h2 className="text-xl md:text-2xl font-mono font-bold animate-carousel-wipe text-amber-500 mb-2 tracking-wide">
-                    &gt; {criticalIncidents[criticalCarouselIndex].call_type}
-                  </h2>
-                  <p className="text-amber-400 animate-carousel-wipe-delay-1 font-mono text-sm">
-                    LOCATION: {criticalIncidents[criticalCarouselIndex].address_raw}
-                  </p>
-                </div>
+                {criticalIncidents[criticalCarouselIndex] && (
+                  <div key={criticalCarouselIndex}>
+                    <h2 className="text-xl md:text-2xl font-mono font-bold animate-carousel-wipe text-amber-500 mb-2 tracking-wide">
+                      &gt; {criticalIncidents[criticalCarouselIndex].call_type}
+                    </h2>
+                    <p className="text-amber-400 animate-carousel-wipe-delay-1 font-mono text-sm">
+                      LOCATION: {criticalIncidents[criticalCarouselIndex].address_raw}
+                    </p>
+                  </div>
+                )}
 
                 {criticalIncidents.length > 1 && (
                   <div className="flex items-center justify-between pt-3 border-t-2 border-amber-500">
@@ -1608,6 +1622,7 @@ export default function Page() {
 
                 <button
                   onClick={() => {
+                    if (!criticalIncidents[criticalCarouselIndex]) return
                     setShowCriticalCarousel(false)
                     setSelectedIncident(criticalIncidents[criticalCarouselIndex])
                     setMobileSheetType(null)  // Close mobile segmented sheets
