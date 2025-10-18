@@ -1087,7 +1087,7 @@ export default function Page() {
       {!(loading && !isRefreshing) && (
         <div ref={legendRef} className="fixed left-4 bottom-4 safe-bottom z-20 md:z-20 pointer-events-auto">
           <div
-            className={`bg-black border border-amber-500 overflow-hidden ${isMobile ? (legendOpen ? 'max-w-sm' : 'max-w-[88px]') : 'max-w-sm'} transition-[max-width] duration-300 ease-in-out`}
+            className={`bg-black border border-amber-500 ${isMobile ? (legendOpen ? 'w-auto max-w-sm' : 'w-[88px]') : 'max-w-sm'} transition-[width] duration-500 ease-out`}
             onMouseEnter={() => !isMobile && setLegendOpen(true)}
             onMouseLeave={() => !isMobile && setLegendOpen(false)}
           >
@@ -1095,9 +1095,10 @@ export default function Page() {
               onClick={() => isMobile && setLegendOpen((v) => !v)}
               className="w-full text-left border border-amber-500/50 p-1.5"
             >
-              <div className="text-[9px] font-mono font-bold text-amber-500 tracking-wider">LEGEND</div>
+              <div className="text-[9px] font-mono font-bold text-amber-500 tracking-wider whitespace-nowrap">LEGEND</div>
             </button>
-            <div className={`space-y-3 text-xs font-mono p-2 border-t border-amber-500 transition-opacity duration-200 ${(legendOpen || !isMobile) ? 'opacity-100' : 'opacity-0'}`}>
+            {(legendOpen || !isMobile) && (
+              <div className="space-y-3 text-xs font-mono p-2 border-t border-amber-500">
                 <div>
                   <div className="text-amber-500/70 mb-2 text-[10px] tracking-wider">PRIORITY LEVELS:</div>
                   <div className="space-y-1.5">
@@ -1118,6 +1119,7 @@ export default function Page() {
                   </div>
                 </div>
               </div>
+            )}
           </div>
         </div>
       )}
