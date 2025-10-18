@@ -67,6 +67,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
   const hasInitialZoomedRef = useRef(false)
   const savedViewRef = useRef<{ center: [number, number]; zoom: number } | null>(null)
   const userMarkerRef = useRef<any>(null)
+  const userMarkerZoomHandlerRef = useRef<any>(null)
 
   // Reusable function to request user location
   const requestUserLocation = () => {
@@ -116,6 +117,12 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
             // Remove existing user marker if any
             if (userMarkerRef.current) {
               userMarkerRef.current.remove()
+            }
+
+            // Clean up zoom event handler if it exists
+            if (userMarkerZoomHandlerRef.current && mapInstanceRef.current) {
+              mapInstanceRef.current.off('zoomend', userMarkerZoomHandlerRef.current)
+              userMarkerZoomHandlerRef.current = null
             }
 
             // Always show user marker and center view on current location
@@ -225,7 +232,32 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               iconAnchor: [20, 20],
             })
 
-            userMarkerRef.current = L.marker([userLat, userLon], { icon: userIcon }).addTo(mapInstanceRef.current)
+            userMarkerRef.current = L.marker([userLat, userLon], { icon: userIcon, zIndexOffset: 10000 }).addTo(mapInstanceRef.current)
+
+            // Update pulse scale based on zoom level
+            const updatePulseScale = () => {
+              if (!userMarkerRef.current) return
+              const zoom = mapInstanceRef.current.getZoom()
+              // Scale from 1.2 at zoom 5 to 2.5 at zoom 18
+              const minZoom = 5, maxZoom = 18
+              const minScale = 1.2, maxScale = 2.5
+              const scale = minScale + ((zoom - minZoom) / (maxZoom - minZoom)) * (maxScale - minScale)
+              const clampedScale = Math.max(minScale, Math.min(maxScale, scale))
+
+              const markerElement = userMarkerRef.current.getElement()
+              if (markerElement) {
+                markerElement.style.setProperty('--pulse-scale', clampedScale.toString())
+              }
+            }
+
+            // Set initial pulse scale
+            updatePulseScale()
+
+            // Store handler ref for cleanup
+            userMarkerZoomHandlerRef.current = updatePulseScale
+
+            // Update on zoom
+            mapInstanceRef.current.on('zoomend', updatePulseScale)
           } catch (e) {
             console.error('[MAP] Error setting user location:', e)
           }
@@ -287,7 +319,16 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
   // Remove user marker when GPS is disabled
   useEffect(() => {
     if (!locationEnabled && userMarkerRef.current) {
-      try { userMarkerRef.current.remove(); userMarkerRef.current = null } catch {}
+      try {
+        userMarkerRef.current.remove()
+        userMarkerRef.current = null
+
+        // Clean up zoom event handler
+        if (userMarkerZoomHandlerRef.current && mapInstanceRef.current) {
+          mapInstanceRef.current.off('zoomend', userMarkerZoomHandlerRef.current)
+          userMarkerZoomHandlerRef.current = null
+        }
+      } catch {}
     }
   }, [locationEnabled])
 
@@ -738,9 +779,14 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               opacity: 0.2;
             }
             50% {
-              transform: scale(1.8);
+              transform: scale(var(--pulse-scale, 1.5));
               opacity: 0.4;
             }
+          }
+
+          /* Ensure user location marker appears above clusters */
+          .user-location-marker {
+            z-index: 10000 !important;
           }
 
           @keyframes pulse-center {
