@@ -1439,7 +1439,7 @@ export default function Page() {
       )}
 
       {/* Terminal loading overlay - only show on initial load, not refreshes */}
-      {loading && !isRefreshing && <TerminalLoading />}
+      {loading && !hasInitialLoad && <TerminalLoading />}
 
       {/* Critical incidents carousel - Amber MDT style - Desktop only */}
       {criticalIncidents.length > 0 && showCriticalCarousel && !showBottomSheet && !mobileSheetType && (
