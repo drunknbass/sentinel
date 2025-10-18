@@ -61,6 +61,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
+  const markerClusterGroupRef = useRef<any>(null)
   const [useMapbox, setUseMapbox] = useState(true)
   const tileLayerRef = useRef<any>(null)
   const hasInitialZoomedRef = useRef(false)
@@ -310,10 +311,36 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         document.head.appendChild(link)
       }
 
+      if (!document.getElementById("leaflet-markercluster-css")) {
+        const link = document.createElement("link")
+        link.id = "leaflet-markercluster-css"
+        link.rel = "stylesheet"
+        link.href = "https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+        document.head.appendChild(link)
+      }
+
+      if (!document.getElementById("leaflet-markercluster-default-css")) {
+        const link = document.createElement("link")
+        link.id = "leaflet-markercluster-default-css"
+        link.rel = "stylesheet"
+        link.href = "https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+        document.head.appendChild(link)
+      }
+
       if (!(window as any).L) {
         await new Promise((resolve, reject) => {
           const script = document.createElement("script")
           script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          script.onload = resolve
+          script.onerror = reject
+          document.head.appendChild(script)
+        })
+      }
+
+      if (!(window as any).L?.markerClusterGroup) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement("script")
+          script.src = "https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"
           script.onload = resolve
           script.onerror = reject
           document.head.appendChild(script)
@@ -418,6 +445,27 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
         mapInstanceRef.current = map
 
+        // Create marker cluster group
+        markerClusterGroupRef.current = L.markerClusterGroup({
+          maxClusterRadius: 60,
+          spiderfyOnMaxZoom: true,
+          showCoverageOnHover: false,
+          zoomToBoundsOnClick: true,
+          iconCreateFunction: function(cluster: any) {
+            const count = cluster.getChildCount()
+            let sizeClass = 'small'
+            if (count > 50) sizeClass = 'large'
+            else if (count > 10) sizeClass = 'medium'
+
+            return L.divIcon({
+              html: `<div class="cluster-inner"><span>${count}</span></div>`,
+              className: `marker-cluster marker-cluster-${sizeClass}`,
+              iconSize: L.point(40, 40)
+            })
+          }
+        })
+        map.addLayer(markerClusterGroupRef.current)
+
         // Expose location request immediately once map exists (ensures user-gesture path works)
         try { onLocationRequestReady?.(requestUserLocation) } catch {}
 
@@ -450,16 +498,10 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
     const L = (window as any).L
     if (!L) return
 
-    // Safely remove markers
-    markersRef.current.forEach((marker) => {
-      try {
-        if (marker && mapInstanceRef.current) {
-          marker.remove()
-        }
-      } catch (e) {
-        // Ignore errors from already-removed markers
-      }
-    })
+    // Clear cluster group
+    if (markerClusterGroupRef.current) {
+      markerClusterGroupRef.current.clearLayers()
+    }
     markersRef.current = []
 
     const validItems = items.filter((item) => item.lat && item.lon)
@@ -548,9 +590,11 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       })
 
       const marker = L.marker([item.lat!, item.lon!], { icon })
-        .addTo(mapInstanceRef.current)
         .on("click", () => onMarkerClick(item))
 
+      if (markerClusterGroupRef.current) {
+        markerClusterGroupRef.current.addLayer(marker)
+      }
       markersRef.current.push(marker)
     })
 
@@ -707,6 +751,48 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               transform: translate(-50%, -50%) scale(1.4);
               opacity: 0.6;
             }
+          }
+
+          /* Cluster styles - amber terminal theme */
+          .marker-cluster {
+            background-color: rgba(255, 176, 0, 0.2) !important;
+            border: 2px solid #ffb000 !important;
+          }
+
+          .marker-cluster div {
+            background-color: #000000 !important;
+            border: 2px solid #ffb000 !important;
+            color: #ffb000 !important;
+            font-family: 'IBM Plex Mono', 'Courier New', monospace !important;
+            font-weight: bold !important;
+            box-shadow: 0 0 8px rgba(255, 176, 0, 0.4) !important;
+          }
+
+          .marker-cluster-small div {
+            width: 30px !important;
+            height: 30px !important;
+            margin-left: 5px !important;
+            margin-top: 5px !important;
+            font-size: 11px !important;
+            line-height: 26px !important;
+          }
+
+          .marker-cluster-medium div {
+            width: 36px !important;
+            height: 36px !important;
+            margin-left: 2px !important;
+            margin-top: 2px !important;
+            font-size: 13px !important;
+            line-height: 32px !important;
+          }
+
+          .marker-cluster-large div {
+            width: 42px !important;
+            height: 42px !important;
+            margin-left: -1px !important;
+            margin-top: -1px !important;
+            font-size: 15px !important;
+            line-height: 38px !important;
           }
 
           @keyframes radar-ping {
