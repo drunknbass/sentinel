@@ -1347,7 +1347,7 @@ export default function Page() {
           onLocationPermission={handleLocationPermission}
           onUserLocation={handleUserLocation}
           onLocationRequestReady={handleLocationRequestReady}
-          disableInteractions={!!(isMobile && (showBottomSheet || panel.isAnyOpen))}
+          disableInteractions={!!(isMobile && panel.isAnyOpen)}
           locationEnabled={locationEnabled}
           isRefreshing={isRefreshing}
           sidePanelOpen={!showBottomSheet && (showListView || !!selectedIncident)}
