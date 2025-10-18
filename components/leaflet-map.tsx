@@ -754,7 +754,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
             }
           }
 
-          /* Cluster styles - cyberpunk terminal theme */
+          /* Cluster styles - targeting reticle / bomb target theme */
           .marker-cluster {
             background-color: transparent !important;
             border: none !important;
@@ -762,65 +762,200 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           }
 
           .marker-cluster div {
-            background-color: #000000 !important;
+            background-color: rgba(0, 0, 0, 0.9) !important;
             border: 2px solid #ffb000 !important;
             border-radius: 0 !important;
             color: #ffb000 !important;
             font-family: 'IBM Plex Mono', 'Courier New', monospace !important;
             font-weight: bold !important;
             box-shadow:
-              0 0 12px rgba(255, 176, 0, 0.6),
-              inset 0 0 8px rgba(255, 176, 0, 0.2) !important;
+              0 0 16px rgba(255, 176, 0, 0.8),
+              inset 0 0 12px rgba(255, 176, 0, 0.3),
+              0 0 0 4px rgba(0, 0, 0, 0.9),
+              0 0 0 6px rgba(255, 176, 0, 0.6) !important;
             position: relative !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             letter-spacing: 0.5px !important;
+            animation: target-pulse 2s ease-in-out infinite !important;
           }
 
+          /* Crosshair - vertical line */
           .marker-cluster div::before {
-            content: '╔' !important;
+            content: '' !important;
             position: absolute !important;
-            top: -2px !important;
-            left: -2px !important;
-            font-size: 8px !important;
-            line-height: 1 !important;
+            width: 2px !important;
+            height: 100% !important;
+            background: linear-gradient(
+              to bottom,
+              transparent 0%,
+              transparent 35%,
+              #ffb000 35%,
+              #ffb000 45%,
+              transparent 45%,
+              transparent 55%,
+              #ffb000 55%,
+              #ffb000 65%,
+              transparent 65%,
+              transparent 100%
+            ) !important;
+            top: 0 !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            opacity: 0.6 !important;
           }
 
+          /* Crosshair - horizontal line */
           .marker-cluster div::after {
-            content: '╗' !important;
+            content: '' !important;
             position: absolute !important;
-            top: -2px !important;
-            right: -2px !important;
-            font-size: 8px !important;
-            line-height: 1 !important;
+            height: 2px !important;
+            width: 100% !important;
+            background: linear-gradient(
+              to right,
+              transparent 0%,
+              transparent 35%,
+              #ffb000 35%,
+              #ffb000 45%,
+              transparent 45%,
+              transparent 55%,
+              #ffb000 55%,
+              #ffb000 65%,
+              transparent 65%,
+              transparent 100%
+            ) !important;
+            top: 50% !important;
+            left: 0 !important;
+            transform: translateY(-50%) !important;
+            opacity: 0.6 !important;
+          }
+
+          /* Corner targeting brackets */
+          .marker-cluster {
+            position: relative !important;
+          }
+
+          .marker-cluster::before {
+            content: '' !important;
+            position: absolute !important;
+            top: -8px !important;
+            left: -8px !important;
+            width: 12px !important;
+            height: 12px !important;
+            border-top: 2px solid #ffb000 !important;
+            border-left: 2px solid #ffb000 !important;
+            opacity: 0.8 !important;
+          }
+
+          .marker-cluster::after {
+            content: '' !important;
+            position: absolute !important;
+            top: -8px !important;
+            right: -8px !important;
+            width: 12px !important;
+            height: 12px !important;
+            border-top: 2px solid #ffb000 !important;
+            border-right: 2px solid #ffb000 !important;
+            opacity: 0.8 !important;
           }
 
           .marker-cluster-small div {
-            width: 34px !important;
-            height: 34px !important;
-            margin-left: 3px !important;
-            margin-top: 3px !important;
+            width: 36px !important;
+            height: 36px !important;
+            margin-left: 2px !important;
+            margin-top: 2px !important;
             font-size: 11px !important;
             line-height: 1 !important;
           }
 
+          .marker-cluster-small::before {
+            bottom: -8px !important;
+            top: auto !important;
+            border-bottom: 2px solid #ffb000 !important;
+            border-top: none !important;
+          }
+
+          .marker-cluster-small::after {
+            bottom: -8px !important;
+            top: auto !important;
+            left: -8px !important;
+            right: auto !important;
+            border-bottom: 2px solid #ffb000 !important;
+            border-left: 2px solid #ffb000 !important;
+            border-top: none !important;
+            border-right: none !important;
+          }
+
           .marker-cluster-medium div {
-            width: 42px !important;
-            height: 42px !important;
-            margin-left: -1px !important;
-            margin-top: -1px !important;
+            width: 44px !important;
+            height: 44px !important;
+            margin-left: -2px !important;
+            margin-top: -2px !important;
             font-size: 13px !important;
             line-height: 1 !important;
           }
 
+          .marker-cluster-medium::before {
+            bottom: -8px !important;
+            top: auto !important;
+            border-bottom: 2px solid #ffb000 !important;
+            border-top: none !important;
+          }
+
+          .marker-cluster-medium::after {
+            bottom: -8px !important;
+            top: auto !important;
+            left: -8px !important;
+            right: auto !important;
+            border-bottom: 2px solid #ffb000 !important;
+            border-left: 2px solid #ffb000 !important;
+            border-top: none !important;
+            border-right: none !important;
+          }
+
           .marker-cluster-large div {
-            width: 50px !important;
-            height: 50px !important;
-            margin-left: -5px !important;
-            margin-top: -5px !important;
+            width: 52px !important;
+            height: 52px !important;
+            margin-left: -6px !important;
+            margin-top: -6px !important;
             font-size: 15px !important;
             line-height: 1 !important;
+          }
+
+          .marker-cluster-large::before {
+            bottom: -8px !important;
+            top: auto !important;
+            border-bottom: 2px solid #ffb000 !important;
+            border-top: none !important;
+          }
+
+          .marker-cluster-large::after {
+            bottom: -8px !important;
+            top: auto !important;
+            left: -8px !important;
+            right: auto !important;
+            border-bottom: 2px solid #ffb000 !important;
+            border-left: 2px solid #ffb000 !important;
+            border-top: none !important;
+            border-right: none !important;
+          }
+
+          @keyframes target-pulse {
+            0%, 100% {
+              box-shadow:
+                0 0 16px rgba(255, 176, 0, 0.8),
+                inset 0 0 12px rgba(255, 176, 0, 0.3),
+                0 0 0 4px rgba(0, 0, 0, 0.9),
+                0 0 0 6px rgba(255, 176, 0, 0.6);
+            }
+            50% {
+              box-shadow:
+                0 0 24px rgba(255, 176, 0, 1),
+                inset 0 0 16px rgba(255, 176, 0, 0.4),
+                0 0 0 4px rgba(0, 0, 0, 0.9),
+                0 0 0 6px rgba(255, 176, 0, 0.9);
+            }
           }
 
           @keyframes radar-ping {
