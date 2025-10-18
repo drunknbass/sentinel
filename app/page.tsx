@@ -1642,6 +1642,7 @@ export default function Page() {
           title="INCIDENT DETAILS"
           snapPoints={[0, 0.4, 0.9]}
           initialSnap={1}
+          disableBackdrop={true}
         >
           <div className="allow-text-select p-6 space-y-4 font-mono">
             <div>

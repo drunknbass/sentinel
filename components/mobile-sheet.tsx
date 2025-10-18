@@ -10,9 +10,10 @@ type MobileSheetProps = {
   children: React.ReactNode
   snapPoints?: number[]
   initialSnap?: number
+  disableBackdrop?: boolean
 }
 
-export default function MobileSheet({ open, onClose, title, children, snapPoints = [0, 0.5, 0.9], initialSnap = 1 }: MobileSheetProps) {
+export default function MobileSheet({ open, onClose, title, children, snapPoints = [0, 0.5, 0.9], initialSnap = 1, disableBackdrop = false }: MobileSheetProps) {
   return (
     <Sheet
       isOpen={open}
@@ -65,13 +66,15 @@ export default function MobileSheet({ open, onClose, title, children, snapPoints
         </Sheet.Content>
       </Sheet.Container>
 
-      <Sheet.Backdrop
-        onTap={onClose}
-        style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          backdropFilter: 'blur(4px)',
-        }}
-      />
+      {!disableBackdrop && (
+        <Sheet.Backdrop
+          onTap={onClose}
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(4px)',
+          }}
+        />
+      )}
     </Sheet>
   )
 }
