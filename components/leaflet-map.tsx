@@ -585,9 +585,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
     // Calculate pixel offset to position pin at desired vertical position
     // pinVerticalPosition: 0 = top, 0.5 = center, 1 = bottom
-    // Offset calculation: (0.5 - pinVerticalPosition) * viewportHeight
-    // This shifts the map center so the pin appears at the desired position
-    const offsetY = (0.5 - pinVerticalPosition) * viewportHeight
+    // To make pin appear ABOVE center, we shift map center DOWN (add to Y)
+    // To make pin appear BELOW center, we shift map center UP (subtract from Y)
+    const offsetY = (pinVerticalPosition - 0.5) * viewportHeight
 
     // Desktop: offset for side panel (centers pin horizontally in safe area)
     let offsetX = 0
