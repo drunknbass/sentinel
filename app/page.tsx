@@ -89,7 +89,11 @@ export default function Page() {
 
   // Auto-refresh toggle
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
-  const [locationEnabled, setLocationEnabled] = useState(false)
+  const [locationEnabled, setLocationEnabled] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const saved = localStorage.getItem('gps-enabled')
+    return saved === 'true'
+  })
   const isMobile = useIsMobile()
   const panel = usePanel()
   const navRef = useDomRef<HTMLDivElement | null>(null)
@@ -366,6 +370,13 @@ export default function Page() {
     }
   }, [locationEnabled])
 
+  // Save GPS preference to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('gps-enabled', String(locationEnabled))
+    }
+  }, [locationEnabled])
+
   /**
    * Sync search query and hideWithoutLocation to URL params
    */
@@ -552,9 +563,13 @@ export default function Page() {
    */
   const handleLocationPermission = (granted: boolean) => {
     setLocationPermission(granted ? 'granted' : 'denied')
-    // Automatically enable GPS when permission is granted
-    if (granted) {
-      setLocationEnabled(true)
+    // Automatically enable GPS when permission is granted, but only if user hasn't explicitly disabled it
+    if (granted && typeof window !== 'undefined') {
+      const savedPreference = localStorage.getItem('gps-enabled')
+      // Only auto-enable if user has never set a preference (null) or if they had it enabled
+      if (savedPreference !== 'false') {
+        setLocationEnabled(true)
+      }
     }
     console.log('[PAGE] Location permission:', granted ? 'granted' : 'denied')
   }
