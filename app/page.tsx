@@ -1732,6 +1732,8 @@ export default function Page() {
             mobileSheetType === 'incidents' ? 'ALL INCIDENTS' :
             mobileSheetType === 'critical' ? 'CRITICAL ALERTS' : ''
           }
+          snapPoints={[0, 0.5, 0.9]}
+          initialSnap={2}
         >
           <div
             ref={(el) => {
