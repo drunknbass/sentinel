@@ -447,7 +447,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
         // Create marker cluster group
         markerClusterGroupRef.current = L.markerClusterGroup({
-          maxClusterRadius: 60,
+          maxClusterRadius: 80,
+          disableClusteringAtZoom: 18,
           spiderfyOnMaxZoom: true,
           showCoverageOnHover: false,
           zoomToBoundsOnClick: true,
