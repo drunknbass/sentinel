@@ -1659,7 +1659,7 @@ export default function Page() {
           open={!!(selectedIncident && showBottomSheet)}
           onClose={() => window.history.back()}
           title="INCIDENT DETAILS"
-          snapPoints={[0, 0.4, 0.9]}
+          snapPoints={[0, 0.4, 0.86]}
           initialSnap={1}
           disableBackdrop={true}
         >
