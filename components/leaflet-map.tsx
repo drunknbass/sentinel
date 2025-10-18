@@ -234,12 +234,26 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
             userMarkerRef.current = L.marker([userLat, userLon], { icon: userIcon, zIndexOffset: 10000 }).addTo(mapInstanceRef.current)
 
-            // Force map to redraw/invalidate to ensure marker appears immediately
-            requestAnimationFrame(() => {
-              if (mapInstanceRef.current) {
-                mapInstanceRef.current.invalidateSize({ pan: false })
-              }
-            })
+            // Force immediate and aggressive map redraw to ensure marker appears
+            // Multiple techniques to guarantee rendering
+            try {
+              // Immediate invalidate
+              mapInstanceRef.current.invalidateSize({ pan: false })
+
+              // Force tiny pan to trigger redraw
+              mapInstanceRef.current.panBy([0, 0])
+
+              // Deferred invalidate as backup
+              requestAnimationFrame(() => {
+                if (mapInstanceRef.current) {
+                  mapInstanceRef.current.invalidateSize({ pan: false })
+                  mapInstanceRef.current.panBy([1, 0])
+                  mapInstanceRef.current.panBy([-1, 0])
+                }
+              })
+            } catch (e) {
+              console.error('[MAP] Error forcing redraw:', e)
+            }
 
             // Update pulse scale based on zoom level
             const updatePulseScale = () => {
