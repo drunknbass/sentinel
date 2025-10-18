@@ -790,14 +790,14 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
             background: linear-gradient(
               to bottom,
               transparent 0%,
-              transparent 35%,
-              #ffb000 35%,
-              #ffb000 45%,
-              transparent 45%,
-              transparent 55%,
-              #ffb000 55%,
-              #ffb000 65%,
-              transparent 65%,
+              transparent 30%,
+              #ffb000 30%,
+              #ffb000 38%,
+              transparent 38%,
+              transparent 62%,
+              #ffb000 62%,
+              #ffb000 70%,
+              transparent 70%,
               transparent 100%
             ) !important;
             top: 0 !important;
@@ -815,14 +815,14 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
             background: linear-gradient(
               to right,
               transparent 0%,
-              transparent 35%,
-              #ffb000 35%,
-              #ffb000 45%,
-              transparent 45%,
-              transparent 55%,
-              #ffb000 55%,
-              #ffb000 65%,
-              transparent 65%,
+              transparent 30%,
+              #ffb000 30%,
+              #ffb000 38%,
+              transparent 38%,
+              transparent 62%,
+              #ffb000 62%,
+              #ffb000 70%,
+              transparent 70%,
               transparent 100%
             ) !important;
             top: 50% !important;
