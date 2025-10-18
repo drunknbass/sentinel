@@ -10,7 +10,7 @@ import LandingPage from "@/components/landing-page"
 import IncidentListView from "@/components/incident-list-view"
 import TerminalLoading from "@/components/terminal-loading"
 import { fetchIncidents, type IncidentsResponse } from "@/lib/api/incidents"
-import { X, ChevronLeft, ChevronRight, Filter, MapPin, AlertTriangle, Navigation } from "lucide-react"
+import { X, ChevronLeft, ChevronRight, Filter, MapPin, AlertTriangle, Navigation, Smartphone } from "lucide-react"
 import MobileSheet from "@/components/mobile-sheet"
 import { setGpsRequester, markGpsPrompted } from "@/lib/gps-bridge"
 
@@ -99,6 +99,27 @@ export default function Page() {
   const navRef = useDomRef<HTMLDivElement | null>(null)
   const [legendOpen, setLegendOpen] = useState(false)
   const legendRef = useDomRef<HTMLDivElement | null>(null)
+  const [isLandscape, setIsLandscape] = useState(false)
+
+  // Detect landscape orientation on mobile
+  useEffect(() => {
+    if (!isMobile) return
+
+    const checkOrientation = () => {
+      if (typeof window === 'undefined') return
+      const isLandscapeMode = window.innerWidth > window.innerHeight
+      setIsLandscape(isLandscapeMode)
+    }
+
+    checkOrientation()
+    window.addEventListener('resize', checkOrientation)
+    window.addEventListener('orientationchange', checkOrientation)
+
+    return () => {
+      window.removeEventListener('resize', checkOrientation)
+      window.removeEventListener('orientationchange', checkOrientation)
+    }
+  }, [isMobile])
 
   // Measure nav height to position mobile filters exactly under it
   useEffect(() => {
@@ -1108,6 +1129,27 @@ export default function Page() {
           </div>
         </div>
       )}
+
+      {/* Landscape warning - mobile only */}
+      {isMobile && isLandscape && (
+        <div className="absolute inset-0 z-[250] flex items-center justify-center p-4 bg-black/95">
+          <div className="max-w-sm w-full bg-black border-4 border-amber-500">
+            <div className="border-2 border-amber-500/50 p-8 space-y-6 font-mono text-center">
+              <div className="flex justify-center">
+                <Smartphone className="w-16 h-16 text-amber-500 animate-pulse" />
+              </div>
+              <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ ROTATE DEVICE ╗</div>
+              <div className="text-sm text-amber-400 leading-relaxed">
+                This application is optimized for portrait orientation. Please rotate your device to portrait mode to continue.
+              </div>
+              <div className="text-[11px] text-amber-500/60">
+                Portrait mode provides the best experience for viewing incident data.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Legend - fixed bottom-left; hover expands on desktop, tap toggles on mobile */}
       {!(loading && !hasInitialLoad) && (
         <div ref={legendRef} className="fixed left-4 bottom-4 safe-bottom z-20 md:z-20 pointer-events-auto">
