@@ -1164,7 +1164,7 @@ export default function Page() {
             </div>
           </div>
         )}
-        <div className="flex items-center justify-between px-3 sm:px-6 py-2 bg-black flex-wrap gap-2">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-2 bg-black flex-wrap gap-2">
           {/* Brand */}
           <div className="text-xs font-mono font-bold text-amber-500 min-w-0">{isMobile ? 'RSO‑MDT' : 'RSO‑MDT v2.1'}</div>
           {/* Title (desktop only) */}
@@ -1226,7 +1226,7 @@ export default function Page() {
                   ? 'border-cyan-500 text-cyan-500'
                   : locationPermission === 'denied'
                     ? 'border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black'
-                    : 'border-amber-500/50 text-amber-500/50 hover:bg-amber-500/50 hover:text-black'
+                    : 'border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black'
               }`}
             >
               <Navigation className={`w-3 h-3 ${locationPermission === 'pending' ? 'animate-pulse' : ''}`} />
