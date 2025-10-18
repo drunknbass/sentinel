@@ -753,46 +753,73 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
             }
           }
 
-          /* Cluster styles - amber terminal theme */
+          /* Cluster styles - cyberpunk terminal theme */
           .marker-cluster {
-            background-color: rgba(255, 176, 0, 0.2) !important;
-            border: 2px solid #ffb000 !important;
+            background-color: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
           }
 
           .marker-cluster div {
             background-color: #000000 !important;
             border: 2px solid #ffb000 !important;
+            border-radius: 0 !important;
             color: #ffb000 !important;
             font-family: 'IBM Plex Mono', 'Courier New', monospace !important;
             font-weight: bold !important;
-            box-shadow: 0 0 8px rgba(255, 176, 0, 0.4) !important;
+            box-shadow:
+              0 0 12px rgba(255, 176, 0, 0.6),
+              inset 0 0 8px rgba(255, 176, 0, 0.2) !important;
+            position: relative !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            letter-spacing: 0.5px !important;
+          }
+
+          .marker-cluster div::before {
+            content: '╔' !important;
+            position: absolute !important;
+            top: -2px !important;
+            left: -2px !important;
+            font-size: 8px !important;
+            line-height: 1 !important;
+          }
+
+          .marker-cluster div::after {
+            content: '╗' !important;
+            position: absolute !important;
+            top: -2px !important;
+            right: -2px !important;
+            font-size: 8px !important;
+            line-height: 1 !important;
           }
 
           .marker-cluster-small div {
-            width: 30px !important;
-            height: 30px !important;
-            margin-left: 5px !important;
-            margin-top: 5px !important;
+            width: 34px !important;
+            height: 34px !important;
+            margin-left: 3px !important;
+            margin-top: 3px !important;
             font-size: 11px !important;
-            line-height: 26px !important;
+            line-height: 1 !important;
           }
 
           .marker-cluster-medium div {
-            width: 36px !important;
-            height: 36px !important;
-            margin-left: 2px !important;
-            margin-top: 2px !important;
-            font-size: 13px !important;
-            line-height: 32px !important;
-          }
-
-          .marker-cluster-large div {
             width: 42px !important;
             height: 42px !important;
             margin-left: -1px !important;
             margin-top: -1px !important;
+            font-size: 13px !important;
+            line-height: 1 !important;
+          }
+
+          .marker-cluster-large div {
+            width: 50px !important;
+            height: 50px !important;
+            margin-left: -5px !important;
+            margin-top: -5px !important;
             font-size: 15px !important;
-            line-height: 38px !important;
+            line-height: 1 !important;
           }
 
           @keyframes radar-ping {
