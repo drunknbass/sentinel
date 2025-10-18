@@ -318,11 +318,32 @@ export default function Page() {
 
     navigator.permissions.query({ name: 'geolocation' as PermissionName })
       .then((result) => {
+        console.log('[PAGE] Geolocation permission state on mount:', result.state)
+
         if (result.state === 'granted') {
           setLocationPermission('granted')
+
+          // If permission already granted AND location is enabled, automatically request position
+          // This allows location to work on page refresh without user gesture
+          const savedEnabled = localStorage.getItem('gps-enabled')
+          if (savedEnabled === 'true') {
+            console.log('[PAGE] Permission already granted + GPS enabled, auto-requesting location')
+            // Small delay to ensure map is ready
+            setTimeout(() => {
+              if (locationRequestFnRef.current) {
+                try {
+                  locationRequestFnRef.current()
+                  console.log('[PAGE] Auto-triggered location request on mount')
+                } catch (e) {
+                  console.warn('[PAGE] Failed to auto-request location:', e)
+                }
+              }
+            }, 500)
+          }
         } else if (result.state === 'denied') {
           setLocationPermission('denied')
         }
+
         // Listen for permission changes
         result.addEventListener('change', () => {
           if (result.state === 'granted') {
