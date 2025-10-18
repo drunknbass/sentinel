@@ -17,6 +17,7 @@ type LeafletMapProps = {
   sidePanelOpen?: boolean
   panelWidth?: number
   showBottomSheet?: boolean
+  pinVerticalPosition?: number  // 0-1: Where pin should appear vertically (0=top, 0.5=center, 1=bottom)
   initialCenter?: [number, number]
   initialZoom?: number
   onMapMove?: (center: [number, number], zoom: number) => void
@@ -56,7 +57,7 @@ const getApproximateLevel = (item: Incident): "exact" | "small" | "medium" | "la
   return "exact"
 }
 
-export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, onUserLocation, disableInteractions = false, locationEnabled = true, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet, initialCenter, initialZoom, onMapMove, requestLocationTrigger, onLocationRequestReady }: LeafletMapProps) {
+export default function LeafletMap({ items, onMarkerClick, selectedIncident, onLocationPermission, onUserLocation, disableInteractions = false, locationEnabled = true, isRefreshing, sidePanelOpen, panelWidth = 320, showBottomSheet, pinVerticalPosition = 0.5, initialCenter, initialZoom, onMapMove, requestLocationTrigger, onLocationRequestReady }: LeafletMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -579,34 +580,28 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
     const L = (window as any).L
 
-    // Calculate pixel offset to center pin in safe area
-    let offsetX = 0
-    let offsetY = 0
-
     const viewportWidth = window.innerWidth
     const viewportHeight = window.innerHeight
 
-    // Desktop: offset for side panel
+    // Calculate pixel offset to position pin at desired vertical position
+    // pinVerticalPosition: 0 = top, 0.5 = center, 1 = bottom
+    // Offset calculation: (0.5 - pinVerticalPosition) * viewportHeight
+    // This shifts the map center so the pin appears at the desired position
+    const offsetY = (0.5 - pinVerticalPosition) * viewportHeight
+
+    // Desktop: offset for side panel (centers pin horizontally in safe area)
+    let offsetX = 0
     if (sidePanelOpen && viewportWidth >= 768) {
-      // Panel is on the right, shift view right to center pin in left 2/3rds
+      // Panel is on the right, shift view right to center pin in left portion
       // Safe area is (viewportWidth - panelWidth), center is at half of that
       // Offset from viewport center = (safe area center) - (viewport center)
       offsetX = -(panelWidth / 2)
     }
 
-    // Mobile: offset for bottom sheet
-    if (showBottomSheet && viewportWidth < 768) {
-      // Bottom sheet opens at 40vh (0.4 snap point)
-      // Position pin at 1/3 vertical breakpoint so it's not hidden behind panel
-      // Target position: 33.33vh from top (1/3 of viewport)
-      // Viewport center is at 50vh, so shift up by (50vh - 33.33vh) = 16.67vh
-      offsetY = viewportHeight * 0.1667
-    }
-
     // Get the container point for the pin's actual position at target zoom
     const targetPoint = mapInstanceRef.current.project([lat, lon], zoom)
 
-    // Add offset to position pin in safe area
+    // Apply offset to position pin in safe area
     const offsetPoint = L.point(targetPoint.x - offsetX, targetPoint.y - offsetY)
 
     // Convert back to lat/lng - this is where the map center should be
@@ -619,12 +614,11 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       animate: true
     })
 
-    console.log('[MAP] Flying to incident in safe area:', {
+    console.log('[MAP] Flying to incident:', {
       incident: [lat, lon],
+      pinVerticalPosition,
       offset: { offsetX, offsetY },
       targetCenter: [targetCenter.lat, targetCenter.lng],
-      sidePanelOpen,
-      showBottomSheet,
     })
   }
 
@@ -656,7 +650,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       })
       savedViewRef.current = null
     }
-  }, [selectedIncident, sidePanelOpen, panelWidth, showBottomSheet])
+  }, [selectedIncident, sidePanelOpen, panelWidth, showBottomSheet, pinVerticalPosition])
 
   return (
     <>

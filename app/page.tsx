@@ -1353,6 +1353,7 @@ export default function Page() {
           sidePanelOpen={!showBottomSheet && (showListView || !!selectedIncident)}
           panelWidth={showListView ? 500 : 320}
           showBottomSheet={showBottomSheet}
+          pinVerticalPosition={showBottomSheet ? 0.33 : 0.5}
           initialCenter={mapCenter}
           initialZoom={mapZoom}
           onMapMove={handleMapMove}
