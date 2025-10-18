@@ -234,6 +234,13 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
             userMarkerRef.current = L.marker([userLat, userLon], { icon: userIcon, zIndexOffset: 10000 }).addTo(mapInstanceRef.current)
 
+            // Force map to redraw/invalidate to ensure marker appears immediately
+            requestAnimationFrame(() => {
+              if (mapInstanceRef.current) {
+                mapInstanceRef.current.invalidateSize({ pan: false })
+              }
+            })
+
             // Update pulse scale based on zoom level
             const updatePulseScale = () => {
               if (!userMarkerRef.current) return
@@ -250,8 +257,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               }
             }
 
-            // Set initial pulse scale
-            updatePulseScale()
+            // Set initial pulse scale after DOM is ready
+            requestAnimationFrame(() => updatePulseScale())
 
             // Store handler ref for cleanup
             userMarkerZoomHandlerRef.current = updatePulseScale
