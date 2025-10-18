@@ -1093,7 +1093,7 @@ export default function Page() {
           >
             <button
               onClick={() => isMobile && setLegendOpen((v) => !v)}
-              className="w-full text-left border border-amber-500/50 p-1.5"
+              className="w-full text-left p-1.5"
             >
               <div className="text-[9px] font-mono font-bold text-amber-500 tracking-wider whitespace-nowrap">LEGEND</div>
             </button>
