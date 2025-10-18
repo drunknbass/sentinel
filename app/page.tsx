@@ -552,6 +552,10 @@ export default function Page() {
    */
   const handleLocationPermission = (granted: boolean) => {
     setLocationPermission(granted ? 'granted' : 'denied')
+    // Automatically enable GPS when permission is granted
+    if (granted) {
+      setLocationEnabled(true)
+    }
     console.log('[PAGE] Location permission:', granted ? 'granted' : 'denied')
   }
 
