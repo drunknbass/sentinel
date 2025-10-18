@@ -507,13 +507,19 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
         mapInstanceRef.current = map
 
-        // Create marker cluster group
+        // Create marker cluster group with stable positioning
         markerClusterGroupRef.current = L.markerClusterGroup({
           maxClusterRadius: 80,
           disableClusteringAtZoom: 18,
           spiderfyOnMaxZoom: true,
           showCoverageOnHover: false,
           zoomToBoundsOnClick: true,
+          // Stability options to prevent drift during pan
+          removeOutsideVisibleBounds: false, // Keep clusters stable during panning
+          animateAddingMarkers: false, // Reduce visual shifting
+          chunkedLoading: true, // Better performance and stability
+          chunkInterval: 50, // Process markers in chunks
+          chunkDelay: 50, // Delay between chunks
           iconCreateFunction: function(cluster: any) {
             const count = cluster.getChildCount()
             let sizeClass = 'small'
