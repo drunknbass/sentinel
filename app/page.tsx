@@ -1723,7 +1723,7 @@ export default function Page() {
       <div className="md:hidden">
         <MobileSheet
           open={!!mobileSheetType}
-          onClose={() => setMobileSheetType(null)}
+          onClose={() => { setMobileSheetType(null); panel.close(); }}
           title={
             mobileSheetType === 'filters' ? 'FILTERS' :
             mobileSheetType === 'incidents' ? 'ALL INCIDENTS' :
