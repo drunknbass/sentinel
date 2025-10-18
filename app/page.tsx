@@ -1084,7 +1084,7 @@ export default function Page() {
         </div>
       )}
       {/* Legend - fixed bottom-left; hover expands on desktop, tap toggles on mobile */}
-      {!(loading && !isRefreshing) && (
+      {!(loading && !hasInitialLoad) && (
         <div ref={legendRef} className="fixed left-4 bottom-4 safe-bottom z-20 md:z-20 pointer-events-auto">
           <div
             className={`bg-black border border-amber-500 ${isMobile ? (legendOpen ? 'w-auto max-w-sm' : 'w-[88px]') : 'max-w-sm'} transition-[width] duration-500 ease-out`}
@@ -1125,7 +1125,7 @@ export default function Page() {
       )}
 
       {/* Top navigation bar - Amber MDT style - Hide when loading */}
-      {!(loading && !isRefreshing) && (
+      {!(loading && !hasInitialLoad) && (
         <div
           ref={navRef}
           className="fixed top-0 left-0 right-0 z-[100] bg-black border-b-2 border-amber-500 safe-top"
@@ -1387,7 +1387,7 @@ export default function Page() {
       </div>
 
       {/* Right-side HUD stack - Terminal style - Hide when loading and on mobile */}
-      {!(loading && !isRefreshing) && (
+      {!(loading && !hasInitialLoad) && (
         <div className="hidden md:flex absolute top-32 right-6 z-30 flex-col items-end gap-3">
         {/* Location disabled indicator */}
         {locationPermission === 'denied' && (
