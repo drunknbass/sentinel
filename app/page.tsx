@@ -995,27 +995,33 @@ export default function Page() {
 
   /**
    * Reset carousel index when critical incidents array changes or becomes invalid
+   * Desktop only - mobile users explicitly open critical alerts panel
    */
   useEffect(() => {
+    if (isMobile) return
+
     if (criticalIncidents.length === 0) {
       setCriticalCarouselIndex(0)
     } else if (criticalCarouselIndex >= criticalIncidents.length) {
       // Index is out of bounds, reset to 0
       setCriticalCarouselIndex(0)
     }
-  }, [criticalIncidents.length, criticalCarouselIndex])
+  }, [criticalIncidents.length, criticalCarouselIndex, isMobile])
 
   /**
    * Auto-advances critical carousel every 8 seconds
+   * Desktop only - mobile users explicitly open critical alerts panel
    */
   useEffect(() => {
+    if (isMobile) return
+
     if (criticalIncidents.length > 1 && showCriticalCarousel && !showBottomSheet) {
       const interval = setInterval(() => {
         setCriticalCarouselIndex((prev) => (prev + 1) % criticalIncidents.length)
       }, 8000)
       return () => clearInterval(interval)
     }
-  }, [criticalIncidents.length, showCriticalCarousel, showBottomSheet])
+  }, [criticalIncidents.length, showCriticalCarousel, showBottomSheet, isMobile])
 
   /**
    * Calculates map bounds for all filtered incidents
