@@ -631,6 +631,8 @@ export default function Page() {
     const loc = `${lat},${lon}`
     console.log('[PAGE] Hardware user location:', loc)
     setUserLocation(loc)
+    // Update permission state since we successfully got location
+    setLocationPermission('granted')
   }
 
   /**
