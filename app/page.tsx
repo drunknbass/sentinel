@@ -17,7 +17,20 @@ import { setGpsRequester, markGpsPrompted } from "@/lib/gps-bridge"
 type Incident = IncidentsResponse["items"][number]
 
 // Polling interval (ms). Override with NEXT_PUBLIC_AUTO_REFRESH_INTERVAL_MS at build time.
-const AUTO_REFRESH_INTERVAL_MS = Number(process.env.NEXT_PUBLIC_AUTO_REFRESH_INTERVAL_MS || 300000)
+// Validated to prevent misconfiguration (min: 30s, max: 10min)
+const MIN_AUTO_REFRESH_INTERVAL_MS = 30000;   // 30 seconds
+const MAX_AUTO_REFRESH_INTERVAL_MS = 600000;  // 10 minutes
+const DEFAULT_AUTO_REFRESH_INTERVAL_MS = 300000; // 5 minutes
+let parsedInterval = Number(process.env.NEXT_PUBLIC_AUTO_REFRESH_INTERVAL_MS || DEFAULT_AUTO_REFRESH_INTERVAL_MS);
+if (
+  isNaN(parsedInterval) ||
+  parsedInterval < MIN_AUTO_REFRESH_INTERVAL_MS ||
+  parsedInterval > MAX_AUTO_REFRESH_INTERVAL_MS
+) {
+  console.warn(`[CONFIG] Auto-refresh interval ${parsedInterval}ms out of bounds, using default ${DEFAULT_AUTO_REFRESH_INTERVAL_MS}ms`);
+  parsedInterval = DEFAULT_AUTO_REFRESH_INTERVAL_MS;
+}
+const AUTO_REFRESH_INTERVAL_MS = parsedInterval;
 
 /**
  * Category color mapping for incident classification
@@ -1171,7 +1184,12 @@ export default function Page() {
 
       {/* Landscape warning - mobile only, optimized for landscape display */}
       {isMobile && isLandscape && (
-        <div className="absolute inset-0 z-[250] flex items-center justify-center p-3 bg-black/95">
+        <div
+          className="absolute inset-0 z-[250] flex items-center justify-center p-3 bg-black/95"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="landscape-warning-title"
+        >
           <div className="max-w-2xl w-full bg-black border-2 border-amber-500">
             <div className="border border-amber-500/50 p-4 font-mono">
               <div className="flex items-center gap-4">
@@ -1181,7 +1199,7 @@ export default function Page() {
                 </div>
                 {/* Content optimized for landscape */}
                 <div className="flex-1 space-y-2">
-                  <div className="text-xs text-amber-500 uppercase tracking-wider font-bold">
+                  <div id="landscape-warning-title" className="text-xs text-amber-500 uppercase tracking-wider font-bold">
                     ╔ ROTATE DEVICE TO PORTRAIT ╗
                   </div>
                   <div className="text-xs text-amber-400">
