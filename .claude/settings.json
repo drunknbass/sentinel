@@ -1,6 +1,0 @@
-{
-  "rules": [
-    "Do not add attribution messages like '🤖 Generated with [Claude Code]' or 'Co-Authored-By: Claude' to commits or pull requests.",
-    "Keep commit messages clean and professional without AI attribution footers."
-  ]
-}
