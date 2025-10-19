@@ -16,6 +16,9 @@ import { setGpsRequester, markGpsPrompted } from "@/lib/gps-bridge"
 
 type Incident = IncidentsResponse["items"][number]
 
+// Polling interval (ms). Override with NEXT_PUBLIC_AUTO_REFRESH_INTERVAL_MS at build time.
+const AUTO_REFRESH_INTERVAL_MS = Number(process.env.NEXT_PUBLIC_AUTO_REFRESH_INTERVAL_MS || 300000)
+
 /**
  * Category color mapping for incident classification
  * Used to color-code markers and badges throughout the app
@@ -100,6 +103,7 @@ export default function Page() {
   const [legendOpen, setLegendOpen] = useState(false)
   const legendRef = useDomRef<HTMLDivElement | null>(null)
   const [isLandscape, setIsLandscape] = useState(false)
+  const [isWindowFocused, setIsWindowFocused] = useState(true)
 
   // Detect landscape orientation on mobile
   useEffect(() => {
@@ -133,6 +137,22 @@ export default function Page() {
     setHeight()
     window.addEventListener('resize', setHeight)
     return () => window.removeEventListener('resize', setHeight)
+  }, [])
+
+  // Track window focus in addition to visibility; only poll when focused
+  useEffect(() => {
+    const onFocus = () => setIsWindowFocused(true)
+    const onBlur = () => setIsWindowFocused(false)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', onFocus)
+      window.addEventListener('blur', onBlur)
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('focus', onFocus)
+        window.removeEventListener('blur', onBlur)
+      }
+    }
   }, [])
 
   // Sync global panel state to legacy mobileSheetType (until panels are fully refactored)
@@ -974,16 +994,16 @@ export default function Page() {
 
     loadIncidents()
 
-    // Auto-refresh every 60 seconds if enabled and tab is visible
+    // Auto-refresh on an interval when enabled, tab is visible, and window is focused
     let interval: NodeJS.Timeout | null = null
-    if (autoRefreshEnabled && isTabVisible) {
+    if (autoRefreshEnabled && isTabVisible && isWindowFocused) {
       interval = setInterval(() => {
-        // Double-check tab visibility before refreshing
-        if (document && !document.hidden) {
-          console.log('[PAGE] Auto-refreshing data (60s interval)')
+        // Double-check tab visibility and focus before refreshing
+        if (document && !document.hidden && document.hasFocus()) {
+          console.log(`[PAGE] Auto-refreshing data (${AUTO_REFRESH_INTERVAL_MS}ms interval)`) 
           loadIncidents()
         }
-      }, 60000)
+      }, AUTO_REFRESH_INTERVAL_MS)
     }
 
     return () => {
@@ -991,7 +1011,7 @@ export default function Page() {
       abortController.abort() // Cancel in-flight request when filters change
       if (interval) clearInterval(interval)
     }
-  }, [selectedCategory, minPriority, timeRange, showLanding, autoRefreshEnabled, nocache, isTabVisible, userLocation])
+  }, [selectedCategory, minPriority, timeRange, showLanding, autoRefreshEnabled, nocache, isTabVisible, isWindowFocused, userLocation])
 
   /**
    * Reset carousel index when critical incidents array changes or becomes invalid
@@ -1148,20 +1168,25 @@ export default function Page() {
         </div>
       )}
 
-      {/* Landscape warning - mobile only */}
+      {/* Landscape warning - mobile only, optimized for landscape display */}
       {isMobile && isLandscape && (
-        <div className="absolute inset-0 z-[250] flex items-center justify-center p-4 bg-black/95">
-          <div className="max-w-sm w-full bg-black border-4 border-amber-500">
-            <div className="border-2 border-amber-500/50 p-8 space-y-6 font-mono text-center">
-              <div className="flex justify-center">
-                <Smartphone className="w-16 h-16 text-amber-500 animate-pulse" />
-              </div>
-              <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ ROTATE DEVICE ╗</div>
-              <div className="text-sm text-amber-400 leading-relaxed">
-                This application is optimized for portrait orientation. Please rotate your device to portrait mode to continue.
-              </div>
-              <div className="text-[11px] text-amber-500/60">
-                Portrait mode provides the best experience for viewing incident data.
+        <div className="absolute inset-0 z-[250] flex items-center justify-center p-3 bg-black/95">
+          <div className="max-w-2xl w-full bg-black border-2 border-amber-500">
+            <div className="border border-amber-500/50 p-4 font-mono">
+              <div className="flex items-center gap-4">
+                {/* Rotated phone icon to indicate rotation needed */}
+                <div className="flex-shrink-0">
+                  <Smartphone className="w-12 h-12 text-amber-500 animate-pulse transform rotate-90" />
+                </div>
+                {/* Content optimized for landscape */}
+                <div className="flex-1 space-y-2">
+                  <div className="text-xs text-amber-500 uppercase tracking-wider font-bold">
+                    ╔ ROTATE DEVICE TO PORTRAIT ╗
+                  </div>
+                  <div className="text-xs text-amber-400">
+                    This app is optimized for portrait orientation. Please rotate your device.
+                  </div>
+                </div>
               </div>
             </div>
           </div>
