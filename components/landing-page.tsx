@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 
 /**
  * LandingPage Component
@@ -15,18 +15,8 @@ import { useEffect, useRef, useState } from "react"
  */
 export default function LandingPage({ onEnter }: { onEnter: () => void }) {
   const mapRef = useRef<HTMLDivElement>(null)
-  const [mapboxToken, setMapboxToken] = useState<string | null>(null)
-
-  useEffect(() => {
-    fetch("/api/mapbox-token")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.token) {
-          setMapboxToken(data.token)
-        }
-      })
-      .catch((err) => console.error("Failed to fetch Mapbox token:", err))
-  }, [])
+  // Use public env var for client-side Mapbox token.
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
 
   useEffect(() => {
     if (typeof window === "undefined" || !mapRef.current) return

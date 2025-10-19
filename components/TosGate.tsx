@@ -41,7 +41,7 @@ export default function TosGate() {
           <div className="space-y-3 text-amber-400 text-sm leading-relaxed">
             <p>
               This application is unofficial. It is not affiliated with, endorsed by, or associated with the
-              Riverside County Sheriff's Office or the Riverside Police Department. Data is aggregated from
+              Riverside County Sheriff&apos;s Office or the Riverside Police Department. Data is aggregated from
               public sources for informational purposes only and may be incomplete or delayed. Do not use this
               app for emergency response. For emergencies, call 911.
             </p>

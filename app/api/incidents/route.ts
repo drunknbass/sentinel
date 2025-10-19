@@ -36,8 +36,14 @@ export async function GET(req: NextRequest) {
     // Riverside County centroid (from constants)
     userLocation = '33.73,-115.98';
   }
-  const maxGeocode = Number(url.searchParams.get('maxGeocode') || process.env.MAX_GEOCODE_PER_REQUEST || 100);
-  const geocodeConcurrency = Number(url.searchParams.get('geocodeConcurrency') || process.env.GEOCODE_CONCURRENCY || 3);
+  // Clamp geocoding limits to protect upstream APIs and hosting costs
+  const rawMaxGeocode = Number(url.searchParams.get('maxGeocode') || process.env.MAX_GEOCODE_PER_REQUEST || 100);
+  const maxGeocodeCap = Number(process.env.MAX_GEOCODE_CAP || 200);
+  const maxGeocode = Math.min(Math.max(0, rawMaxGeocode), maxGeocodeCap);
+
+  const rawConcurrency = Number(url.searchParams.get('geocodeConcurrency') || process.env.GEOCODE_CONCURRENCY || 3);
+  const concurrencyCap = Number(process.env.GEOCODE_CONCURRENCY_CAP || 5);
+  const geocodeConcurrency = Math.min(Math.max(1, rawConcurrency), concurrencyCap);
   const nocache = ['1', 'true', 'yes'].includes((url.searchParams.get('nocache') || '').toLowerCase());
   const forceGeocode = url.searchParams.get('forceGeocode'); // 'apple', 'census', 'nominatim'
 
@@ -101,13 +107,16 @@ export async function GET(req: NextRequest) {
     console.log('[API] Final count to return:', spatial.length);
     console.log('[API] Response:', { count: spatial.length, itemsSample: spatial.slice(0, 2) });
 
+    // Dynamic cache headers: default to modest edge cache, allow tuning via env
+    const sMax = Number(process.env.INCIDENTS_S_MAXAGE || 120);
+    const swr = Number(process.env.INCIDENTS_STALE_WHILE_REVALIDATE || 300);
+    const headers = nocache
+      ? { 'Cache-Control': 'no-store' }
+      : { 'Cache-Control': `public, s-maxage=${sMax}, stale-while-revalidate=${swr}` };
+
     return NextResponse.json(
       { count: spatial.length, items: spatial },
-      {
-        headers: {
-          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60'
-        }
-      }
+      { headers }
     );
   } catch (error: any) {
     console.error('[API] Error occurred:', error?.message);

@@ -1133,7 +1133,7 @@ export default function Page() {
             <div className="border-2 border-amber-500/50 p-5 md:p-6 space-y-4 font-mono">
               <div className="text-xs text-amber-500/70 uppercase tracking-wider">╔ IMPORTANT NOTICE ╗</div>
               <div className="text-sm text-amber-400 leading-relaxed">
-                This application is unofficial. It is not affiliated with, endorsed by, or associated with the Riverside County Sheriff's Office or the Riverside Police Department. Data shown is aggregated from publicly available sources for informational purposes only and may be incomplete or delayed. Do not use this app for emergency response. For emergencies, call 911.
+                This application is unofficial. It is not affiliated with, endorsed by, or associated with the Riverside County Sheriff&apos;s Office or the Riverside Police Department. Data shown is aggregated from publicly available sources for informational purposes only and may be incomplete or delayed. Do not use this app for emergency response. For emergencies, call 911.
               </div>
               <div className="text-[11px] text-amber-500/60">
                 By continuing you acknowledge this notice and may be prompted for location access.

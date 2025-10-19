@@ -29,9 +29,9 @@ export async function generateAppleMapsToken(): Promise<string | null> {
     console.log(`[APPLE_MAPS ${timestamp}] Cache status: EMPTY`);
   }
 
-  // TEST: Try using pre-generated token FIRST
-  const testToken = process.env.APPLE_MAPKIT_TEST_TOKEN || 'eyJraWQiOiJKUDNDQjQzRFUyIiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJTS1c5N1I2MzRNIiwiaWF0IjoxNzYwNjQ4NzM1LCJleHAiOjE3NjEyODkxOTl9.IZIezMgJRGG5Eevt4qrlqP-iOUet7w_cSTgRB3P8iJrYmsvjuL1npJ7dx2No-wzU9-sms6Gw4uPvmmXf6G-Yow';
-  const hasTestToken = testToken && testToken !== 'SKIP';
+  // TEST: Try using pre-generated token FIRST (never in production)
+  const testToken = process.env.APPLE_MAPKIT_TEST_TOKEN;
+  const hasTestToken = !!testToken && process.env.NODE_ENV !== 'production' && testToken !== 'SKIP';
 
   console.log(`[APPLE_MAPS ${timestamp}] Test token: ${hasTestToken ? 'PRESENT' : 'SKIP'}`);
 

@@ -20,10 +20,13 @@ export async function GET(req: NextRequest) {
       getTodayViews()
     ]);
 
-    return NextResponse.json({
-      today: todayViews,
-      history: views
-    });
+    // Edge cache analytics briefly to reduce function invocations
+    const sMax = Number(process.env.ANALYTICS_S_MAXAGE || 300);
+    const swr = Number(process.env.ANALYTICS_STALE_WHILE_REVALIDATE || 600);
+    return NextResponse.json(
+      { today: todayViews, history: views },
+      { headers: { 'Cache-Control': `public, s-maxage=${sMax}, stale-while-revalidate=${swr}` } }
+    );
   } catch (error) {
     console.error('[ANALYTICS API] Error:', error);
     return NextResponse.json({ error: 'Failed to fetch analytics' }, { status: 500 });
