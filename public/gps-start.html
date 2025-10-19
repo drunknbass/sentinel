@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Enable Location</title>
+    <style>
+      html, body { height: 100%; margin: 0; }
+      body { background:#000; color:#f59e0b; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; display:flex; align-items:center; justify-content:center; }
+      .card { max-width: 680px; width: calc(100% - 24px); border: 4px solid #f59e0b; padding: 16px; background: #000; }
+      .inner { border: 2px solid #f59e0b80; padding: 16px; }
+      .btn { display:inline-block; padding: 12px 16px; border: 2px solid #f59e0b; background:#f59e0b; color:#000; font-weight:700; cursor:pointer; text-align:center; }
+      .btn.alt { background: transparent; color:#f59e0b; }
+      .row { margin-top: 12px; display:flex; gap: 8px; flex-wrap: wrap; }
+      .muted { color:#f59e0bb0; font-size: 12px; }
+      .log { margin-top: 12px; color:#fbbf24; font-size:12px; word-break: break-word; max-height: 30vh; overflow:auto; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="inner">
+        <div style="font-size:12px; opacity:.8; text-transform:uppercase; margin-bottom:8px">╔ Enable Location ╗</div>
+        <div style="color:#fbbf24; font-size:14px; line-height:1.5; margin-bottom:12px">
+          Tap the button below to enable GPS. On iOS, this must be done from a user tap.
+        </div>
+        <div class="row">
+          <button id="ask" class="btn">[ENTER] ENABLE LOCATION</button>
+          <button id="watch" class="btn alt">[W] WATCH POSITION</button>
+          <button id="stop" class="btn alt">[S] STOP WATCH</button>
+          <a href="/" class="btn alt">[ESC] BACK TO APP</a>
+        </div>
+        <div id="hint" class="muted" style="margin-top:10px"></div>
+        <div id="log" class="log"></div>
+      </div>
+    </div>
+    <script>
+      (function(){
+        const logEl = document.getElementById('log');
+        const hintEl = document.getElementById('hint');
+        function log(m){ const ts = new Date().toISOString(); logEl.textContent = ts+" "+m+"\n"+logEl.textContent; }
+        try { log('secureContext='+String(window.isSecureContext)); } catch{}
+        if (!('geolocation' in navigator)) {
+          log('navigator.geolocation not available');
+        }
+        if ('permissions' in navigator && navigator.permissions?.query) {
+          navigator.permissions.query({ name: 'geolocation' }).then(p=>{
+            log('permissions.state='+p.state);
+            if (p.state === 'denied') {
+              hintEl.textContent = 'Location is blocked. Enable in Settings (Safari Websites → Location → Allow, with Precise Location ON), then return.';
+            }
+          }).catch(e=>log('permissions.error='+ (e&&e.message||e)));
+        } else {
+          log('Permissions API not available');
+        }
+        // Shared watch helpers
+        var wid = null;
+        function renderLocation(lat, lon){
+          const msg = 'LAT,LON = '+lat+','+lon;
+          hintEl.textContent = 'Location acquired.';
+          log(msg);
+          // Also write to localStorage for convenience (no redirect)
+          try { localStorage.setItem('gps:userLocation', lat+','+lon); localStorage.setItem('gps:ts', String(Date.now())); } catch{}
+        }
+        function startWatch(){
+          if (!('geolocation' in navigator)) { log('no geolocation in navigator'); return; }
+          if (wid != null) { log('watch already running id='+wid); return; }
+          try {
+            wid = navigator.geolocation.watchPosition(function(pos){
+              renderLocation(pos.coords.latitude, pos.coords.longitude);
+            }, function(err){
+              log('watch error code='+err.code+' msg='+err.message);
+            }, { enableHighAccuracy: true, maximumAge: 0 });
+            log('starting watchPosition id='+wid);
+          } catch(e){ log('watch exception '+(e&&e.message||e)); }
+        }
+        function stopWatch(){
+          if (wid != null) {
+            try { navigator.geolocation.clearWatch(wid); } catch{}
+            log('stopped watchPosition id='+wid);
+            wid = null;
+          }
+        }
+        function ask(){
+          log('requesting geolocation...');
+          if (!('geolocation' in navigator)) { log('no geolocation in navigator'); return; }
+          navigator.geolocation.getCurrentPosition(function(pos){
+            const lat = pos.coords.latitude, lon = pos.coords.longitude;
+            log('SUCCESS '+lat+','+lon);
+            renderLocation(lat, lon);
+            // Auto-start watch after first success
+            startWatch();
+          }, function(err){
+            log('ERROR code='+err.code+' msg='+err.message);
+            if (err.code === 1) {
+              hintEl.textContent = 'Permission denied. Open Settings and allow Location for this site, then try again.';
+            } else if (err.code === 2) {
+              hintEl.textContent = 'Position unavailable. Ensure Location Services are ON and try again.';
+            } else if (err.code === 3) {
+              hintEl.textContent = 'Timed out. Try again in an area with better reception.';
+            }
+          }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+        }
+        (function(){
+          const btn = document.getElementById('ask');
+          let fired = false;
+          const run = () => { if (fired) return; fired = true; ask(); };
+          btn.addEventListener('click', run, { passive: true, once: true });
+          btn.addEventListener('touchstart', run, { passive: true, once: true });
+        })();
+        // Watch/Unwatch controls
+        (function(){
+          if (!('geolocation' in navigator)) return;
+          const wbtn = document.getElementById('watch');
+          const sbtn = document.getElementById('stop');
+          wbtn.addEventListener('click', function(){ startWatch(); });
+          sbtn.addEventListener('click', function(){ stopWatch(); });
+        })();
+        // If permission already granted, auto-start watch immediately on load
+        (function(){
+          if (!('geolocation' in navigator)) return;
+          if ('permissions' in navigator && navigator.permissions?.query) {
+            navigator.permissions.query({ name: 'geolocation' }).then(p=>{
+              if (p.state === 'granted') {
+                log('permission already granted; starting watch now');
+                startWatch();
+              }
+            }).catch(()=>{});
+          }
+        })();
+        // In-app browser hint
+        (function(){
+          var ua = navigator.userAgent || '';
+          var inApp = /(FBAN|FBAV|Instagram|Line\/)i/i.test(ua) || /Twitter/i.test(ua) || /WebView/i.test(ua);
+          if (inApp) {
+            hintEl.textContent = 'In-app browsers may block GPS. Use Safari/Chrome for best results.';
+          }
+        })();
+      })();
+    </script>
+  </body>
+  </html>
