@@ -3,8 +3,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 async function testAppleMapsDirectly() {
-  // The token that should be working
-  const token = 'eyJraWQiOiJKUDNDQjQzRFUyIiwidHlwIjoiSldUIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJTS1c5N1I2MzRNIiwiaWF0IjoxNzYwNjQ4NzM1LCJleHAiOjE3NjEyODkxOTl9.IZIezMgJRGG5Eevt4qrlqP-iOUet7w_cSTgRB3P8iJrYmsvjuL1npJ7dx2No-wzU9-sms6Gw4uPvmmXf6G-Yow';
+  // Use test token from environment
+  const token = process.env.APPLE_MAPKIT_TEST_TOKEN;
+
+  if (!token) {
+    console.error('APPLE_MAPKIT_TEST_TOKEN not set in environment');
+    return;
+  }
 
   // Test addresses
   const tests = [
