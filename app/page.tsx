@@ -615,18 +615,19 @@ export default function Page() {
   }, [])
 
   /**
-   * Restore scroll position when incidents sheet opens
+   * Scroll position restoration disabled for better UX
+   * Allows users to dismiss and return to list without being forced to previous position
    */
-  useEffect(() => {
-    if (mobileSheetType === 'incidents' && incidentsScrollRef.current) {
-      // Restore scroll position after a short delay to ensure DOM is ready
-      setTimeout(() => {
-        if (incidentsScrollRef.current) {
-          incidentsScrollRef.current.scrollTop = incidentsScrollPos
-        }
-      }, 50)
-    }
-  }, [mobileSheetType, incidentsScrollPos])
+  // useEffect(() => {
+  //   if (mobileSheetType === 'incidents' && incidentsScrollRef.current) {
+  //     // Restore scroll position after a short delay to ensure DOM is ready
+  //     setTimeout(() => {
+  //       if (incidentsScrollRef.current) {
+  //         incidentsScrollRef.current.scrollTop = incidentsScrollPos
+  //       }
+  //     }, 50)
+  //   }
+  // }, [mobileSheetType, incidentsScrollPos])
 
   /**
    * Handles entering the map view from landing page
@@ -2089,10 +2090,7 @@ export default function Page() {
                       <button
                         key={item.incident_id}
                         onClick={() => {
-                          // Save scroll position before navigating
-                          if (incidentsScrollRef.current) {
-                            setIncidentsScrollPos(incidentsScrollRef.current.scrollTop)
-                          }
+                          // Scroll position saving disabled
                           setSelectedIncident(item)
                           setMobileSheetType(null)
                           setShowBottomSheet(true)
@@ -2158,10 +2156,7 @@ export default function Page() {
                       <button
                         key={item.incident_id}
                         onClick={() => {
-                          // Save scroll position before navigating (critical incidents)
-                          if (incidentsScrollRef.current) {
-                            setIncidentsScrollPos(incidentsScrollRef.current.scrollTop)
-                          }
+                          // Scroll position saving disabled
                           setSelectedIncident(item)
                           setMobileSheetType(null)
                           setShowBottomSheet(true)

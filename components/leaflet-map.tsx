@@ -741,26 +741,18 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
     const L = (window as any).L
     if (!L) return
 
-    // When selecting an incident, save current view (once) and animate to it
+    // When selecting an incident, fly to it
     if (selectedIncident && selectedIncident.lat && selectedIncident.lon) {
-      // Save current view only on first incident selection
-      if (!savedViewRef.current) {
-        const center = mapInstanceRef.current.getCenter()
-        const zoom = mapInstanceRef.current.getZoom()
-        savedViewRef.current = { center: [center.lat, center.lng], zoom }
-        console.log('[MAP] Saved user view:', savedViewRef.current)
-      }
+      // Clear any saved view when opening a new incident
+      savedViewRef.current = null
 
       // Always fly to the selected incident (works for first pin and switching between pins)
       flyToIncidentInSafeArea(selectedIncident.lat, selectedIncident.lon, 18)
     }
-    // When deselecting, restore previous view
+    // When deselecting, do NOT restore previous view (disabled for better UX)
+    // User can freely pan/zoom without being snapped back on dismiss
     else if (!selectedIncident && savedViewRef.current) {
-      console.log('[MAP] Restoring user view:', savedViewRef.current)
-      mapInstanceRef.current.flyTo(savedViewRef.current.center, savedViewRef.current.zoom, {
-        duration: 1.2,
-        easeLinearity: 0.25,
-      })
+      console.log('[MAP] View restoration disabled - user can freely navigate')
       savedViewRef.current = null
     }
   }, [selectedIncident, sidePanelOpen, panelWidth, showBottomSheet, pinVerticalPosition])
