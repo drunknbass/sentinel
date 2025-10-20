@@ -1,0 +1,14 @@
+# CODEOWNERS
+# Default owner
+*       @drunknbass
+
+# Major areas
+app/**  @drunknbass
+lib/**  @drunknbass
+components/** @drunknbass
+
+# Repo meta
+.github/** @drunknbass
+tests/**   @drunknbass
+scripts/** @drunknbass
+

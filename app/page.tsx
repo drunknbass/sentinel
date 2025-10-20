@@ -117,6 +117,8 @@ export default function Page() {
   const legendRef = useDomRef<HTMLDivElement | null>(null)
   const [isLandscape, setIsLandscape] = useState(false)
   const [isWindowFocused, setIsWindowFocused] = useState(true)
+  const locationRequestInFlightRef = useRef(false)
+  const locationRequestTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Detect landscape orientation on mobile
   useEffect(() => {
@@ -348,11 +350,12 @@ export default function Page() {
     if (typeof window === 'undefined') return
     if (!('geolocation' in navigator)) return
     if (!window.isSecureContext) return
+    if (showLanding) return // avoid prompting while on landing page taps
 
     // Hook the very first user interaction to guarantee a gesture-based prompt
     const onFirstInteract = () => {
-      // If permission not yet granted, try again with gesture
-      if (locationPermission !== 'granted') {
+      // If permission not yet granted, try again with gesture once
+      if (locationPermission !== 'granted' && !locationRequestInFlightRef.current) {
         try { handleRequestLocation() } catch {}
       }
     }
@@ -362,7 +365,7 @@ export default function Page() {
       window.removeEventListener('pointerdown', onFirstInteract)
       window.removeEventListener('keydown', onFirstInteract)
     }
-  }, [locationPermission])
+  }, [locationPermission, showLanding])
 
   // (Removed global pointerdown hook; rely on explicit triggers + first-interaction fallback above)
 
@@ -648,9 +651,12 @@ export default function Page() {
    * Location permission will be requested by the map component
    */
   const handleEnterMapView = () => {
-    // IMPORTANT: Request geolocation first inside the same user gesture
-    // iOS Safari is strict about gesture timing; call this before state changes
-    try { handleRequestLocation() } catch {}
+    // IMPORTANT: Attempt geolocation within the same user gesture, but avoid duplicates
+    try {
+      if (!locationRequestInFlightRef.current && locationPermission !== 'granted') {
+        handleRequestLocation()
+      }
+    } catch {}
 
     // Then switch to the map view
     const url = new URL(window.location.href)
@@ -718,13 +724,31 @@ export default function Page() {
   const handleRequestLocation = () => {
     if (typeof window === 'undefined' || !navigator.geolocation) return
 
+    if (locationRequestInFlightRef.current) {
+      console.log('[PAGE] Location request already in flight; skipping duplicate')
+      return
+    }
+
     console.log('[PAGE] Manually requesting location permission')
     setLocationPermission('pending')
+
+    // Guard against re-entrancy/duplicate prompts
+    locationRequestInFlightRef.current = true
+    if (locationRequestTimeoutRef.current) clearTimeout(locationRequestTimeoutRef.current)
+    // Safety timeout to clear the in-flight flag if callbacks don't fire
+    locationRequestTimeoutRef.current = setTimeout(() => {
+      locationRequestInFlightRef.current = false
+    }, 15000)
 
     // Call the location request function directly (maintains user gesture context for iOS)
     if (locationRequestFnRef.current) {
       console.log('[PAGE] Calling location request function directly')
       locationRequestFnRef.current()
+      // Allow another request after a short grace period
+      if (locationRequestTimeoutRef.current) clearTimeout(locationRequestTimeoutRef.current)
+      locationRequestTimeoutRef.current = setTimeout(() => {
+        locationRequestInFlightRef.current = false
+      }, 5000)
     } else {
       console.warn('[PAGE] Location request function not ready; requesting directly now (keeps user gesture)')
       // Guarantee a prompt even if the map isn't mounted yet
@@ -737,10 +761,14 @@ export default function Page() {
           const loc = `${lat},${lon}`
           console.log('[PAGE] Direct geolocation success:', loc)
           setUserLocation(loc)
+          locationRequestInFlightRef.current = false
+          if (locationRequestTimeoutRef.current) clearTimeout(locationRequestTimeoutRef.current)
         },
         (err) => {
           console.error('[PAGE] Direct geolocation error:', err)
           setLocationPermission('denied')
+          locationRequestInFlightRef.current = false
+          if (locationRequestTimeoutRef.current) clearTimeout(locationRequestTimeoutRef.current)
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       )

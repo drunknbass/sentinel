@@ -446,6 +446,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               keepBuffer: 8,
             },
           ).addTo(map)
+          try { map.setMaxZoom?.(19) } catch { (map as any).options.maxZoom = 19 }
         } else {
           tileLayerRef.current = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
             attribution:
@@ -456,6 +457,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
             updateWhenZooming: false,
             keepBuffer: 8,
           }).addTo(map)
+          try { map.setMaxZoom?.(20) } catch { (map as any).options.maxZoom = 20 }
         }
 
         // Add zoom controls (works with programmatic zoom even if touch/wheel zoom are disabled)
@@ -507,11 +509,18 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
         mapInstanceRef.current = map
 
-        // Create marker cluster group with stable positioning
+        // Create marker cluster group
+        // Fix: keep clustering enabled up to (and including) max map zoom so
+        // markers with identical coordinates do not overlap. At max zoom,
+        // clicking the cluster will spiderfy to expose individual pins.
         markerClusterGroupRef.current = L.markerClusterGroup({
           maxClusterRadius: 80,
-          disableClusteringAtZoom: 18,
+          // Previously 18 caused identical coords to overlap when zoomed in.
+          // Use a value above the map's max zoom (Mapbox 19, Carto 20).
+          disableClusteringAtZoom: 21,
           spiderfyOnMaxZoom: true,
+          // Slightly increase spiderfy distance for legibility when pins share a point
+          spiderfyDistanceMultiplier: 1.4,
           showCoverageOnHover: false,
           zoomToBoundsOnClick: true,
           // Stability options to prevent drift during pan
