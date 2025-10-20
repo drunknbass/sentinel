@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { sharedCache } from '../../lib/cache';
 import { scrapeIncidents } from '../../lib/scrape';
 
-const fixturePath = resolve(__dirname, './fixtures/pressaccess.html');
+const fixturePath = resolve(__dirname, '../fixtures/pressaccess.html');
 const fixtureHtml = readFileSync(fixturePath, 'utf-8');
 
 const htmlResponse = {

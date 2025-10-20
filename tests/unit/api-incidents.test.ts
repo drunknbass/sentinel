@@ -5,7 +5,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { sharedCache } from '../../lib/cache';
 import { GET } from '../../app/api/incidents/route';
 
-const fixturePath = resolve(__dirname, './fixtures/pressaccess.html');
+const fixturePath = resolve(__dirname, '../fixtures/pressaccess.html');
 const fixtureHtml = readFileSync(fixturePath, 'utf-8');
 
 const htmlResponse = {
