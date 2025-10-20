@@ -59,3 +59,6 @@ Works on any Node host. Vercel recommended. Set env vars in Production, Preview,
 
 ## License
 MIT – see `LICENSE`.
+
+## Contributing
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, checks, and PR flow.
