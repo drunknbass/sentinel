@@ -446,6 +446,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               keepBuffer: 8,
             },
           ).addTo(map)
+          try { map.setMaxZoom?.(19) } catch { (map as any).options.maxZoom = 19 }
         } else {
           tileLayerRef.current = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
             attribution:
@@ -456,6 +457,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
             updateWhenZooming: false,
             keepBuffer: 8,
           }).addTo(map)
+          try { map.setMaxZoom?.(20) } catch { (map as any).options.maxZoom = 20 }
         }
 
         // Add zoom controls (works with programmatic zoom even if touch/wheel zoom are disabled)
