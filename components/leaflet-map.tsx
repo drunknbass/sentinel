@@ -68,6 +68,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
   const savedViewRef = useRef<{ center: [number, number]; zoom: number } | null>(null)
   const userMarkerRef = useRef<any>(null)
   const userMarkerZoomHandlerRef = useRef<any>(null)
+  const [flyoutGroup, setFlyoutGroup] = useState<{ lat: number; lon: number; items: Incident[] } | null>(null)
+  const [flyoutPoint, setFlyoutPoint] = useState<{ x: number; y: number } | null>(null)
 
   // Reusable function to request user location
   const requestUserLocation = () => {
@@ -584,7 +586,25 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
     const validItems = items.filter((item) => item.lat && item.lon)
 
-    validItems.forEach((item) => {
+    // Group identical coordinates (6dp)
+    const groups = new Map<string, { lat: number; lon: number; items: Incident[] }>()
+    const keyOf = (lat: number, lon: number) => `${lat!.toFixed(6)},${lon!.toFixed(6)}`
+    for (const it of validItems) {
+      const k = keyOf(it.lat!, it.lon!)
+      if (!groups.has(k)) groups.set(k, { lat: it.lat!, lon: it.lon!, items: [] })
+      groups.get(k)!.items.push(it)
+    }
+
+    const openFlyout = (lat: number, lon: number, itemsAtPoint: Incident[]) => {
+      if (!mapInstanceRef.current) return
+      const L = (window as any).L
+      const pt = mapInstanceRef.current.latLngToContainerPoint(L.latLng(lat, lon))
+      setFlyoutPoint({ x: pt.x, y: pt.y })
+      setFlyoutGroup({ lat, lon, items: itemsAtPoint })
+    }
+
+    groups.forEach(({ lat, lon, items: arr }) => {
+      const item = arr[0]
       const color = getPriorityColor(item.priority)
 
       // Different visual styles based on priority level
@@ -667,8 +687,11 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         iconAnchor: [size / 2, size / 2],
       })
 
-      const marker = L.marker([item.lat!, item.lon!], { icon })
-        .on("click", () => onMarkerClick(item))
+      const marker = L.marker([lat, lon], { icon })
+        .on("click", () => {
+          if (arr.length > 1) openFlyout(lat, lon, arr)
+          else onMarkerClick(item)
+        })
 
       if (markerClusterGroupRef.current) {
         markerClusterGroupRef.current.addLayer(marker)
@@ -695,6 +718,21 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       }, 100)
     }
   }, [items, onMarkerClick, selectedIncident])
+
+  // Keep flyout anchored on pan/zoom
+  useEffect(() => {
+    if (!mapInstanceRef.current) return
+    const L = (window as any).L
+    const map = mapInstanceRef.current
+    const update = () => {
+      if (!flyoutGroup) return
+      const pt = map.latLngToContainerPoint(L.latLng(flyoutGroup.lat, flyoutGroup.lon))
+      setFlyoutPoint({ x: pt.x, y: pt.y })
+    }
+    map.on('move zoom', update)
+    update()
+    return () => { map.off('move zoom', update) }
+  }, [flyoutGroup])
 
   // Reusable function to calculate safe area center and animate to a pin
   const flyToIncidentInSafeArea = (lat: number, lon: number, zoom: number) => {
@@ -769,6 +807,16 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
   return (
     <>
       <div ref={mapRef} className="absolute inset-0 w-full h-full bg-[#1a1a1a]">
+        {flyoutGroup && flyoutPoint && (
+          <OverlapFlyout
+            items={flyoutGroup.items}
+            lat={flyoutGroup.lat}
+            lon={flyoutGroup.lon}
+            anchor={flyoutPoint}
+            onSelect={(it) => { onMarkerClick(it); setFlyoutGroup(null) }}
+            onClose={() => setFlyoutGroup(null)}
+          />
+        )}
         <style jsx global>{`
           @keyframes pulse-priority {
             0%, 100% {

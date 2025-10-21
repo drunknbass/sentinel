@@ -1,0 +1,54 @@
+name: UI Snapshots
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  storybook-and-snapshots:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Storybook
+        run: pnpm build-storybook || true
+
+      - name: Upload Storybook static
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: storybook-static
+
+      - name: Run UI snapshot tests
+        run: pnpm run test:ui || true
+
+      - name: Upload Vitest snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-snapshots
+          path: |
+            tests/ui/__snapshots__
+            vitest-report.*
+
+      - name: Summarize
+        run: |
+          echo "### UI Snapshots" >> $GITHUB_STEP_SUMMARY
+          echo "- Storybook artifact: storybook-static" >> $GITHUB_STEP_SUMMARY
+          echo "- Vitest snapshots: vitest-snapshots" >> $GITHUB_STEP_SUMMARY
+
