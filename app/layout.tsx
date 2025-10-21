@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from '@/lib/themes/theme-provider';
 import { PanelProvider } from '@/lib/ui/panel-provider';
 import RootClient from '@/components/RootClient';
+import { Analytics } from '@vercel/analytics/next';
 import TosGate from '@/components/TosGate';
 
 export const metadata: Metadata = {
@@ -28,6 +29,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <RootClient>
               {children}
               <TosGate />
+              {/* Vercel Analytics: automatic page view tracking */}
+              <Analytics />
             </RootClient>
           </ThemeProvider>
         </PanelProvider>
