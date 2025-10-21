@@ -2,6 +2,10 @@
   "name": "rso-pressaccess-vercel",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
