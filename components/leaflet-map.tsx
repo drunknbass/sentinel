@@ -571,6 +571,27 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         })
         map.addLayer(markerClusterGroupRef.current)
 
+        // After each zoom animation, normalize cluster marker positions so the
+        // icon is placed at the geographic center of its children. MarkerCluster
+        // uses an internal weighted center which can feel biased depending on
+        // membership changes. This snaps the visual marker to the bounds center
+        // for better spatial intuition.
+        const alignClustersToCentroid = () => {
+          try {
+            markerClusterGroupRef.current?.eachLayer((layer: any) => {
+              if (typeof layer.getChildCount === 'function' && typeof layer.getBounds === 'function' && layer.getChildCount() > 1) {
+                const center = layer.getBounds().getCenter()
+                if (center && typeof layer.setLatLng === 'function') {
+                  layer.setLatLng(center)
+                }
+              }
+            })
+          } catch {}
+        }
+
+        map.on('zoomend', () => requestAnimationFrame(alignClustersToCentroid))
+        markerClusterGroupRef.current.on('animationend', () => requestAnimationFrame(alignClustersToCentroid))
+
         // Expose location request immediately once map exists (ensures user-gesture path works)
         try { onLocationRequestReady?.(requestUserLocation) } catch {}
 
