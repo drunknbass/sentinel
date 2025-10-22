@@ -794,6 +794,9 @@ export default function Page() {
 
     const newUrl = `${window.location.pathname}?${params.toString()}`
     window.history.replaceState({}, '', newUrl)
+
+    // Any map interaction should collapse the legend to keep the view clean
+    setLegendOpen(false)
   }
 
   /**

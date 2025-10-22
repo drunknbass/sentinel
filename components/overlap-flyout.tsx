@@ -21,7 +21,7 @@ export default function OverlapFlyout({ items, lat, lon, anchor, onSelect, onClo
   return (
     <div
       className="cyber-flyout"
-      style={{ position: 'absolute', left: anchor ? anchor.x : 14, top: anchor ? anchor.y : 14, zIndex: 5000 }}
+      style={{ position: 'absolute', left: anchor ? anchor.x : 14, top: anchor ? anchor.y : 14, transform: 'translate(-50%, -100%) translate(16px, -12px)', zIndex: 5000 }}
       onClick={(e) => e.stopPropagation()}
     >
       <div className="cyber-flyout-inner">
@@ -42,6 +42,7 @@ export default function OverlapFlyout({ items, lat, lon, anchor, onSelect, onClo
         </div>
       </div>
       <style jsx global>{`
+        .cyber-flyout{pointer-events:auto}
         .cyber-flyout-inner{width:248px;background:rgba(0,0,0,0.92);border:2px solid #ffb000;box-shadow:0 0 16px rgba(255,176,0,0.6), inset 0 0 12px rgba(255,176,0,0.2);font-family:"IBM Plex Mono","Courier New",monospace;color:#ffb000}
         .cyber-flyout-header{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;font-weight:bold;letter-spacing:.5px;background:linear-gradient(90deg, rgba(255,176,0,0.15), rgba(0,0,0,0))}
         .cyber-close{color:#ffb000;background:transparent;border:none;font-size:18px;cursor:pointer}
@@ -57,4 +58,3 @@ export default function OverlapFlyout({ items, lat, lon, anchor, onSelect, onClo
     </div>
   )
 }
-
