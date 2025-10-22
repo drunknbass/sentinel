@@ -754,6 +754,28 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       markersRef.current.push(marker)
     })
 
+    // Ensure clusters are visually centered at the constant centroid as soon
+    // as markers are added (not only after the next zoom). This prevents the
+    // first zoom-in from revealing a large offset.
+    try {
+      const L = (window as any).L
+      const alignNow = () => {
+        markerClusterGroupRef.current?.eachLayer((layer: any) => {
+          if (typeof layer.getChildCount !== 'function' || layer.getChildCount() <= 1) return
+          if (typeof layer.getAllChildMarkers !== 'function' || typeof layer.setLatLng !== 'function') return
+          const children: any[] = layer.getAllChildMarkers()
+          if (!children?.length) return
+          let sLat = 0, sLng = 0
+          for (const m of children) { const ll = m.getLatLng(); sLat += ll.lat; sLng += ll.lng }
+          const center = L.latLng(sLat / children.length, sLng / children.length)
+          layer.setLatLng(center)
+        })
+      }
+      // Run twice to catch any late-added cluster layers
+      requestAnimationFrame(alignNow)
+      setTimeout(alignNow, 50)
+    } catch {}
+
     // Only zoom to fit all pins on the very first load (never again after that)
     // Skip if user provided initial center/zoom from URL params
     if (validItems.length > 0 && !hasInitialZoomedRef.current && !selectedIncident && !initialCenter && !initialZoom) {
