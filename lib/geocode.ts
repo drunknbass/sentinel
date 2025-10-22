@@ -591,22 +591,9 @@ export async function geocodeOne(
   }
   }
 
-  // If all geocoding failed but we have an area, use area centroid as last resort
-  if (value.lat === null && value.lon === null && area) {
-    const areaUpper = area.toUpperCase().trim();
-    if (AREA_COORDINATES[areaUpper]) {
-      console.log(`[GEOCODE] All services failed, using area centroid for ${area}`);
-      value = {
-        lat: AREA_COORDINATES[areaUpper].lat,
-        lon: AREA_COORDINATES[areaUpper].lon,
-        approximate: true,
-        strategy: 'apple_maps' as const, // Mark as apple_maps since it's our primary
-        centroid_used: `area_fallback:${area}`,
-        error: 'Used area centroid as fallback',
-        query: address
-      };
-    }
-  }
+  // IMPORTANT: Never place pins at centroids. If APIs fail, leave as null so
+  // the UI does not display an incorrect location. Centroids are only used as
+  // userLocation hints for Apple Maps requests inside geocodeWithAppleMaps.
 
   // Only cache successful results that are not area-centroid fallbacks.
   // Caching area fallbacks prevents future re-geocoding when tokens/env improve.
