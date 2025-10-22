@@ -17,6 +17,15 @@ const geocodeCache = new TTLCache<GeocodeResult>(
   Number(process.env.GEOCODE_CACHE_TTL_SECONDS || 259200) * 1000 // 3 days default (259200 seconds)
 );
 
+/**
+ * Clear a specific local geocode cache entry
+ */
+export function clearLocalGeocodeCache(address: string, area: string | null) {
+  const key = `geo:${address}|${area || ''}`;
+  geocodeCache.delete(key);
+  console.log('[GEOCODE] Cleared local cache:', key);
+}
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Riverside County geographic centroid coordinates

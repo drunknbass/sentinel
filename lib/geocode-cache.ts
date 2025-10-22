@@ -108,3 +108,20 @@ export async function saveToVercelKV(address: string, area: string | null, value
     console.log('[GEOCODE] Upstash Redis save error (non-fatal):', (err as Error).message);
   }
 }
+
+/**
+ * Delete a geocode result from Upstash Redis (and return true if deleted)
+ */
+export async function deleteFromVercelKV(address: string, area: string | null): Promise<boolean> {
+  const redis = getRedisClient();
+  if (!redis) return false;
+  try {
+    const key = `${KV_PREFIX}${address}|${area || ''}`;
+    await redis.del(key as any);
+    console.log('[GEOCODE] Deleted from Upstash Redis:', key);
+    return true;
+  } catch (err) {
+    console.log('[GEOCODE] Upstash Redis delete error (non-fatal):', (err as Error).message);
+    return false;
+  }
+}
