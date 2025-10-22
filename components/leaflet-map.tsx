@@ -522,12 +522,38 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         // across intermediate zoom levels. At the start of the next band we
         // drop the base radius, causing a discrete re-cluster only at the
         // threshold.
-        const CLUSTER_BANDS = [
-          { start: 6, end: 9, basePx: 40 },   // 6-9: 40, 80, 160, 320
-          { start: 10, end: 12, basePx: 28 }, // 10-12: 28, 56, 112
-          { start: 13, end: 14, basePx: 22 }, // 13-14: 22, 44
-          { start: 15, end: 16, basePx: 18 }, // 15-16: 18, 36
-        ] as const
+        // Profiles let us tune how aggressively clusters “pull together”.
+        // Use `?clusterProfile=big|normal|small` to compare live.
+        const profileParam = typeof window !== 'undefined'
+          ? new URLSearchParams(window.location.search).get('clusterProfile')
+          : null
+        const PROFILE = (profileParam === 'small' || profileParam === 'big')
+          ? profileParam
+          : 'big' // default: larger swath like production feel
+
+        let CLUSTER_BANDS: Array<{ start: number; end: number; basePx: number }>
+        if (PROFILE === 'small') {
+          CLUSTER_BANDS = [
+            { start: 6, end: 9, basePx: 28 },
+            { start: 10, end: 12, basePx: 18 },
+            { start: 13, end: 14, basePx: 14 },
+            { start: 15, end: 16, basePx: 10 },
+          ]
+        } else if (PROFILE === 'big') {
+          CLUSTER_BANDS = [
+            { start: 6, end: 9, basePx: 70 },   // 6-9: 70, 140, 280, 560
+            { start: 10, end: 12, basePx: 48 }, // 10-12: 48, 96, 192
+            { start: 13, end: 14, basePx: 32 }, // 13-14: 32, 64
+            { start: 15, end: 16, basePx: 24 }, // 15-16: 24, 48
+          ]
+        } else {
+          CLUSTER_BANDS = [
+            { start: 6, end: 9, basePx: 40 },
+            { start: 10, end: 12, basePx: 28 },
+            { start: 13, end: 14, basePx: 22 },
+            { start: 15, end: 16, basePx: 18 },
+          ]
+        }
 
         const maxClusterRadius = (z: number) => {
           const zoom = Math.floor(z)
@@ -542,7 +568,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         markerClusterGroupRef.current = L.markerClusterGroup({
           maxClusterRadius,
           // Stop clustering at high zoom so individual pins are stable.
-          disableClusteringAtZoom: 18,
+          disableClusteringAtZoom: PROFILE === 'big' ? 19 : 18,
           spiderfyOnMaxZoom: true,
           // Slightly increase spiderfy distance for legibility when pins share a point
           spiderfyDistanceMultiplier: 1.4,
