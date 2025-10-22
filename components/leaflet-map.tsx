@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import OverlapFlyout from "@/components/overlap-flyout"
 import type { IncidentsResponse } from "@/lib/api/incidents"
 
 type Incident = IncidentsResponse["items"][number]

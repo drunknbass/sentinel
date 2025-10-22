@@ -2,7 +2,7 @@
   "name": "rso-pressaccess-vercel",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@9.12.3",
+  "packageManager": "pnpm@10.19.0",
   "engines": {
     "node": ">=20"
   },
@@ -46,6 +46,8 @@
     "tw-animate-css": "latest"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "jsdom": "^24.1.0",
     "@storybook/addon-essentials": "^8.2.5",
     "@storybook/react-vite": "^8.2.5",
     "@testing-library/react": "^14.2.1",
