@@ -101,6 +101,19 @@ export default function ClusterTestPage() {
         attribution: '© OpenStreetMap, © CARTO'
       }).addTo(map)
 
+      // Match app zoom control styling/position
+      const style = document.createElement("style")
+      style.textContent = `
+        .leaflet-bottom.leaflet-right { bottom: 24px !important; right: 38px !important; }
+        @media (max-width: 767px) { .leaflet-bottom.leaflet-right { right: 8px !important; } }
+        .leaflet-control-zoom { border: 2px solid #ffb000 !important; border-radius: 0 !important; overflow: hidden; box-shadow: 0 0 8px rgba(255,176,0,0.3) !important; }
+        .leaflet-control-zoom a { background:#000 !important; color:#ffb000 !important; border:none !important; border-bottom:2px solid #ffb000 !important; width:40px !important; height:40px !important; line-height:40px !important; font-size:20px !important; font-weight:bold !important; font-family:"IBM Plex Mono","Courier New",monospace !important; }
+        .leaflet-control-zoom a:last-child { border-bottom:none !important; }
+        .leaflet-control-zoom a:hover { background:#ffb000 !important; color:#000 !important; }
+      `
+      document.head.appendChild(style)
+      L.control.zoom({ position: "bottomright" }).addTo(map)
+
       // Banded clustering identical to app
       const CLUSTER_BANDS = [
         { start: 6, end: 9, basePx: 40 },
@@ -254,4 +267,3 @@ export default function ClusterTestPage() {
     </div>
   )
 }
-
