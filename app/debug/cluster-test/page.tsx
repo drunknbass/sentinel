@@ -5,12 +5,14 @@ import React, { useEffect, useRef, useState } from "react"
 type AlignMode = "none" | "bounds" | "mean"
 
 // Default demo points (roughly around Perris, CA)
-// Four pins in a vertical column (same lon) for clear visual checks
+// Default: 4 pins around a center that form one cluster at z≈11–12,
+// but will split apart at z≈13 when the cluster radius band changes.
+// Offsets ~0.005° (~500–560 m) chosen for clear split-on-threshold behavior.
 const DEFAULT_POINTS: Array<[number, number]> = [
-  [33.8000, -117.2300],
-  [33.8200, -117.2300],
-  [33.8400, -117.2300],
-  [33.8600, -117.2300],
+  [33.8300 + 0.0050, -117.2300],   // north
+  [33.8300 - 0.0050, -117.2300],   // south
+  [33.8300,           -117.2300 + 0.0060], // east
+  [33.8300,           -117.2300 - 0.0060], // west
 ]
 
 const parsePointsFromQuery = (): Array<[number, number]> => {
@@ -18,6 +20,15 @@ const parsePointsFromQuery = (): Array<[number, number]> => {
     const sp = new URLSearchParams(window.location.search)
     const raw = sp.get("points")
     if (!raw) return DEFAULT_POINTS
+    if (raw.toLowerCase() === 'spread4') return DEFAULT_POINTS
+    if (raw.toLowerCase() === 'vertical4') {
+      return [
+        [33.8000, -117.2300],
+        [33.8200, -117.2300],
+        [33.8400, -117.2300],
+        [33.8600, -117.2300],
+      ]
+    }
     const pts = raw.split(";")
       .map(p => p.trim())
       .filter(Boolean)
@@ -271,7 +282,9 @@ export default function ClusterTestPage() {
         </div>
         <div style={{marginTop:6}}>
           points param example:<br />
-          ?points=33.83,-117.23;33.85,-117.23;33.87,-117.23;33.89,-117.23
+          - ?points=spread4 (default) – 4 around a center<br/>
+          - ?points=vertical4 – 4 in a vertical column<br/>
+          - or explicit: ?points=33.83,-117.23;33.85,-117.23;33.87,-117.23;33.89,-117.23
         </div>
       </div>
     </div>
