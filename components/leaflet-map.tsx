@@ -579,10 +579,19 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         const alignClustersToCentroid = () => {
           try {
             markerClusterGroupRef.current?.eachLayer((layer: any) => {
-              if (typeof layer.getChildCount === 'function' && typeof layer.getBounds === 'function' && layer.getChildCount() > 1) {
-                const center = layer.getBounds().getCenter()
-                if (center && typeof layer.setLatLng === 'function') {
-                  layer.setLatLng(center)
+              if (typeof layer.getChildCount === 'function' && layer.getChildCount() > 1 && typeof layer.getAllChildMarkers === 'function') {
+                const children: any[] = layer.getAllChildMarkers?.() ?? []
+                if (children.length > 1) {
+                  let sumLat = 0, sumLng = 0
+                  for (const m of children) {
+                    const ll = m.getLatLng()
+                    sumLat += ll.lat
+                    sumLng += ll.lng
+                  }
+                  const center = (window as any).L.latLng(sumLat / children.length, sumLng / children.length)
+                  if (center && typeof layer.setLatLng === 'function') {
+                    layer.setLatLng(center)
+                  }
                 }
               }
             })
