@@ -65,6 +65,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
   const markerClusterGroupRef = useRef<any>(null)
   const [useMapbox, setUseMapbox] = useState(true)
   const tileLayerRef = useRef<any>(null)
+  const superIndexRef = useRef<any>(null)
+  const superLayerRef = useRef<any>(null)
   const hasInitialZoomedRef = useRef(false)
   const savedViewRef = useRef<{ center: [number, number]; zoom: number } | null>(null)
   const userMarkerRef = useRef<any>(null)
@@ -413,6 +415,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       }
 
       const L = (window as any).L
+      const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+      const USE_SUPER = (urlParams?.get('cluster') || '').toLowerCase() === 'super'
 
       if (!mapInstanceRef.current && mapRef.current) {
         const riversideCenter: [number, number] = [33.8303, -117.3762]
@@ -512,15 +516,64 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
         mapInstanceRef.current = map
 
-        // Create marker cluster group
-        // Fix: keep clustering enabled up to (and including) max map zoom so
-        // markers with identical coordinates do not overlap. At max zoom,
-        // clicking the cluster will spiderfy to expose individual pins.
-        markerClusterGroupRef.current = L.markerClusterGroup({
-          maxClusterRadius: 80,
-          // Previously 18 caused identical coords to overlap when zoomed in.
-          // Use a value above the map's max zoom (Mapbox 19, Carto 20).
-          disableClusteringAtZoom: 21,
+        // Create clustering layer
+        // Deterministic clustering bands: keep cluster membership stable
+        // within zoom ranges, and only allow clusters to re-form/split at
+        // specific threshold zooms to prevent jitter as the user zooms.
+        //
+        // Strategy: make the effective pixel radius scale ~2x per zoom step
+        // inside each band, which keeps pairwise cluster decisions stable
+        // across intermediate zoom levels. At the start of the next band we
+        // drop the base radius, causing a discrete re-cluster only at the
+        // threshold.
+        // Profiles let us tune how aggressively clusters “pull together”.
+        // Use `?clusterProfile=big|normal|small` to compare live.
+        const profileParam = typeof window !== 'undefined'
+          ? new URLSearchParams(window.location.search).get('clusterProfile')
+          : null
+        const PROFILE = (profileParam === 'small' || profileParam === 'big')
+          ? profileParam
+          : 'big' // default: larger swath like production feel
+
+        let CLUSTER_BANDS: Array<{ start: number; end: number; basePx: number }>
+        if (PROFILE === 'small') {
+          CLUSTER_BANDS = [
+            { start: 6, end: 9, basePx: 28 },
+            { start: 10, end: 12, basePx: 18 },
+            { start: 13, end: 14, basePx: 14 },
+            { start: 15, end: 16, basePx: 10 },
+          ]
+        } else if (PROFILE === 'big') {
+          CLUSTER_BANDS = [
+            { start: 6, end: 9, basePx: 70 },   // 6-9: 70, 140, 280, 560
+            { start: 10, end: 12, basePx: 48 }, // 10-12: 48, 96, 192
+            { start: 13, end: 14, basePx: 32 }, // 13-14: 32, 64
+            { start: 15, end: 16, basePx: 24 }, // 15-16: 24, 48
+          ]
+        } else {
+          CLUSTER_BANDS = [
+            { start: 6, end: 9, basePx: 40 },
+            { start: 10, end: 12, basePx: 28 },
+            { start: 13, end: 14, basePx: 22 },
+            { start: 15, end: 16, basePx: 18 },
+          ]
+        }
+
+        const maxClusterRadius = (z: number) => {
+          const zoom = Math.floor(z)
+          const band = CLUSTER_BANDS.find(b => zoom >= b.start && zoom <= b.end)
+          if (!band) return 32 // fallback small radius
+          const steps = zoom - band.start
+          const radius = band.basePx * Math.pow(2, steps)
+          // Hard clamp so icons don’t get absurdly large
+          return Math.max(12, Math.min(200, Math.round(radius)))
+        }
+
+        if (!USE_SUPER) {
+          markerClusterGroupRef.current = L.markerClusterGroup({
+          maxClusterRadius,
+          // Stop clustering at high zoom so individual pins are stable.
+          disableClusteringAtZoom: PROFILE === 'big' ? 19 : 18,
           spiderfyOnMaxZoom: true,
           // Slightly increase spiderfy distance for legibility when pins share a point
           spiderfyDistanceMultiplier: 1.4,
@@ -534,18 +587,63 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           chunkDelay: 50, // Delay between chunks
           iconCreateFunction: function(cluster: any) {
             const count = cluster.getChildCount()
-            let sizeClass = 'small'
-            if (count > 50) sizeClass = 'large'
-            else if (count > 10) sizeClass = 'medium'
+            let sizeClass: 'small' | 'medium' | 'large' = 'small'
+            let size = 36
+            if (count > 50) { sizeClass = 'large'; size = 52 }
+            else if (count > 10) { sizeClass = 'medium'; size = 44 }
 
             return L.divIcon({
               html: `<div class="cluster-inner"><span>${count}</span></div>`,
               className: `marker-cluster marker-cluster-${sizeClass}`,
-              iconSize: L.point(40, 40)
+              iconSize: L.point(size, size),
+              iconAnchor: L.point(size / 2, size / 2)
             })
           }
         })
         map.addLayer(markerClusterGroupRef.current)
+        } else {
+          // Supercluster path: layer group to render clusters/leaves
+          superLayerRef.current = L.layerGroup().addTo(map)
+        }
+
+        // After each zoom animation, normalize cluster marker positions so the
+        // icon is placed at the geographic center of its children. MarkerCluster
+        // uses an internal weighted center which can feel biased depending on
+        // membership changes. This snaps the visual marker to the bounds center
+        // for better spatial intuition.
+        const alignClustersToCentroid = () => {
+          try {
+            markerClusterGroupRef.current?.eachLayer((layer: any) => {
+              if (typeof layer.getChildCount === 'function' && layer.getChildCount() > 1 && typeof layer.getAllChildMarkers === 'function') {
+                const children: any[] = layer.getAllChildMarkers?.() ?? []
+                if (children.length > 1) {
+                  // Compute centroid in WebMercator meters for visual stability
+                  const Lref = (window as any).L
+                  const proj = Lref.Projection?.SphericalMercator
+                  if (proj) {
+                    let sx = 0, sy = 0
+                    for (const m of children) {
+                      const p = proj.project(m.getLatLng())
+                      sx += p.x; sy += p.y
+                    }
+                    const avg = Lref.point(sx / children.length, sy / children.length)
+                    const center = proj.unproject(avg)
+                    if (center && typeof layer.setLatLng === 'function') layer.setLatLng(center)
+                  } else {
+                    // Fallback to geographic mean
+                    let sumLat = 0, sumLng = 0
+                    for (const m of children) { const ll = m.getLatLng(); sumLat += ll.lat; sumLng += ll.lng }
+                    const center = Lref.latLng(sumLat / children.length, sumLng / children.length)
+                    if (center && typeof layer.setLatLng === 'function') layer.setLatLng(center)
+                  }
+                }
+              }
+            })
+          } catch {}
+        }
+
+        map.on('zoomend', () => requestAnimationFrame(alignClustersToCentroid))
+        markerClusterGroupRef.current.on('animationend', () => requestAnimationFrame(alignClustersToCentroid))
 
         // Expose location request immediately once map exists (ensures user-gesture path works)
         try { onLocationRequestReady?.(requestUserLocation) } catch {}
@@ -579,6 +677,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
     const L = (window as any).L
     if (!L) return
 
+    const urlParams = new URLSearchParams(window.location.search)
+    const USE_SUPER = (urlParams.get('cluster') || '').toLowerCase() === 'super'
+
     // Clear cluster group
     if (markerClusterGroupRef.current) {
       markerClusterGroupRef.current.clearLayers()
@@ -600,6 +701,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       if (!mapInstanceRef.current) return
       const L = (window as any).L
       const pt = mapInstanceRef.current.latLngToContainerPoint(L.latLng(lat, lon))
+      // Pass the pin center; component will place panel 20px to the right and vertically centered
       setFlyoutPoint({ x: pt.x, y: pt.y })
       setFlyoutGroup({ lat, lon, items: itemsAtPoint })
     }
@@ -643,6 +745,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         borderWidth = 2
       }
 
+      const hasStack = arr.length > 1
       const icon = L.divIcon({
         className: "custom-marker",
         html: `
@@ -661,16 +764,23 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               background: black;
               box-shadow: 0 0 ${glowIntensity} ${color}, inset 0 0 ${glowIntensity} ${color}40;
             "></div>
-            <div style="
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              width: ${size * 0.25}px;
-              height: ${size * 0.25}px;
-              background: ${color};
+            ${hasStack ? `
+            <div title="${arr.length} incidents here" style="
+              position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+              min-width:${Math.max(16, Math.round(size*0.36))}px;
+              height:${Math.max(16, Math.round(size*0.36))}px;
+              padding:0 ${Math.max(2, Math.round(size*0.06))}px;
+              background:${color}; color:#000; font-weight:900;
+              font-size:${Math.max(10, Math.round(size*0.42))}px; line-height:${Math.max(14, Math.round(size*0.36))}px;
+              display:flex; align-items:center; justify-content:center; border-radius:2px;
               box-shadow: 0 0 ${glowIntensity} ${color};
-            "></div>
+            ">${arr.length}</div>
+            ` : `
+            <div style="
+              position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+              width: ${size * 0.25}px; height: ${size * 0.25}px; background: ${color};
+              box-shadow: 0 0 ${glowIntensity} ${color};
+            "></div>`}
             <div style="
               position: absolute;
               top: -2px;
@@ -682,6 +792,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               border-right: ${size * 0.125}px solid transparent;
               border-bottom: ${size * 0.1875}px solid ${color};
             "></div>
+            
           </div>
         `,
         iconSize: [size, size],
@@ -696,9 +807,108 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
       if (markerClusterGroupRef.current) {
         markerClusterGroupRef.current.addLayer(marker)
+      } else if (superLayerRef.current) {
+        superLayerRef.current.addLayer(marker)
       }
       markersRef.current.push(marker)
     })
+
+    // Supercluster index build
+    if (USE_SUPER) {
+      try {
+        const Supercluster = require('supercluster')
+        const profileParam = (new URLSearchParams(window.location.search).get('clusterProfile') || '').toLowerCase()
+        const PROFILE_LOCAL = (profileParam === 'small' || profileParam === 'big') ? profileParam : 'big'
+        const features = validItems.map((it) => ({
+          type: 'Feature',
+          properties: { id: it.incident_id || Math.random().toString(36).slice(2) },
+          geometry: { type: 'Point', coordinates: [it.lon!, it.lat!] }
+        }))
+        superIndexRef.current = new Supercluster({
+          radius: PROFILE_LOCAL === 'big' ? 80 : PROFILE_LOCAL === 'small' ? 40 : 60,
+          maxZoom: 19,
+          minZoom: 0
+        }).load(features)
+
+        const render = () => {
+          if (!mapInstanceRef.current || !superIndexRef.current || !superLayerRef.current) return
+          const z = Math.max(0, Math.min(19, Math.floor(mapInstanceRef.current.getZoom() || 0)))
+          const b = mapInstanceRef.current.getBounds()
+          const bbox: [number, number, number, number] = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]
+          const clusters = superIndexRef.current.getClusters(bbox, z)
+          superLayerRef.current!.clearLayers()
+          clusters.forEach((f: any) => {
+            const [lng, lat] = f.geometry.coordinates
+            if (f.properties.cluster) {
+              const count = f.properties.point_count
+              let size = 36; let cls = 'small'
+              if (count > 50) { size = 52; cls = 'large' } else if (count > 10) { size = 44; cls = 'medium' }
+              const icon = L.divIcon({
+                html: `<div class="cluster-inner"><span>${count}</span></div>`,
+                className: `marker-cluster marker-cluster-${cls}`,
+                iconSize: L.point(size, size), iconAnchor: L.point(size/2, size/2)
+              })
+              const m = L.marker([lat, lng], { icon })
+              m.on('click', () => {
+                const nextZoom = Math.min(19, superIndexRef.current.getClusterExpansionZoom(f.id))
+                mapInstanceRef.current!.flyTo([lat, lng], nextZoom, { duration: 0.5 })
+              })
+              superLayerRef.current!.addLayer(m)
+            } else {
+              // Leaf: we don't have the original item here; use default color
+              const color = getPriorityColor(60)
+              const size = 28
+              const icon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="position:relative;width:${size}px;height:${size}px">
+                        <div style="position:absolute;inset:${size*0.15}px;border:2px solid ${color};background:black"></div>
+                        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:${size*0.25}px;height:${size*0.25}px;background:${color}"></div>
+                       </div>`,
+                iconSize: [size, size], iconAnchor: [size/2, size/2]
+              })
+              superLayerRef.current!.addLayer(L.marker([lat, lng], { icon }))
+            }
+          })
+        }
+
+        render()
+        mapInstanceRef.current.on('moveend', render)
+        mapInstanceRef.current.on('zoomend', render)
+      } catch (e) {
+        console.error('Supercluster init failed', e)
+      }
+    }
+
+    // Ensure clusters are visually centered at the constant centroid as soon
+    // as markers are added (not only after the next zoom). This prevents the
+    // first zoom-in from revealing a large offset.
+    try {
+      const L = (window as any).L
+      const alignNow = () => {
+        markerClusterGroupRef.current?.eachLayer((layer: any) => {
+          if (typeof layer.getChildCount !== 'function' || layer.getChildCount() <= 1) return
+          if (typeof layer.getAllChildMarkers !== 'function' || typeof layer.setLatLng !== 'function') return
+          const children: any[] = layer.getAllChildMarkers()
+          if (!children?.length) return
+          const proj = L.Projection?.SphericalMercator
+          if (proj) {
+            let sx = 0, sy = 0
+            for (const m of children) { const p = proj.project(m.getLatLng()); sx += p.x; sy += p.y }
+            const avg = L.point(sx / children.length, sy / children.length)
+            const center = proj.unproject(avg)
+            layer.setLatLng(center)
+          } else {
+            let sLat = 0, sLng = 0
+            for (const m of children) { const ll = m.getLatLng(); sLat += ll.lat; sLng += ll.lng }
+            const center = L.latLng(sLat / children.length, sLng / children.length)
+            layer.setLatLng(center)
+          }
+        })
+      }
+      // Run twice to catch any late-added cluster layers
+      requestAnimationFrame(alignNow)
+      setTimeout(alignNow, 50)
+    } catch {}
 
     // Only zoom to fit all pins on the very first load (never again after that)
     // Skip if user provided initial center/zoom from URL params
@@ -936,8 +1146,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           .marker-cluster-small div {
             width: 36px !important;
             height: 36px !important;
-            margin-left: 2px !important;
-            margin-top: 2px !important;
+            margin-left: 0 !important;
+            margin-top: 0 !important;
             font-size: 11px !important;
             line-height: 1 !important;
           }
@@ -963,8 +1173,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           .marker-cluster-medium div {
             width: 44px !important;
             height: 44px !important;
-            margin-left: -2px !important;
-            margin-top: -2px !important;
+            margin-left: 0 !important;
+            margin-top: 0 !important;
             font-size: 13px !important;
             line-height: 1 !important;
           }
@@ -990,8 +1200,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           .marker-cluster-large div {
             width: 52px !important;
             height: 52px !important;
-            margin-left: -6px !important;
-            margin-top: -6px !important;
+            margin-left: 0 !important;
+            margin-top: 0 !important;
             font-size: 15px !important;
             line-height: 1 !important;
           }
