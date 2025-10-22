@@ -65,6 +65,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
   const markerClusterGroupRef = useRef<any>(null)
   const [useMapbox, setUseMapbox] = useState(true)
   const tileLayerRef = useRef<any>(null)
+  const superIndexRef = useRef<any>(null)
+  const superLayerRef = useRef<any>(null)
   const hasInitialZoomedRef = useRef(false)
   const savedViewRef = useRef<{ center: [number, number]; zoom: number } | null>(null)
   const userMarkerRef = useRef<any>(null)
@@ -413,6 +415,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       }
 
       const L = (window as any).L
+      const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+      const USE_SUPER = (urlParams?.get('cluster') || '').toLowerCase() === 'super'
 
       if (!mapInstanceRef.current && mapRef.current) {
         const riversideCenter: [number, number] = [33.8303, -117.3762]
@@ -512,7 +516,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
         mapInstanceRef.current = map
 
-        // Create marker cluster group
+        // Create clustering layer
         // Deterministic clustering bands: keep cluster membership stable
         // within zoom ranges, and only allow clusters to re-form/split at
         // specific threshold zooms to prevent jitter as the user zooms.
@@ -565,7 +569,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           return Math.max(12, Math.min(200, Math.round(radius)))
         }
 
-        markerClusterGroupRef.current = L.markerClusterGroup({
+        if (!USE_SUPER) {
+          markerClusterGroupRef.current = L.markerClusterGroup({
           maxClusterRadius,
           // Stop clustering at high zoom so individual pins are stable.
           disableClusteringAtZoom: PROFILE === 'big' ? 19 : 18,
@@ -596,6 +601,10 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           }
         })
         map.addLayer(markerClusterGroupRef.current)
+        } else {
+          // Supercluster path: layer group to render clusters/leaves
+          superLayerRef.current = L.layerGroup().addTo(map)
+        }
 
         // After each zoom animation, normalize cluster marker positions so the
         // icon is placed at the geographic center of its children. MarkerCluster
@@ -667,6 +676,9 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
     const L = (window as any).L
     if (!L) return
+
+    const urlParams = new URLSearchParams(window.location.search)
+    const USE_SUPER = (urlParams.get('cluster') || '').toLowerCase() === 'super'
 
     // Clear cluster group
     if (markerClusterGroupRef.current) {
@@ -785,9 +797,77 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
 
       if (markerClusterGroupRef.current) {
         markerClusterGroupRef.current.addLayer(marker)
+      } else if (superLayerRef.current) {
+        superLayerRef.current.addLayer(marker)
       }
       markersRef.current.push(marker)
     })
+
+    // Supercluster index build
+    if (USE_SUPER) {
+      try {
+        const Supercluster = require('supercluster')
+        const profileParam = (new URLSearchParams(window.location.search).get('clusterProfile') || '').toLowerCase()
+        const PROFILE_LOCAL = (profileParam === 'small' || profileParam === 'big') ? profileParam : 'big'
+        const features = validItems.map((it) => ({
+          type: 'Feature',
+          properties: { id: it.incident_id || Math.random().toString(36).slice(2) },
+          geometry: { type: 'Point', coordinates: [it.lon!, it.lat!] }
+        }))
+        superIndexRef.current = new Supercluster({
+          radius: PROFILE_LOCAL === 'big' ? 80 : PROFILE_LOCAL === 'small' ? 40 : 60,
+          maxZoom: 19,
+          minZoom: 0
+        }).load(features)
+
+        const render = () => {
+          if (!mapInstanceRef.current || !superIndexRef.current || !superLayerRef.current) return
+          const z = Math.max(0, Math.min(19, Math.floor(mapInstanceRef.current.getZoom() || 0)))
+          const b = mapInstanceRef.current.getBounds()
+          const bbox: [number, number, number, number] = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]
+          const clusters = superIndexRef.current.getClusters(bbox, z)
+          superLayerRef.current!.clearLayers()
+          clusters.forEach((f: any) => {
+            const [lng, lat] = f.geometry.coordinates
+            if (f.properties.cluster) {
+              const count = f.properties.point_count
+              let size = 36; let cls = 'small'
+              if (count > 50) { size = 52; cls = 'large' } else if (count > 10) { size = 44; cls = 'medium' }
+              const icon = L.divIcon({
+                html: `<div class="cluster-inner"><span>${count}</span></div>`,
+                className: `marker-cluster marker-cluster-${cls}`,
+                iconSize: L.point(size, size), iconAnchor: L.point(size/2, size/2)
+              })
+              const m = L.marker([lat, lng], { icon })
+              m.on('click', () => {
+                const nextZoom = Math.min(19, superIndexRef.current.getClusterExpansionZoom(f.id))
+                mapInstanceRef.current!.flyTo([lat, lng], nextZoom, { duration: 0.5 })
+              })
+              superLayerRef.current!.addLayer(m)
+            } else {
+              // Leaf: we don't have the original item here; use default color
+              const color = getPriorityColor(60)
+              const size = 28
+              const icon = L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="position:relative;width:${size}px;height:${size}px">
+                        <div style="position:absolute;inset:${size*0.15}px;border:2px solid ${color};background:black"></div>
+                        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:${size*0.25}px;height:${size*0.25}px;background:${color}"></div>
+                       </div>`,
+                iconSize: [size, size], iconAnchor: [size/2, size/2]
+              })
+              superLayerRef.current!.addLayer(L.marker([lat, lng], { icon }))
+            }
+          })
+        }
+
+        render()
+        mapInstanceRef.current.on('moveend', render)
+        mapInstanceRef.current.on('zoomend', render)
+      } catch (e) {
+        console.error('Supercluster init failed', e)
+      }
+    }
 
     // Ensure clusters are visually centered at the constant centroid as soon
     // as markers are added (not only after the next zoom). This prevents the
