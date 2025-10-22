@@ -575,10 +575,20 @@ export async function geocodeOne(
       value = await geocodeWithCensus(address, area);
     }
 
-    // Final fallback to Nominatim if both fail
-    if (value.lat === null && value.lon === null) {
-      value = await geocodeWithNominatim(address, area);
+  // Final fallback to Nominatim if both fail
+  if (value.lat === null && value.lon === null) {
+    value = await geocodeWithNominatim(address, area);
+  }
+
+  // If we still failed and the address looks like a street-only (no numbers, not a BLOCK)
+  // try a second Nominatim pass with county hint (some cases benefit from an extra try)
+  if (value.lat === null && value.lon === null) {
+    const looksStreetOnly = /[A-Za-z]/.test(address) && !/\d/.test(address) && !/\bBLOCK\b/i.test(address);
+    if (looksStreetOnly) {
+      console.log('[GEOCODE] Extra pass for street-only address via Nominatim:', address, area);
+      value = await geocodeWithNominatim(`${address}, ${area || ''}`, 'RIVERSIDE COUNTY');
     }
+  }
   }
 
   // If all geocoding failed but we have an area, use area centroid as last resort
@@ -598,10 +608,16 @@ export async function geocodeOne(
     }
   }
 
-  // Only cache successful geocoding results (don't cache null results) and when nocache is false
+  // Only cache successful results that are not area-centroid fallbacks.
+  // Caching area fallbacks prevents future re-geocoding when tokens/env improve.
   if (value.lat !== null && value.lon !== null && !nocache) {
-    geocodeCache.set(key, value);
-    saveToVercelKV(address, area, value).catch(() => {}); // Non-blocking
+    const isAreaFallback = typeof value.centroid_used === 'string' && value.centroid_used.startsWith('area_fallback:');
+    if (!isAreaFallback) {
+      geocodeCache.set(key, value);
+      saveToVercelKV(address, area, value).catch(() => {}); // Non-blocking
+    } else {
+      console.log('[GEOCODE] Skipping cache save for area fallback:', key);
+    }
   }
 
   return value;
