@@ -608,15 +608,24 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               if (typeof layer.getChildCount === 'function' && layer.getChildCount() > 1 && typeof layer.getAllChildMarkers === 'function') {
                 const children: any[] = layer.getAllChildMarkers?.() ?? []
                 if (children.length > 1) {
-                  let sumLat = 0, sumLng = 0
-                  for (const m of children) {
-                    const ll = m.getLatLng()
-                    sumLat += ll.lat
-                    sumLng += ll.lng
-                  }
-                  const center = (window as any).L.latLng(sumLat / children.length, sumLng / children.length)
-                  if (center && typeof layer.setLatLng === 'function') {
-                    layer.setLatLng(center)
+                  // Compute centroid in WebMercator meters for visual stability
+                  const Lref = (window as any).L
+                  const proj = Lref.Projection?.SphericalMercator
+                  if (proj) {
+                    let sx = 0, sy = 0
+                    for (const m of children) {
+                      const p = proj.project(m.getLatLng())
+                      sx += p.x; sy += p.y
+                    }
+                    const avg = Lref.point(sx / children.length, sy / children.length)
+                    const center = proj.unproject(avg)
+                    if (center && typeof layer.setLatLng === 'function') layer.setLatLng(center)
+                  } else {
+                    // Fallback to geographic mean
+                    let sumLat = 0, sumLng = 0
+                    for (const m of children) { const ll = m.getLatLng(); sumLat += ll.lat; sumLng += ll.lng }
+                    const center = Lref.latLng(sumLat / children.length, sumLng / children.length)
+                    if (center && typeof layer.setLatLng === 'function') layer.setLatLng(center)
                   }
                 }
               }
@@ -791,10 +800,19 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           if (typeof layer.getAllChildMarkers !== 'function' || typeof layer.setLatLng !== 'function') return
           const children: any[] = layer.getAllChildMarkers()
           if (!children?.length) return
-          let sLat = 0, sLng = 0
-          for (const m of children) { const ll = m.getLatLng(); sLat += ll.lat; sLng += ll.lng }
-          const center = L.latLng(sLat / children.length, sLng / children.length)
-          layer.setLatLng(center)
+          const proj = L.Projection?.SphericalMercator
+          if (proj) {
+            let sx = 0, sy = 0
+            for (const m of children) { const p = proj.project(m.getLatLng()); sx += p.x; sy += p.y }
+            const avg = L.point(sx / children.length, sy / children.length)
+            const center = proj.unproject(avg)
+            layer.setLatLng(center)
+          } else {
+            let sLat = 0, sLng = 0
+            for (const m of children) { const ll = m.getLatLng(); sLat += ll.lat; sLng += ll.lng }
+            const center = L.latLng(sLat / children.length, sLng / children.length)
+            layer.setLatLng(center)
+          }
         })
       }
       // Run twice to catch any late-added cluster layers
