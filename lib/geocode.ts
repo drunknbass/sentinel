@@ -575,33 +575,36 @@ export async function geocodeOne(
       value = await geocodeWithCensus(address, area);
     }
 
-    // Final fallback to Nominatim if both fail
-    if (value.lat === null && value.lon === null) {
-      value = await geocodeWithNominatim(address, area);
-    }
+  // Final fallback to Nominatim if both fail
+  if (value.lat === null && value.lon === null) {
+    value = await geocodeWithNominatim(address, area);
   }
 
-  // If all geocoding failed but we have an area, use area centroid as last resort
-  if (value.lat === null && value.lon === null && area) {
-    const areaUpper = area.toUpperCase().trim();
-    if (AREA_COORDINATES[areaUpper]) {
-      console.log(`[GEOCODE] All services failed, using area centroid for ${area}`);
-      value = {
-        lat: AREA_COORDINATES[areaUpper].lat,
-        lon: AREA_COORDINATES[areaUpper].lon,
-        approximate: true,
-        strategy: 'apple_maps' as const, // Mark as apple_maps since it's our primary
-        centroid_used: `area_fallback:${area}`,
-        error: 'Used area centroid as fallback',
-        query: address
-      };
+  // If we still failed and the address looks like a street-only (no numbers, not a BLOCK)
+  // try a second Nominatim pass with county hint (some cases benefit from an extra try)
+  if (value.lat === null && value.lon === null) {
+    const looksStreetOnly = /[A-Za-z]/.test(address) && !/\d/.test(address) && !/\bBLOCK\b/i.test(address);
+    if (looksStreetOnly) {
+      console.log('[GEOCODE] Extra pass for street-only address via Nominatim:', address, area);
+      value = await geocodeWithNominatim(`${address}, ${area || ''}`, 'RIVERSIDE COUNTY');
     }
   }
+  }
 
-  // Only cache successful geocoding results (don't cache null results) and when nocache is false
+  // IMPORTANT: Never place pins at centroids. If APIs fail, leave as null so
+  // the UI does not display an incorrect location. Centroids are only used as
+  // userLocation hints for Apple Maps requests inside geocodeWithAppleMaps.
+
+  // Only cache successful results that are not area-centroid fallbacks.
+  // Caching area fallbacks prevents future re-geocoding when tokens/env improve.
   if (value.lat !== null && value.lon !== null && !nocache) {
-    geocodeCache.set(key, value);
-    saveToVercelKV(address, area, value).catch(() => {}); // Non-blocking
+    const isAreaFallback = typeof value.centroid_used === 'string' && value.centroid_used.startsWith('area_fallback:');
+    if (!isAreaFallback) {
+      geocodeCache.set(key, value);
+      saveToVercelKV(address, area, value).catch(() => {}); // Non-blocking
+    } else {
+      console.log('[GEOCODE] Skipping cache save for area fallback:', key);
+    }
   }
 
   return value;
