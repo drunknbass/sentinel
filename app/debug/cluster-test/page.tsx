@@ -5,11 +5,12 @@ import React, { useEffect, useRef, useState } from "react"
 type AlignMode = "none" | "bounds" | "mean"
 
 // Default demo points (roughly around Perris, CA)
+// Four pins in a vertical column (same lon) for clear visual checks
 const DEFAULT_POINTS: Array<[number, number]> = [
-  [33.811, -117.231],
-  [33.830, -117.228],
-  [33.849, -117.227],
-  [33.868, -117.226],
+  [33.8000, -117.2300],
+  [33.8200, -117.2300],
+  [33.8400, -117.2300],
+  [33.8600, -117.2300],
 ]
 
 const parsePointsFromQuery = (): Array<[number, number]> => {
@@ -34,12 +35,20 @@ const parsePointsFromQuery = (): Array<[number, number]> => {
 export default function ClusterTestPage() {
   const mapRef = useRef<HTMLDivElement>(null)
   const mcgRef = useRef<any>(null)
-  const [align, setAlign] = useState<AlignMode>(() => {
+  const [align, setAlignState] = useState<AlignMode>(() => {
     if (typeof window === "undefined") return "mean"
     const sp = new URLSearchParams(window.location.search)
     const v = (sp.get("align") || "mean").toLowerCase() as AlignMode
     return (v === "none" || v === "bounds" || v === "mean") ? v : "mean"
   })
+  const setAlign = (v: AlignMode) => {
+    setAlignState(v)
+    try {
+      const url = new URL(window.location.href)
+      url.searchParams.set("align", v)
+      window.history.replaceState(null, "", url.toString())
+    } catch {}
+  }
   const pointsRef = useRef<Array<[number, number]>>([])
   const debugLayerRef = useRef<any>(null)
 
@@ -145,8 +154,9 @@ export default function ClusterTestPage() {
           let cls = "small"
           if (count > 50) { size = 52; cls = "large" }
           else if (count > 10) { size = 44; cls = "medium" }
+          const modeColor = align === "mean" ? "#00ff88" : align === "bounds" ? "#00bfff" : "#888888"
           return L.divIcon({
-            html: `<div class="cluster-inner"><span>${count}</span></div>`,
+            html: `<div class="cluster-inner" style="border:2px solid ${modeColor}"><span>${count}</span></div>`,
             className: `marker-cluster marker-cluster-${cls}`,
             iconSize: L.point(size, size),
             iconAnchor: L.point(size/2, size/2),
@@ -246,7 +256,7 @@ export default function ClusterTestPage() {
   return (
     <div className="w-full h-svh">
       <div ref={mapRef} className="w-full h-full" />
-      <div style={{position:'absolute', top: 8, left: 8, background:'rgba(0,0,0,0.75)', color:'#ffb000', padding:8, fontFamily:'monospace', fontSize:12, zIndex:5000}}>
+      <div style={{position:'absolute', top: 8, left: 8, background:'rgba(0,0,0,0.75)', color:'#ffb000', padding:8, fontFamily:'monospace', fontSize:12, zIndex:5000, maxWidth: 360}}>
         <div><b>Cluster Test</b></div>
         <div>align: 
           <select value={align} onChange={e => setAlign(e.target.value as AlignMode)}>
@@ -255,9 +265,9 @@ export default function ClusterTestPage() {
             <option value="mean">mean</option>
           </select>
         </div>
-        <div style={{marginTop:6}}>
-          <button onClick={() => stepZoom(+1)}>Zoom +1</button>
-          <button onClick={() => stepZoom(-1)} style={{marginLeft:6}}>Zoom -1</button>
+        <div style={{marginTop:6, lineHeight:1.4}}>
+          Dots: <span style={{color:'#ffb000'}}>plugin</span>, <span style={{color:'#00bfff'}}>bounds</span>, <span style={{color:'#00ff88'}}>mean</span><br/>
+          Cluster border color reflects current mode.
         </div>
         <div style={{marginTop:6}}>
           points param example:<br />
