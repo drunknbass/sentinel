@@ -18,10 +18,27 @@ export default function OverlapFlyout({ items, lat, lon, anchor, onSelect, onClo
     if (p <= 80) return '#84cc16'
     return '#06b6d4'
   }
+
+  // Compute anchored position: 20px to the right of the pin, vertically centered.
+  const pad = 20
+  const panelWidth = 248
+  const ax = anchor?.x ?? 14
+  const ay = anchor?.y ?? 14
+  let left = ax + pad
+  let translate = 'translate(0,-50%)'
+  // If panel would overflow right edge, flip to the left of the pin instead.
+  if (typeof window !== 'undefined') {
+    const vw = window.innerWidth
+    if (left + panelWidth + 8 > vw) {
+      left = ax - pad
+      translate = 'translate(-100%,-50%)'
+    }
+  }
+  const top = ay
   return (
     <div
       className="cyber-flyout"
-      style={{ position: 'absolute', left: anchor ? anchor.x : 14, top: anchor ? anchor.y : 14, transform: 'translate(-50%, -100%) translate(16px, -12px)', zIndex: 5000 }}
+      style={{ position: 'absolute', left, top, transform: translate, zIndex: 5000 }}
       onClick={(e) => e.stopPropagation()}
     >
       <div className="cyber-flyout-inner">

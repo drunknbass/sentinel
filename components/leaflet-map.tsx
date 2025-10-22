@@ -701,14 +701,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       if (!mapInstanceRef.current) return
       const L = (window as any).L
       const pt = mapInstanceRef.current.latLngToContainerPoint(L.latLng(lat, lon))
-      // Nudge the flyout so it doesn't cover the pin. Favor top-right, but
-      // clamp within viewport to avoid going off-screen.
-      const ox = 18, oy = -16
-      const vw = window.innerWidth, vh = window.innerHeight
-      let fx = pt.x + ox, fy = pt.y + oy
-      fx = Math.max(8, Math.min(vw - 264, fx)) // ~248px width + margin
-      fy = Math.max(8, Math.min(vh - 220, fy)) // cap within viewport
-      setFlyoutPoint({ x: fx, y: fy })
+      // Pass the pin center; component will place panel 20px to the right and vertically centered
+      setFlyoutPoint({ x: pt.x, y: pt.y })
       setFlyoutGroup({ lat, lon, items: itemsAtPoint })
     }
 
