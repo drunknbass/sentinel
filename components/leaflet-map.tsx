@@ -701,7 +701,14 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
       if (!mapInstanceRef.current) return
       const L = (window as any).L
       const pt = mapInstanceRef.current.latLngToContainerPoint(L.latLng(lat, lon))
-      setFlyoutPoint({ x: pt.x, y: pt.y })
+      // Nudge the flyout so it doesn't cover the pin. Favor top-right, but
+      // clamp within viewport to avoid going off-screen.
+      const ox = 18, oy = -16
+      const vw = window.innerWidth, vh = window.innerHeight
+      let fx = pt.x + ox, fy = pt.y + oy
+      fx = Math.max(8, Math.min(vw - 264, fx)) // ~248px width + margin
+      fy = Math.max(8, Math.min(vh - 220, fy)) // cap within viewport
+      setFlyoutPoint({ x: fx, y: fy })
       setFlyoutGroup({ lat, lon, items: itemsAtPoint })
     }
 
@@ -744,6 +751,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         borderWidth = 2
       }
 
+      const hasStack = arr.length > 1
       const icon = L.divIcon({
         className: "custom-marker",
         html: `
@@ -783,6 +791,12 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               border-right: ${size * 0.125}px solid transparent;
               border-bottom: ${size * 0.1875}px solid ${color};
             "></div>
+            ${hasStack ? `
+            <div title="${arr.length} incidents here" style="
+              position:absolute; right:-6px; top:-8px; height:18px; min-width:18px;
+              padding:0 4px; background:#000; color:${color}; border:2px solid ${color};
+              font-weight:800; font-size:11px; line-height:14px; display:flex; align-items:center; justify-content:center;
+              box-shadow:0 0 6px ${color}80;">${arr.length}</div>` : ''}
           </div>
         `,
         iconSize: [size, size],
