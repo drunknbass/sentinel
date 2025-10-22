@@ -43,6 +43,7 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "components/ui/**/*"
+    "components/ui/**/*",
+    "**/*.stories.*"
   ]
 }
