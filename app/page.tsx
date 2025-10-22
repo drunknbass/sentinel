@@ -1889,6 +1889,24 @@ export default function Page() {
                     &gt; {selectedIncident.call_type}
                   </h2>
                   <p className="text-amber-400 text-sm">LOCATION: {selectedIncident.address_raw || "UNKNOWN"}</p>
+                  <div className="mt-2 flex gap-2">
+                    {/* Open in Apple Maps */}
+                    <a
+                      href={`https://maps.apple.com/place?address=${encodeURIComponent(selectedIncident.address_raw || '')}%2C+${encodeURIComponent(selectedIncident.area || '')}%2C+CA&coordinate=${selectedIncident.lat ?? ''}%2C${selectedIncident.lon ?? ''}&name=${encodeURIComponent(selectedIncident.call_type || 'Incident')}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-block px-3 py-1 border-2 border-amber-500 text-amber-500 text-xs font-bold tracking-wider hover:bg-amber-500 hover:text-black transition"
+                    >
+                      OPEN IN APPLE MAPS
+                    </a>
+                    {/* Mirror link to our /place route for A/B compare */}
+                    <a
+                      href={`/place?address=${encodeURIComponent(selectedIncident.address_raw || '')}%2C+${encodeURIComponent(selectedIncident.area || '')}%2C+CA&coordinate=${selectedIncident.lat ?? ''}%2C${selectedIncident.lon ?? ''}&name=${encodeURIComponent(selectedIncident.call_type || 'Incident')}`}
+                      className="inline-block px-3 py-1 border-2 border-amber-500 text-amber-500 text-xs font-bold tracking-wider hover:bg-amber-500 hover:text-black transition"
+                    >
+                      VIEW VIA /place
+                    </a>
+                  </div>
                 </>
               )}
             </div>
