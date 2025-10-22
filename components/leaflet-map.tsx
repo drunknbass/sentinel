@@ -513,14 +513,36 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
         mapInstanceRef.current = map
 
         // Create marker cluster group
-        // Fix: keep clustering enabled up to (and including) max map zoom so
-        // markers with identical coordinates do not overlap. At max zoom,
-        // clicking the cluster will spiderfy to expose individual pins.
+        // Deterministic clustering bands: keep cluster membership stable
+        // within zoom ranges, and only allow clusters to re-form/split at
+        // specific threshold zooms to prevent jitter as the user zooms.
+        //
+        // Strategy: make the effective pixel radius scale ~2x per zoom step
+        // inside each band, which keeps pairwise cluster decisions stable
+        // across intermediate zoom levels. At the start of the next band we
+        // drop the base radius, causing a discrete re-cluster only at the
+        // threshold.
+        const CLUSTER_BANDS = [
+          { start: 6, end: 9, basePx: 40 },   // 6-9: 40, 80, 160, 320
+          { start: 10, end: 12, basePx: 28 }, // 10-12: 28, 56, 112
+          { start: 13, end: 14, basePx: 22 }, // 13-14: 22, 44
+          { start: 15, end: 16, basePx: 18 }, // 15-16: 18, 36
+        ] as const
+
+        const maxClusterRadius = (z: number) => {
+          const zoom = Math.floor(z)
+          const band = CLUSTER_BANDS.find(b => zoom >= b.start && zoom <= b.end)
+          if (!band) return 32 // fallback small radius
+          const steps = zoom - band.start
+          const radius = band.basePx * Math.pow(2, steps)
+          // Hard clamp so icons don’t get absurdly large
+          return Math.max(12, Math.min(200, Math.round(radius)))
+        }
+
         markerClusterGroupRef.current = L.markerClusterGroup({
-          maxClusterRadius: 80,
-          // Previously 18 caused identical coords to overlap when zoomed in.
-          // Use a value above the map's max zoom (Mapbox 19, Carto 20).
-          disableClusteringAtZoom: 21,
+          maxClusterRadius,
+          // Stop clustering at high zoom so individual pins are stable.
+          disableClusteringAtZoom: 18,
           spiderfyOnMaxZoom: true,
           // Slightly increase spiderfy distance for legibility when pins share a point
           spiderfyDistanceMultiplier: 1.4,
