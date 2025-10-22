@@ -770,16 +770,23 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               background: black;
               box-shadow: 0 0 ${glowIntensity} ${color}, inset 0 0 ${glowIntensity} ${color}40;
             "></div>
-            <div style="
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              width: ${size * 0.25}px;
-              height: ${size * 0.25}px;
-              background: ${color};
+            ${hasStack ? `
+            <div title="${arr.length} incidents here" style="
+              position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+              min-width:${Math.max(16, Math.round(size*0.36))}px;
+              height:${Math.max(16, Math.round(size*0.36))}px;
+              padding:0 ${Math.max(2, Math.round(size*0.06))}px;
+              background:${color}; color:#000; font-weight:900;
+              font-size:${Math.max(10, Math.round(size*0.42))}px; line-height:${Math.max(14, Math.round(size*0.36))}px;
+              display:flex; align-items:center; justify-content:center; border-radius:2px;
               box-shadow: 0 0 ${glowIntensity} ${color};
-            "></div>
+            ">${arr.length}</div>
+            ` : `
+            <div style="
+              position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+              width: ${size * 0.25}px; height: ${size * 0.25}px; background: ${color};
+              box-shadow: 0 0 ${glowIntensity} ${color};
+            "></div>`}
             <div style="
               position: absolute;
               top: -2px;
@@ -791,12 +798,7 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
               border-right: ${size * 0.125}px solid transparent;
               border-bottom: ${size * 0.1875}px solid ${color};
             "></div>
-            ${hasStack ? `
-            <div title="${arr.length} incidents here" style="
-              position:absolute; right:-6px; top:-8px; height:18px; min-width:18px;
-              padding:0 4px; background:#000; color:${color}; border:2px solid ${color};
-              font-weight:800; font-size:11px; line-height:14px; display:flex; align-items:center; justify-content:center;
-              box-shadow:0 0 6px ${color}80;">${arr.length}</div>` : ''}
+            
           </div>
         `,
         iconSize: [size, size],
