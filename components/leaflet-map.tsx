@@ -556,14 +556,16 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           chunkDelay: 50, // Delay between chunks
           iconCreateFunction: function(cluster: any) {
             const count = cluster.getChildCount()
-            let sizeClass = 'small'
-            if (count > 50) sizeClass = 'large'
-            else if (count > 10) sizeClass = 'medium'
+            let sizeClass: 'small' | 'medium' | 'large' = 'small'
+            let size = 36
+            if (count > 50) { sizeClass = 'large'; size = 52 }
+            else if (count > 10) { sizeClass = 'medium'; size = 44 }
 
             return L.divIcon({
               html: `<div class="cluster-inner"><span>${count}</span></div>`,
               className: `marker-cluster marker-cluster-${sizeClass}`,
-              iconSize: L.point(40, 40)
+              iconSize: L.point(size, size),
+              iconAnchor: L.point(size / 2, size / 2)
             })
           }
         })
@@ -958,8 +960,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           .marker-cluster-small div {
             width: 36px !important;
             height: 36px !important;
-            margin-left: 2px !important;
-            margin-top: 2px !important;
+            margin-left: 0 !important;
+            margin-top: 0 !important;
             font-size: 11px !important;
             line-height: 1 !important;
           }
@@ -985,8 +987,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           .marker-cluster-medium div {
             width: 44px !important;
             height: 44px !important;
-            margin-left: -2px !important;
-            margin-top: -2px !important;
+            margin-left: 0 !important;
+            margin-top: 0 !important;
             font-size: 13px !important;
             line-height: 1 !important;
           }
@@ -1012,8 +1014,8 @@ export default function LeafletMap({ items, onMarkerClick, selectedIncident, onL
           .marker-cluster-large div {
             width: 52px !important;
             height: 52px !important;
-            margin-left: -6px !important;
-            margin-top: -6px !important;
+            margin-left: 0 !important;
+            margin-top: 0 !important;
             font-size: 15px !important;
             line-height: 1 !important;
           }
