@@ -38,6 +38,11 @@ jobs:
         run: pnpm test
 
       - name: Build application
+        env:
+          NEXT_PUBLIC_MAPBOX_TOKEN: ${{ secrets.NEXT_PUBLIC_MAPBOX_TOKEN }}
+          APPLE_MAPKIT_TEAM_ID: ${{ secrets.APPLE_MAPKIT_TEAM_ID }}
+          APPLE_MAPKIT_KEY_ID: ${{ secrets.APPLE_MAPKIT_KEY_ID }}
+          APPLE_MAPKIT_PRIVATE_KEY: ${{ secrets.APPLE_MAPKIT_PRIVATE_KEY }}
         run: pnpm run build
 
       - name: Verify build
